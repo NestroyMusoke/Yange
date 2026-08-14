@@ -4,6 +4,7 @@ import type {
   GarmentState,
   PreferenceSignal,
 } from "@yange/domain";
+import { WardrobeStudio } from "./features/studio/WardrobeStudio";
 import { useYange } from "./useYange";
 
 const confidenceLabels = [
@@ -58,9 +59,12 @@ export function App() {
     error,
     wearOutfit,
     checkIn,
+    addWardrobeItem,
+    saveStyleProfile,
+    saveLookDna,
     reset,
   } = useYange();
-  const [activeView, setActiveView] = useState<"today" | "activity">("today");
+  const [activeView, setActiveView] = useState<"today" | "studio" | "activity">("today");
   const todayOutfit = state.outfits["today-city-calm"];
   const fridayOutfit = state.outfits["friday-rooftop"];
   const todayGarments = todayOutfit.garmentIds.map((id) => state.garments[id]);
@@ -131,6 +135,16 @@ export function App() {
             onClick={() => setActiveView("today")}
           >
             Today
+          </button>
+          <button
+            type="button"
+            className={activeView === "studio" ? "active" : ""}
+            onClick={() => setActiveView("studio")}
+          >
+            Wardrobe studio
+            {Object.keys(state.inspirationLooks).length > 0 && (
+              <span className="count">{Object.keys(state.inspirationLooks).length}</span>
+            )}
           </button>
           <button
             type="button"
@@ -273,6 +287,13 @@ export function App() {
               </section>
             </aside>
           </div>
+        ) : activeView === "studio" ? (
+          <WardrobeStudio
+            state={state}
+            onAddGarment={addWardrobeItem}
+            onSaveStyle={saveStyleProfile}
+            onSaveLook={saveLookDna}
+          />
         ) : (
           <section className="activity-panel">
             <div className="section-heading">
@@ -283,7 +304,7 @@ export function App() {
               </div>
               {ledger.length > 0 && (
                 <button type="button" className="quiet-action" onClick={reset}>
-                  Reset Phase 1 demo
+                  Reset Yange demo
                 </button>
               )}
             </div>
@@ -315,8 +336,8 @@ export function App() {
       </main>
 
       <footer>
-        <span>Phase 1 · Local Digital Twin</span>
-        <span>No cloud credentials connected</span>
+        <span>Phase 2 · Multimodal Wardrobe Studio</span>
+        <span>Private local adapter · no cloud credentials connected</span>
       </footer>
     </div>
   );

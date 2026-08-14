@@ -1,4 +1,41 @@
-import type { TwinState } from "./types";
+import type {
+  BleachMethod,
+  DryMethod,
+  EvidenceMeta,
+  GarmentCareProfile,
+  IronMethod,
+  TwinState,
+  WashMethod,
+} from "./types";
+
+const confirmed: EvidenceMeta = {
+  provenance: "user-confirmed",
+  confidence: 1,
+  reviewStatus: "confirmed",
+};
+
+const seedProvenance = {
+  name: confirmed,
+  category: confirmed,
+  colour: confirmed,
+  material: confirmed,
+};
+
+function seedCare(
+  wash: WashMethod,
+  dry: DryMethod,
+  iron: IronMethod,
+  bleach: BleachMethod,
+  notes: string[],
+): GarmentCareProfile {
+  return {
+    wash: { value: wash, ...confirmed },
+    dry: { value: dry, ...confirmed },
+    iron: { value: iron, ...confirmed },
+    bleach: { value: bleach, ...confirmed },
+    notes: { value: notes, ...confirmed },
+  };
+}
 
 export function createSeedState(): TwinState {
   return {
@@ -9,6 +46,17 @@ export function createSeedState(): TwinState {
         category: "top",
         colour: "Warm cream",
         material: "82% cotton · 18% modal",
+        imageAssetId: null,
+        careLabelAssetId: null,
+        provenance: seedProvenance,
+        careProfile: seedCare(
+          "machine-cold",
+          "line-dry-shade",
+          "low",
+          "do-not-bleach",
+          ["Wash with similar light colours"],
+        ),
+        source: "seed",
         state: "available",
         wearsSinceWash: 0,
         wearPolicy: {
@@ -23,6 +71,17 @@ export function createSeedState(): TwinState {
         category: "bottom",
         colour: "Chocolate",
         material: "Cotton-viscose blend",
+        imageAssetId: null,
+        careLabelAssetId: null,
+        provenance: seedProvenance,
+        careProfile: seedCare(
+          "machine-cold",
+          "line-dry",
+          "medium",
+          "do-not-bleach",
+          ["Turn inside out before washing"],
+        ),
+        source: "seed",
         state: "available",
         wearsSinceWash: 0,
         wearPolicy: {
@@ -37,6 +96,17 @@ export function createSeedState(): TwinState {
         category: "outerwear",
         colour: "Deep olive",
         material: "Linen-cotton blend",
+        imageAssetId: null,
+        careLabelAssetId: null,
+        provenance: seedProvenance,
+        careProfile: seedCare(
+          "hand-wash",
+          "line-dry-shade",
+          "low",
+          "do-not-bleach",
+          ["Reshape while damp"],
+        ),
+        source: "seed",
         state: "available",
         wearsSinceWash: 1,
         wearPolicy: {
@@ -51,6 +121,17 @@ export function createSeedState(): TwinState {
         category: "accessory",
         colour: "Gold",
         material: "Gold-plated steel",
+        imageAssetId: null,
+        careLabelAssetId: null,
+        provenance: seedProvenance,
+        careProfile: seedCare(
+          "unknown",
+          "unknown",
+          "unknown",
+          "unknown",
+          ["Wipe clean; keep dry"],
+        ),
+        source: "seed",
         state: "available",
         wearsSinceWash: 0,
         wearPolicy: {
@@ -65,6 +146,17 @@ export function createSeedState(): TwinState {
         category: "shoes",
         colour: "Black",
         material: "Leather upper",
+        imageAssetId: null,
+        careLabelAssetId: null,
+        provenance: seedProvenance,
+        careProfile: seedCare(
+          "unknown",
+          "unknown",
+          "unknown",
+          "unknown",
+          ["Wipe clean with a soft cloth"],
+        ),
+        source: "seed",
         state: "available",
         wearsSinceWash: 2,
         wearPolicy: {
@@ -79,6 +171,17 @@ export function createSeedState(): TwinState {
         category: "top",
         colour: "Ivory",
         material: "Viscose-nylon blend",
+        imageAssetId: null,
+        careLabelAssetId: null,
+        provenance: seedProvenance,
+        careProfile: seedCare(
+          "hand-wash",
+          "flat-dry",
+          "low",
+          "do-not-bleach",
+          ["Do not wring"],
+        ),
+        source: "seed",
         state: "available",
         wearsSinceWash: 0,
         wearPolicy: {
@@ -127,6 +230,17 @@ export function createSeedState(): TwinState {
       averageConfidence: null,
       signals: {},
     },
+    styleProfile: {
+      version: 1,
+      heightCm: 168,
+      colourRelationship: "warm",
+      preferredColours: ["cream", "olive", "chocolate"],
+      avoidedColours: [],
+      fitPreferences: ["defined-waist", "tailored"],
+      comfortPriorities: ["breathable", "easy-movement"],
+      styleWords: ["calm", "polished", "textural"],
+      updatedAt: null,
+    },
+    inspirationLooks: {},
   };
 }
-

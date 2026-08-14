@@ -56,7 +56,33 @@ export function deriveActivity(
             tone: "positive",
           };
         }
+        case "GarmentAdded": {
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Wardrobe learned a new piece",
+            detail: `${event.payload.garment.name} was added with field-level evidence and care provenance.`,
+            tone: "positive",
+          };
+        }
+        case "StyleProfileUpdated": {
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Style DNA refined",
+            detail: "User-controlled colour, fit, height, and comfort preferences were saved.",
+            tone: "positive",
+          };
+        }
+        case "LookDnaCaptured": {
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Inspiration decoded",
+            detail: `${event.payload.look.name} became reusable Look DNA without copying the person in the image.`,
+            tone: "neutral",
+          };
+        }
       }
     });
 }
-

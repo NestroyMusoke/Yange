@@ -1,14 +1,21 @@
 import { useMemo, useState } from "react";
 import {
+  addGarment as addGarmentCommand,
   calculateReadiness,
+  captureLookDna as captureLookDnaCommand,
   createSeedState,
   deriveActivity,
   markOutfitWorn,
   recordConfidence,
   replayEvents,
+  updateStyleProfile as updateStyleProfileCommand,
   type DomainEvent,
+  type Garment,
+  type LookDna,
+  type StyleProfile,
 } from "@yange/domain";
 import { localEventRepository } from "./storage";
+import { indexedDbMediaRepository } from "./media/mediaRepository";
 
 function operationId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -75,6 +82,57 @@ export function useYange() {
     localEventRepository.reset();
     setLedger([]);
     setError(null);
+    void indexedDbMediaRepository.clear().catch(() => {
+      setError("The event ledger was reset, but some private image data could not be cleared.");
+    });
+  }
+
+  function addWardrobeItem(garment: Garment): boolean {
+    try {
+      commit(
+        addGarmentCommand(state, ledger, {
+          garment,
+          operationId: operationId("garment"),
+          occurredAt: new Date().toISOString(),
+        }),
+      );
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to add garment.");
+      return false;
+    }
+  }
+
+  function saveStyleProfile(profile: StyleProfile): boolean {
+    try {
+      commit(
+        updateStyleProfileCommand(ledger, {
+          profile,
+          operationId: operationId("style-profile"),
+          occurredAt: new Date().toISOString(),
+        }),
+      );
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to save Style DNA.");
+      return false;
+    }
+  }
+
+  function saveLookDna(look: LookDna): boolean {
+    try {
+      commit(
+        captureLookDnaCommand(state, ledger, {
+          look,
+          operationId: operationId("look-dna"),
+          occurredAt: new Date().toISOString(),
+        }),
+      );
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to save Look DNA.");
+      return false;
+    }
   }
 
   return {
@@ -85,6 +143,9 @@ export function useYange() {
     error,
     wearOutfit,
     checkIn,
+    addWardrobeItem,
+    saveStyleProfile,
+    saveLookDna,
     reset,
   };
 }

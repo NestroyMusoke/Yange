@@ -28,7 +28,9 @@ Ports: repository | multimodal | weather | calendar | notification | clock
 Local adapters now / Google Cloud adapters in Phase 5
 ```
 
-## Phase 1 event flow
+## Implemented event flows
+
+### Phase 1 — wear and confidence
 
 ```text
 User marks outfit worn
@@ -45,6 +47,37 @@ Activity timeline renders the same committed evidence
         |
 Confidence Check-in updates contextual preference memory
 ```
+
+### Phase 2 — multimodal evidence intake
+
+```text
+User selects garment / care-label / inspiration image
+        |
+Browser validates extension + MIME + binary signature
+        |
+Decode -> orient -> resize -> WebP rewrite (metadata removed)
+        |
+IndexedDB stores Blob -------- ledger stores opaque asset ID only
+        |
+Versioned multimodal port -> deterministic local adapter
+        |
+Runtime contract parser rejects unsafe or malformed output
+        |
+User reviews and corrects field-level evidence
+        |
+Domain command validates provenance -> append-only event -> replayed twin
+```
+
+### Replaceable model boundary
+
+`@yange/contracts` owns the versioned request, response, runtime parser, and analyzer port. The React experience depends on that boundary rather than a Gemini SDK. Phase 5 can add a Vertex AI adapter without changing domain commands, persisted events, or review UI.
+
+### Split persistence
+
+- `localStorage`: the small append-only domain event ledger.
+- `IndexedDB`: rewritten image blobs and media metadata.
+- Domain events reference generated asset IDs and never carry pixels or original files.
+- Reset clears both stores; a media-storage failure does not erase a successfully reset ledger.
 
 ## Reliability decisions
 

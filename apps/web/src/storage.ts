@@ -1,7 +1,10 @@
 import type { DomainEvent } from "@yange/domain";
 
-const LEDGER_KEY = "yange.phase1.event-ledger";
-const LEGACY_LEDGER_KEY = "closetloop.phase1.event-ledger";
+const LEDGER_KEY = "yange.event-ledger.v1";
+const LEGACY_LEDGER_KEYS = [
+  "yange.phase1.event-ledger",
+  "closetloop.phase1.event-ledger",
+] as const;
 
 export interface EventRepository {
   read(): DomainEvent[];
@@ -24,12 +27,14 @@ export const localEventRepository: EventRepository = {
     const current = window.localStorage.getItem(LEDGER_KEY);
     if (current) return safelyParse(current);
 
-    const legacy = window.localStorage.getItem(LEGACY_LEDGER_KEY);
-    if (!legacy) return [];
-
-    window.localStorage.setItem(LEDGER_KEY, legacy);
-    window.localStorage.removeItem(LEGACY_LEDGER_KEY);
-    return safelyParse(legacy);
+    for (const legacyKey of LEGACY_LEDGER_KEYS) {
+      const legacy = window.localStorage.getItem(legacyKey);
+      if (!legacy) continue;
+      window.localStorage.setItem(LEDGER_KEY, legacy);
+      window.localStorage.removeItem(legacyKey);
+      return safelyParse(legacy);
+    }
+    return [];
   },
   append(events) {
     const current = this.read();
@@ -41,6 +46,6 @@ export const localEventRepository: EventRepository = {
   },
   reset() {
     window.localStorage.removeItem(LEDGER_KEY);
-    window.localStorage.removeItem(LEGACY_LEDGER_KEY);
+    LEGACY_LEDGER_KEYS.forEach((key) => window.localStorage.removeItem(key));
   },
 };

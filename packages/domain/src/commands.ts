@@ -2,9 +2,12 @@ import { applyEvent } from "./projection";
 import { isGarmentUsable } from "./readiness";
 import type {
   DomainEvent,
+  EvidenceMeta,
   Garment,
   GarmentState,
+  LookDna,
   PostWearMode,
+  StyleProfile,
   TwinState,
 } from "./types";
 
@@ -34,6 +37,34 @@ function targetState(garment: Garment): GarmentState {
 
 function hasOperation(events: DomainEvent[], operationId: string): boolean {
   return events.some((event) => event.operationId === operationId);
+}
+
+function validateEvidence(meta: EvidenceMeta, field: string): void {
+  if (!Number.isFinite(meta.confidence) || meta.confidence < 0 || meta.confidence > 1) {
+    throw new DomainError(`${field} confidence must be between 0 and 1.`);
+  }
+  if (meta.provenance !== "user-confirmed" && meta.reviewStatus === "confirmed") {
+    throw new DomainError(`${field} cannot be confirmed without user review.`);
+  }
+}
+
+function validateGarment(garment: Garment): void {
+  if (!garment.id.trim()) throw new DomainError("Garment ID is required.");
+  if (!garment.name.trim()) throw new DomainError("Garment name is required.");
+  if (garment.name.trim().length > 80) {
+    throw new DomainError("Garment name must be 80 characters or fewer.");
+  }
+  if (!garment.colour.trim()) throw new DomainError("Garment colour is required.");
+  if (!garment.material.trim()) throw new DomainError("Garment material is required.");
+
+  for (const [field, meta] of Object.entries(garment.provenance)) {
+    validateEvidence(meta, field);
+  }
+  validateEvidence(garment.careProfile.wash, "Wash method");
+  validateEvidence(garment.careProfile.dry, "Dry method");
+  validateEvidence(garment.careProfile.iron, "Iron method");
+  validateEvidence(garment.careProfile.bleach, "Bleach method");
+  validateEvidence(garment.careProfile.notes, "Care notes");
 }
 
 export interface MarkOutfitWornInput {
@@ -144,3 +175,112 @@ export function recordConfidence(
   ];
 }
 
+export interface AddGarmentInput {
+  garment: Garment;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function addGarment(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: AddGarmentInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  validateGarment(input.garment);
+  if (state.garments[input.garment.id]) {
+    throw new DomainError("A garment with this ID already exists.");
+  }
+  if (input.garment.source !== "user-added") {
+    throw new DomainError("Only user-added garments can enter through onboarding.");
+  }
+
+  return [
+    {
+      id: eventId(input.operationId, "garment-added"),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "GarmentAdded",
+      payload: { garment: structuredClone(input.garment) },
+    },
+  ];
+}
+
+export interface UpdateStyleProfileInput {
+  profile: StyleProfile;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function updateStyleProfile(
+  ledger: DomainEvent[],
+  input: UpdateStyleProfileInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const { profile } = input;
+  if (
+    profile.heightCm !== null &&
+    (!Number.isFinite(profile.heightCm) || profile.heightCm < 90 || profile.heightCm > 250)
+  ) {
+    throw new DomainError("Height must be between 90 and 250 centimetres.");
+  }
+  if (profile.preferredColours.length > 12 || profile.avoidedColours.length > 12) {
+    throw new DomainError("Choose no more than 12 colours in each list.");
+  }
+  if (profile.styleWords.length > 8) {
+    throw new DomainError("Choose no more than 8 style words.");
+  }
+  if (profile.styleWords.some((word) => !word.trim() || word.trim().length > 24)) {
+    throw new DomainError("Style words must be 1 to 24 characters.");
+  }
+
+  return [
+    {
+      id: eventId(input.operationId, "style-profile"),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "StyleProfileUpdated",
+      payload: { profile: structuredClone(profile) },
+    },
+  ];
+}
+
+export interface CaptureLookDnaInput {
+  look: LookDna;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function captureLookDna(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: CaptureLookDnaInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  if (state.inspirationLooks[input.look.id]) {
+    throw new DomainError("This inspiration look has already been saved.");
+  }
+  if (!input.look.sourceAssetId.trim()) {
+    throw new DomainError("An inspiration image is required.");
+  }
+  if (
+    !Number.isFinite(input.look.confidence) ||
+    input.look.confidence < 0 ||
+    input.look.confidence > 1
+  ) {
+    throw new DomainError("Look DNA confidence must be between 0 and 1.");
+  }
+  if (!input.look.palette.length || input.look.palette.length > 6) {
+    throw new DomainError("Look DNA requires between 1 and 6 palette colours.");
+  }
+
+  return [
+    {
+      id: eventId(input.operationId, "look-dna"),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "LookDnaCaptured",
+      payload: { look: structuredClone(input.look) },
+    },
+  ];
+}

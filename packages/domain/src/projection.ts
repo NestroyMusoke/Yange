@@ -90,10 +90,30 @@ export function applyEvent(state: TwinState, event: DomainEvent): TwinState {
     }
     case "OutfitRiskDetected":
       return state;
+    case "GarmentAdded":
+      return {
+        ...state,
+        garments: {
+          ...state.garments,
+          [event.payload.garment.id]: structuredClone(event.payload.garment),
+        },
+      };
+    case "StyleProfileUpdated":
+      return {
+        ...state,
+        styleProfile: structuredClone(event.payload.profile),
+      };
+    case "LookDnaCaptured":
+      return {
+        ...state,
+        inspirationLooks: {
+          ...state.inspirationLooks,
+          [event.payload.look.id]: structuredClone(event.payload.look),
+        },
+      };
   }
 }
 
 export function replayEvents(seed: TwinState, events: DomainEvent[]): TwinState {
   return events.reduce(applyEvent, seed);
 }
-

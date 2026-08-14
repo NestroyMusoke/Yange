@@ -6,6 +6,8 @@ Each phase must produce a runnable, verifiable increment. Google integrations ar
 
 ## Phase 1 — Wardrobe Digital Twin vertical slice
 
+**Status:** Complete and verified.
+
 **Goal:** Prove the central state-and-learning loop without external services.
 
 Deliverables:
@@ -30,6 +32,8 @@ Exit criteria:
 
 ## Phase 2 — Multimodal wardrobe and Style DNA onboarding
 
+**Status:** Complete and verified locally. Google credentials are intentionally not required.
+
 **Goal:** Replace seeded wardrobe inputs with beautiful user-controlled onboarding.
 
 Deliverables:
@@ -47,6 +51,15 @@ Exit criteria:
 - A user can create and correct a wardrobe item without cloud credentials
 - Uncertain care information never becomes confirmed automatically
 - Multimodal adapter can later be switched to Vertex AI through configuration
+
+Verification evidence:
+
+- Runtime validation rejects malformed or falsely auto-confirmed model output
+- Deliberate adapter failure preserves prepared images and retries successfully
+- Care-label facts cannot be committed as confirmed without an explicit user action
+- Garment media, Style DNA, and Look DNA survive reload
+- Browser console is clean and 390 px / desktop layouts have no horizontal overflow
+- See `docs/phase-2-verification.md` for the reproducible checklist
 
 ## Phase 3 — Outfit intelligence and safe laundry planning
 

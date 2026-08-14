@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  addGarment,
   calculateReadiness,
+  captureLookDna,
   createSeedState,
   markOutfitWorn,
   recordConfidence,
   replayEvents,
+  updateStyleProfile,
 } from "./index";
 
 const now = "2026-08-14T09:00:00.000Z";
@@ -106,5 +109,101 @@ describe("Wardrobe Digital Twin", () => {
       }),
     ).toThrow("only be recorded after wearing");
   });
-});
 
+  it("adds a provenance-aware garment through an idempotent event", () => {
+    const seed = createSeedState();
+    const garment = structuredClone(seed.garments["cream-blouse"]);
+    garment.id = "user-linen-shirt";
+    garment.name = "Terracotta linen shirt";
+    garment.source = "user-added";
+    garment.provenance.colour = {
+      provenance: "ai-estimated",
+      confidence: 0.82,
+      reviewStatus: "needs-review",
+    };
+
+    const events = addGarment(seed, [], {
+      garment,
+      operationId: "garment-1",
+      occurredAt: now,
+    });
+    const projected = replayEvents(seed, events);
+
+    expect(projected.garments[garment.id].name).toBe(garment.name);
+    expect(projected.garments[garment.id].provenance.colour.reviewStatus).toBe(
+      "needs-review",
+    );
+    expect(
+      addGarment(projected, events, {
+        garment,
+        operationId: "garment-1",
+        occurredAt: now,
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects extracted care data disguised as user-confirmed", () => {
+    const seed = createSeedState();
+    const garment = structuredClone(seed.garments["cream-blouse"]);
+    garment.id = "unsafe-care-item";
+    garment.source = "user-added";
+    garment.careProfile.wash = {
+      value: "machine-cold",
+      provenance: "label-extracted",
+      confidence: 0.96,
+      reviewStatus: "confirmed",
+    };
+
+    expect(() =>
+      addGarment(seed, [], {
+        garment,
+        operationId: "garment-unsafe",
+        occurredAt: now,
+      }),
+    ).toThrow("cannot be confirmed without user review");
+  });
+
+  it("persists user-controlled Style DNA through replay", () => {
+    const seed = createSeedState();
+    const profile = {
+      ...seed.styleProfile,
+      heightCm: 174,
+      preferredColours: ["plum", "cream"],
+      fitPreferences: ["relaxed" as const],
+      updatedAt: now,
+    };
+    const events = updateStyleProfile([], {
+      profile,
+      operationId: "profile-1",
+      occurredAt: now,
+    });
+
+    expect(replayEvents(seed, events).styleProfile).toEqual(profile);
+  });
+
+  it("stores versioned inspiration Look DNA", () => {
+    const seed = createSeedState();
+    const look = {
+      id: "look-1",
+      sourceAssetId: "asset-1",
+      contractVersion: "1.0" as const,
+      name: "Soft utility",
+      palette: ["#e6d8ba", "#5e6948"],
+      silhouette: "relaxed column",
+      keyPieces: ["overshirt", "wide-leg trousers"],
+      layering: ["light outer layer"],
+      stylingCues: ["tonal accessories"],
+      occasionCues: ["creative workday"],
+      confidence: 0.88,
+      provenance: "ai-estimated" as const,
+      createdAt: now,
+    };
+    const events = captureLookDna(seed, [], {
+      look,
+      operationId: "look-1",
+      occurredAt: now,
+    });
+
+    expect(replayEvents(seed, events).inspirationLooks[look.id]).toEqual(look);
+  });
+});
