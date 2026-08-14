@@ -295,6 +295,154 @@ export interface LaundryPlan {
   incompatibilityEdges: LaundryIncompatibilityEdge[];
 }
 
+export interface ForecastPeriod {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  temperatureC: number;
+  precipitationProbability: number;
+  humidityPercent: number;
+  windKph: number;
+  condition: WeatherCondition;
+  daylight: boolean;
+}
+
+export interface SevenDayForecast {
+  version: 1;
+  source: string;
+  location: string;
+  timeZone: string;
+  issuedAt: string;
+  periods: ForecastPeriod[];
+}
+
+export type DryingSuitability = "excellent" | "good" | "limited" | "unsafe";
+
+export interface DryingWindowAssessment {
+  periodId: string;
+  startsAt: string;
+  endsAt: string;
+  score: number;
+  suitability: DryingSuitability;
+  outdoorSafe: boolean;
+  reasons: string[];
+}
+
+export type WearCastRiskSeverity = "watch" | "warning" | "critical";
+
+export interface OutfitDependencyRisk {
+  outfitId: string;
+  dueAt: string;
+  hoursRemaining: number;
+  unavailableGarmentIds: string[];
+  severity: WearCastRiskSeverity;
+}
+
+export interface WardrobeCapacityRisk {
+  threshold: number;
+  ratio: number;
+  unavailableCount: number;
+  totalCoreClothing: number;
+  affectedGarmentIds: string[];
+  triggered: boolean;
+}
+
+export interface LaundryWindowProposal {
+  id: string;
+  clusterId: string;
+  garmentIds: string[];
+  washAt: string;
+  dryFrom: string;
+  dryUntil: string;
+  deadline: string;
+  suitabilityScore: number;
+  outdoorRecommended: boolean;
+  basis: string[];
+}
+
+export interface WearCastNotificationDraft {
+  id: string;
+  kind: "laundry-risk" | "outfit-recovery" | "wardrobe-capacity";
+  severity: WearCastRiskSeverity;
+  title: string;
+  body: string;
+  relatedOutfitId: string | null;
+  relatedGarmentIds: string[];
+}
+
+export interface WearCastScenario {
+  mode: "do-nothing" | "autopilot";
+  protectedOutfitIds: string[];
+  unresolvedOutfitIds: string[];
+  scheduledLaundryWindows: number;
+  fallbackReserved: boolean;
+  summary: string;
+}
+
+export interface WearCastDecision {
+  engineVersion: "wearcast-v1";
+  decisionId: string;
+  generatedAt: string;
+  horizonEndsAt: string;
+  forecast: SevenDayForecast;
+  risks: OutfitDependencyRisk[];
+  capacity: WardrobeCapacityRisk;
+  dryingWindows: DryingWindowAssessment[];
+  laundryProposals: LaundryWindowProposal[];
+  fallbackCandidate: OutfitCandidate | null;
+  fallbackForOutfitId: string | null;
+  notifications: WearCastNotificationDraft[];
+  scenarios: {
+    doNothing: WearCastScenario;
+    autopilot: WearCastScenario;
+  };
+  decisionTrace: string[];
+}
+
+export interface ScheduledLaundryWindow extends LaundryWindowProposal {
+  runId: string;
+  status: "scheduled";
+  scheduledAt: string;
+}
+
+export interface AgentNotification {
+  id: string;
+  runId: string;
+  kind: WearCastNotificationDraft["kind"];
+  severity: WearCastRiskSeverity;
+  title: string;
+  body: string;
+  relatedOutfitId: string | null;
+  relatedGarmentIds: string[];
+  queuedAt: string;
+  deliveredAt: string | null;
+  deliveryStatus: "queued" | "delivered";
+}
+
+export interface OutfitRecovery {
+  id: string;
+  runId: string;
+  atRiskOutfitId: string;
+  fallbackOutfitId: string;
+  activatedAt: string;
+}
+
+export interface AutonomyRunRecord {
+  id: string;
+  triggerId: string;
+  committedAt: string;
+  riskCount: number;
+  laundryWindowCount: number;
+  fallbackOutfitId: string | null;
+}
+
+export interface AutonomyState {
+  runs: Record<string, AutonomyRunRecord>;
+  laundryWindows: Record<string, ScheduledLaundryWindow>;
+  notifications: Record<string, AgentNotification>;
+  recoveries: Record<string, OutfitRecovery>;
+}
+
 export interface ConfidenceFeedback {
   outfitId: string;
   value: 1 | 2 | 3 | 4 | 5;
@@ -324,6 +472,7 @@ export interface TwinState {
   styleMemory: StyleMemory;
   styleProfile: StyleProfile;
   inspirationLooks: Record<string, LookDna>;
+  autonomy: AutonomyState;
 }
 
 interface EventEnvelope {
@@ -374,6 +523,26 @@ export type DomainEvent =
   | (EventEnvelope & {
       type: "OutfitPlanned";
       payload: { outfit: Outfit };
+    })
+  | (EventEnvelope & {
+      type: "AutonomyRunCommitted";
+      payload: { run: AutonomyRunRecord };
+    })
+  | (EventEnvelope & {
+      type: "LaundryWindowScheduled";
+      payload: { window: ScheduledLaundryWindow };
+    })
+  | (EventEnvelope & {
+      type: "OutfitRecoveryActivated";
+      payload: { recovery: OutfitRecovery };
+    })
+  | (EventEnvelope & {
+      type: "NotificationQueued";
+      payload: { notification: AgentNotification };
+    })
+  | (EventEnvelope & {
+      type: "NotificationDelivered";
+      payload: { notificationId: string; deliveredAt: string };
     });
 
 export interface ReadinessResult {

@@ -315,5 +315,11 @@ export function createSeedState(): TwinState {
       updatedAt: null,
     },
     inspirationLooks: {},
+    autonomy: {
+      runs: {},
+      laundryWindows: {},
+      notifications: {},
+      recoveries: {},
+    },
   };
 }

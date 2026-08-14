@@ -28,6 +28,13 @@ Ports: repository | multimodal | weather | calendar | notification | clock
 Local adapters now / Google Cloud adapters in Phase 5
 ```
 
+Package ownership is explicit:
+
+- `@yange/domain`: deterministic policies, commands, events, projections, simulation, and scores.
+- `@yange/contracts`: versioned integration ports, runtime validation, and credential-free local adapters.
+- `@yange/orchestrator`: checkpointed workflow sequencing, retry, resume, and duplicate-trigger handling.
+- `@yange/web`: responsive presentation plus browser-backed repository implementations.
+
 ## Implemented event flows
 
 ### Phase 1 — wear and confidence
@@ -106,6 +113,39 @@ Visible cluster evidence and separation trace
 
 The clustering engine is pure TypeScript and deliberately conservative: extra loads are allowed; an incompatibility edge inside a recommended load is not.
 
+### Phase 4 — autonomous WearCast
+
+```text
+Scheduler-shaped trigger with stable trigger ID
+        |
+Validated seven-day ForecastProvider snapshot
+        |
+Clone Digital Twin -> simulate Do nothing + Autopilot
+        |
+Risk policy -> drying opportunity -> verified fallback
+        |
+Validated idempotent domain commit
+        |
+Autonomy run + laundry windows + fallback + notification outbox events
+        |
+NotificationGateway delivery -> delivered events
+```
+
+The workflow stores six checkpoints in a repository independent of the event ledger. Forecast acquisition and branch simulation are read-only. The intervention commit is atomic at the local event-sink boundary. Notification delivery follows as its own checkpoint, so a gateway outage cannot erase or duplicate a valid wardrobe decision.
+
+```text
+triggered
+   -> forecast-acquired
+   -> decision-simulated
+   -> interventions-committed
+   -> notifications-delivered
+   -> completed
+```
+
+Retry loads the existing execution and skips every reached checkpoint. A completed trigger replay returns the saved receipt and increments `duplicateTriggerCount`; it does not call the event sink or notification gateway. Per-notification checkpoint state and stable idempotency keys also protect partial delivery loops.
+
+The current browser implementation uses `localStorage` for workflow checkpoints and the event ledger. Phase 5 replaces those repositories with Firestore and a transactional outbox while preserving the same workflow and domain interfaces.
+
 ### Replaceable model boundary
 
 `@yange/contracts` owns the versioned multimodal and explanation requests, responses, runtime parsers, and adapter ports. The React experience depends on those boundaries rather than a Gemini SDK. Phase 5 can add Vertex AI adapters without changing domain commands, persisted events, scoring, or review UI.
@@ -126,3 +166,6 @@ The clustering engine is pure TypeScript and deliberately conservative: extra lo
 - Model-produced structured data is versioned and validated before use.
 - Confirmed user and care-label facts outrank AI estimates.
 - Critical operations never depend on a WebGL or animation layer.
+- Future simulation clones its inputs and cannot write the event ledger.
+- Forecast heuristics express suitability and uncertainty, never a guaranteed drying completion time.
+- Workflow retries are idempotent even when the underlying scheduler or message transport delivers more than once.

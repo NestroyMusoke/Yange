@@ -102,6 +102,48 @@ export function deriveActivity(
             tone: "positive",
           };
         }
+        case "AutonomyRunCommitted":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "WearCast acted autonomously",
+            detail: `${event.payload.run.riskCount} risk signal${event.payload.run.riskCount === 1 ? "" : "s"} produced ${event.payload.run.laundryWindowCount} laundry intervention${event.payload.run.laundryWindowCount === 1 ? "" : "s"}.`,
+            tone: "positive",
+          };
+        case "LaundryWindowScheduled":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Laundry opportunity scheduled",
+            detail: `${event.payload.window.garmentIds.length} piece${event.payload.window.garmentIds.length === 1 ? "" : "s"} matched a ${event.payload.window.suitabilityScore}% drying window.`,
+            tone: "positive",
+          };
+        case "OutfitRecoveryActivated": {
+          const fallback = state.outfits[event.payload.recovery.fallbackOutfitId];
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Fallback outfit activated",
+            detail: `${fallback?.name ?? "A verified fallback"} now protects the endangered outfit commitment.`,
+            tone: "positive",
+          };
+        }
+        case "NotificationQueued":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Notification queued",
+            detail: event.payload.notification.title,
+            tone: event.payload.notification.severity === "critical" ? "warning" : "neutral",
+          };
+        case "NotificationDelivered":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Notification delivered",
+            detail: state.autonomy.notifications[event.payload.notificationId]?.title ?? "WearCast update delivered.",
+            tone: "positive",
+          };
       }
     });
 }

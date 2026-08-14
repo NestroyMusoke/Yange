@@ -119,6 +119,68 @@ export function applyEvent(state: TwinState, event: DomainEvent): TwinState {
           [event.payload.outfit.id]: structuredClone(event.payload.outfit),
         },
       };
+    case "AutonomyRunCommitted":
+      return {
+        ...state,
+        autonomy: {
+          ...state.autonomy,
+          runs: {
+            ...state.autonomy.runs,
+            [event.payload.run.id]: structuredClone(event.payload.run),
+          },
+        },
+      };
+    case "LaundryWindowScheduled":
+      return {
+        ...state,
+        autonomy: {
+          ...state.autonomy,
+          laundryWindows: {
+            ...state.autonomy.laundryWindows,
+            [event.payload.window.id]: structuredClone(event.payload.window),
+          },
+        },
+      };
+    case "OutfitRecoveryActivated":
+      return {
+        ...state,
+        autonomy: {
+          ...state.autonomy,
+          recoveries: {
+            ...state.autonomy.recoveries,
+            [event.payload.recovery.id]: structuredClone(event.payload.recovery),
+          },
+        },
+      };
+    case "NotificationQueued":
+      return {
+        ...state,
+        autonomy: {
+          ...state.autonomy,
+          notifications: {
+            ...state.autonomy.notifications,
+            [event.payload.notification.id]: structuredClone(event.payload.notification),
+          },
+        },
+      };
+    case "NotificationDelivered": {
+      const notification = state.autonomy.notifications[event.payload.notificationId];
+      if (!notification) return state;
+      return {
+        ...state,
+        autonomy: {
+          ...state.autonomy,
+          notifications: {
+            ...state.autonomy.notifications,
+            [notification.id]: {
+              ...notification,
+              deliveryStatus: "delivered",
+              deliveredAt: event.payload.deliveredAt,
+            },
+          },
+        },
+      };
+    }
   }
 }
 

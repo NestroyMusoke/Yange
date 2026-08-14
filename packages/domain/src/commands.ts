@@ -8,10 +8,12 @@ import type {
   GarmentState,
   LookDna,
   OutfitCandidate,
+  WearCastDecision,
   PostWearMode,
   StyleProfile,
   TwinState,
 } from "./types";
+import { evaluateWearCast } from "./wearcast";
 
 export class DomainError extends Error {
   constructor(message: string) {
@@ -399,4 +401,128 @@ export function queueGarmentsForLaundry(
     });
   });
   return events;
+}
+
+export interface CommitWearCastDecisionInput {
+  runId: string;
+  triggerId: string;
+  decision: WearCastDecision;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function commitWearCastDecision(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: CommitWearCastDecisionInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const verified = evaluateWearCast(state, input.decision.forecast, input.decision.generatedAt);
+  if (verified.decisionId !== input.decision.decisionId) {
+    throw new DomainError("The WearCast decision no longer matches the live Digital Twin.");
+  }
+  const fallbackOutfitId = verified.fallbackCandidate
+    ? `planned-${verified.fallbackCandidate.id}`
+    : null;
+  const events: DomainEvent[] = [
+    {
+      id: eventId(input.operationId, "run"),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "AutonomyRunCommitted",
+      payload: {
+        run: {
+          id: input.runId,
+          triggerId: input.triggerId,
+          committedAt: input.occurredAt,
+          riskCount: verified.risks.length,
+          laundryWindowCount: verified.laundryProposals.length,
+          fallbackOutfitId,
+        },
+      },
+    },
+  ];
+  verified.laundryProposals.forEach((proposal, index) => {
+    events.push({
+      id: eventId(input.operationId, `laundry-window-${index}`),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "LaundryWindowScheduled",
+      payload: {
+        window: {
+          ...structuredClone(proposal),
+          runId: input.runId,
+          status: "scheduled",
+          scheduledAt: input.occurredAt,
+        },
+      },
+    });
+  });
+  if (verified.fallbackCandidate && verified.fallbackForOutfitId && fallbackOutfitId) {
+    const fallbackEvents = planOutfit(state, ledger, {
+      candidate: verified.fallbackCandidate,
+      operationId: `${input.operationId}:fallback`,
+      occurredAt: input.occurredAt,
+    });
+    events.push(...fallbackEvents);
+    events.push({
+      id: eventId(input.operationId, "recovery"),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "OutfitRecoveryActivated",
+      payload: {
+        recovery: {
+          id: `recovery-${verified.decisionId}`,
+          runId: input.runId,
+          atRiskOutfitId: verified.fallbackForOutfitId,
+          fallbackOutfitId,
+          activatedAt: input.occurredAt,
+        },
+      },
+    });
+  }
+  verified.notifications.forEach((draft, index) => {
+    events.push({
+      id: eventId(input.operationId, `notification-${index}`),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "NotificationQueued",
+      payload: {
+        notification: {
+          ...structuredClone(draft),
+          runId: input.runId,
+          queuedAt: input.occurredAt,
+          deliveredAt: null,
+          deliveryStatus: "queued",
+        },
+      },
+    });
+  });
+  return events;
+}
+
+export interface DeliverNotificationInput {
+  notificationId: string;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function markNotificationDelivered(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: DeliverNotificationInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const notification = state.autonomy.notifications[input.notificationId];
+  if (!notification) throw new DomainError("Notification not found.");
+  if (notification.deliveryStatus === "delivered") return [];
+  return [
+    {
+      id: eventId(input.operationId, "delivered"),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "NotificationDelivered",
+      payload: { notificationId: notification.id, deliveredAt: input.occurredAt },
+    },
+  ];
 }

@@ -1,10 +1,16 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import {
+  createKampalaDemoForecast,
+  FakeNotificationGateway,
+  ManualForecastAdapter,
+} from "@yange/contracts";
 import {
   addGarment as addGarmentCommand,
   calculateReadiness,
   captureLookDna as captureLookDnaCommand,
   createSeedState,
   deriveActivity,
+  evaluateWearCast,
   markOutfitWorn,
   planOutfit as planOutfitCommand,
   queueGarmentsForLaundry as queueGarmentsForLaundryCommand,
@@ -17,6 +23,8 @@ import {
   type OutfitCandidate,
   type StyleProfile,
 } from "@yange/domain";
+import { WearCastWorkflow, type WearCastExecution } from "@yange/orchestrator";
+import { localWorkflowRepository } from "./autonomyStorage";
 import { localEventRepository } from "./storage";
 import { indexedDbMediaRepository } from "./media/mediaRepository";
 
@@ -24,11 +32,23 @@ function operationId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
+const wearCastTrigger = {
+  triggerId: "demo-friday-forecast-2026-08-14",
+  triggeredAt: "2026-08-14T07:30:00.000Z",
+  source: "demo-scheduler" as const,
+};
+
+const demoForecast = createKampalaDemoForecast();
+
 export function useYange() {
   const [ledger, setLedger] = useState<DomainEvent[]>(() =>
     localEventRepository.read(),
   );
   const [error, setError] = useState<string | null>(null);
+  const [autonomyExecution, setAutonomyExecution] = useState<WearCastExecution | null>(() =>
+    localWorkflowRepository.latest(),
+  );
+  const [autonomyRunning, setAutonomyRunning] = useState(false);
 
   const state = useMemo(
     () => replayEvents(createSeedState(), ledger),
@@ -39,10 +59,56 @@ export function useYange() {
     () => deriveActivity(ledger, state),
     [ledger, state],
   );
+  const ledgerRef = useRef(ledger);
+  const stateRef = useRef(state);
+  ledgerRef.current = ledger;
+  stateRef.current = state;
+  const notificationGateway = useMemo(
+    () => new FakeNotificationGateway(() => "2026-08-14T07:32:00.000Z"),
+    [],
+  );
+  const forecastProvider = useMemo(
+    () => new ManualForecastAdapter(demoForecast, {
+      now: () => new Date(wearCastTrigger.triggeredAt),
+    }),
+    [],
+  );
+  const wearCastWorkflow = useMemo(
+    () => new WearCastWorkflow({
+      forecastProvider,
+      notificationGateway,
+      repository: localWorkflowRepository,
+      twinReader: {
+        read: () => ({
+          state: structuredClone(stateRef.current),
+          ledger: structuredClone(ledgerRef.current),
+        }),
+      },
+      eventSink: {
+        append: async (events) => {
+          if (!events.length) return;
+          const next = localEventRepository.append(events);
+          ledgerRef.current = next;
+          stateRef.current = replayEvents(createSeedState(), next);
+          setLedger(next);
+          setError(null);
+        },
+      },
+      now: () => "2026-08-14T07:31:00.000Z",
+    }),
+    [forecastProvider, notificationGateway],
+  );
+  const wearCastDecision = useMemo(
+    () => autonomyExecution?.decision ?? evaluateWearCast(state, demoForecast, wearCastTrigger.triggeredAt),
+    [autonomyExecution?.decision, state],
+  );
 
   function commit(events: DomainEvent[]) {
     if (!events.length) return;
-    setLedger(localEventRepository.append(events));
+    const next = localEventRepository.append(events);
+    ledgerRef.current = next;
+    stateRef.current = replayEvents(createSeedState(), next);
+    setLedger(next);
     setError(null);
   }
 
@@ -84,6 +150,11 @@ export function useYange() {
   function reset() {
     localEventRepository.reset();
     setLedger([]);
+    ledgerRef.current = [];
+    stateRef.current = createSeedState();
+    localWorkflowRepository.reset();
+    notificationGateway.reset();
+    setAutonomyExecution(null);
     setError(null);
     void indexedDbMediaRepository.clear().catch(() => {
       setError("The event ledger was reset, but some private image data could not be cleared.");
@@ -170,6 +241,23 @@ export function useYange() {
     }
   }
 
+  function stageWearCastPressure(): boolean {
+    return queueLaundry(["cream-blouse", "chocolate-trousers", "ivory-knit"]);
+  }
+
+  async function runWearCast(injectNotificationFailure = false): Promise<WearCastExecution> {
+    setAutonomyRunning(true);
+    setError(null);
+    if (injectNotificationFailure) notificationGateway.failNext();
+    try {
+      const execution = await wearCastWorkflow.run(wearCastTrigger);
+      setAutonomyExecution(execution);
+      return execution;
+    } finally {
+      setAutonomyRunning(false);
+    }
+  }
+
   return {
     state,
     ledger,
@@ -183,6 +271,12 @@ export function useYange() {
     saveLookDna,
     planCandidate,
     queueLaundry,
+    wearCastDecision,
+    wearCastForecast: demoForecast,
+    autonomyExecution,
+    autonomyRunning,
+    stageWearCastPressure,
+    runWearCast,
     reset,
   };
 }

@@ -94,6 +94,8 @@ Verification evidence:
 
 ## Phase 4 — Autonomous WearCast and Laundry Window Optimizer
 
+**Status:** Complete and verified locally. Google credentials are intentionally not required.
+
 **Goal:** Prove asynchronous, high-value action.
 
 Deliverables:
@@ -112,6 +114,17 @@ Exit criteria:
 - The agent schedules an intervention and reserves a fallback
 - Duplicate events do not duplicate notifications or state transitions
 - A failed integration degrades one capability without breaking the app
+
+Verification evidence:
+
+- Three staged laundry pieces reach exactly 50% of core clothing and endanger the seeded Friday outfit
+- The same immutable inputs produce identical risks, scenarios, drying rankings, fallback, and decision ID
+- A scheduler-shaped trigger commits two laundry windows, one five-piece fallback, three notification outbox records, and a run receipt
+- Injected notification failure pauses after intervention commit; retry resumes delivery only
+- Reload preserves all six workflow checkpoints and the append-only event projection
+- Replaying the completed trigger creates zero new events and zero new deliveries while recording one ignored duplicate
+- All 36 automated tests, strict type checking, production build, high-severity dependency audit, desktop walkthrough, and 390 px responsive checks pass
+- See `docs/phase-4-verification.md` for the reproducible record
 
 ## Phase 5 — Google Cloud adapters and production hardening
 

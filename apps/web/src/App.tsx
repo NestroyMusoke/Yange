@@ -6,6 +6,7 @@ import type {
 } from "@yange/domain";
 import { Atelier } from "./features/intelligence/Atelier";
 import { WardrobeStudio } from "./features/studio/WardrobeStudio";
+import { WearCast } from "./features/wearcast/WearCast";
 import { useYange } from "./useYange";
 
 const confidenceLabels = [
@@ -65,9 +66,15 @@ export function App() {
     saveLookDna,
     planCandidate,
     queueLaundry,
+    wearCastDecision,
+    wearCastForecast,
+    autonomyExecution,
+    autonomyRunning,
+    stageWearCastPressure,
+    runWearCast,
     reset,
   } = useYange();
-  const [activeView, setActiveView] = useState<"today" | "studio" | "atelier" | "activity">("today");
+  const [activeView, setActiveView] = useState<"today" | "studio" | "atelier" | "wearcast" | "activity">("today");
   const todayOutfit = state.outfits["today-city-calm"];
   const fridayOutfit = state.outfits["friday-rooftop"];
   const todayGarments = todayOutfit.garmentIds.map((id) => state.garments[id]);
@@ -82,6 +89,12 @@ export function App() {
     [state.styleMemory.signals],
   );
   const fridayAtRisk = readiness.atRiskOutfitIds.includes(fridayOutfit.id);
+  const fridayRecovery = Object.values(state.autonomy.recoveries).find(
+    (recovery) => recovery.atRiskOutfitId === fridayOutfit.id,
+  );
+  const fridayFallback = fridayRecovery
+    ? state.outfits[fridayRecovery.fallbackOutfitId]
+    : null;
 
   return (
     <div className="app-shell">
@@ -120,7 +133,9 @@ export function App() {
               <strong className="metric-status">
                 {readiness.level === "ready"
                   ? "Ready for the week"
-                  : fridayAtRisk
+                  : fridayRecovery
+                    ? "Friday has a fallback"
+                    : fridayAtRisk
                     ? "One future look at risk"
                     : "Laundry is building"}
               </strong>
@@ -138,6 +153,16 @@ export function App() {
             onClick={() => setActiveView("today")}
           >
             Today
+          </button>
+          <button
+            type="button"
+            className={activeView === "wearcast" ? "active" : ""}
+            onClick={() => setActiveView("wearcast")}
+          >
+            WearCast
+            {(wearCastDecision.risks.length > 0 || autonomyExecution?.status === "failed") && (
+              <span className="count">{wearCastDecision.risks.length || "!"}</span>
+            )}
           </button>
           <button
             type="button"
@@ -257,21 +282,23 @@ export function App() {
             </section>
 
             <aside className="side-stack">
-              <section className={`future-card ${fridayAtRisk ? "future-risk" : ""}`}>
+              <section className={`future-card ${fridayAtRisk && !fridayRecovery ? "future-risk" : ""}`}>
                 <div className="future-topline">
                   <span>WearCast preview</span>
-                  <em>{fridayAtRisk ? "At risk" : "Protected"}</em>
+                  <em>{fridayRecovery ? "Fallback ready" : fridayAtRisk ? "At risk" : "Protected"}</em>
                 </div>
                 <h3>{fridayOutfit.name}</h3>
                 <p>{fridayOutfit.scheduledFor}</p>
                 <div className="dependency-line" aria-hidden="true">
                   <span className="today-node">Today</span>
                   <i />
-                  <span className={fridayAtRisk ? "risk-node" : "future-node"}>Friday</span>
+                  <span className={fridayAtRisk && !fridayRecovery ? "risk-node" : "future-node"}>Friday</span>
                 </div>
                 <p className="future-detail">
-                  {fridayAtRisk
-                    ? "The cream blouse moved to laundry. The autonomous recovery plan arrives in Phase 4."
+                  {fridayRecovery
+                    ? `${fridayFallback?.name ?? "A verified fallback"} is reserved while the original look recovers.`
+                    : fridayAtRisk
+                    ? "A dependency moved out of rotation. WearCast can now simulate and execute a safe recovery."
                     : "All dependent garments are currently available."}
                 </p>
               </section>
@@ -315,6 +342,16 @@ export function App() {
             onPlan={planCandidate}
             onQueueLaundry={queueLaundry}
           />
+        ) : activeView === "wearcast" ? (
+          <WearCast
+            state={state}
+            decision={wearCastDecision}
+            forecast={wearCastForecast}
+            execution={autonomyExecution}
+            running={autonomyRunning}
+            onStage={stageWearCastPressure}
+            onRun={runWearCast}
+          />
         ) : (
           <section className="activity-panel">
             <div className="section-heading">
@@ -357,7 +394,7 @@ export function App() {
       </main>
 
       <footer>
-        <span>Phase 3 · Auditable outfit and care intelligence</span>
+        <span>Phase 4 · Autonomous WearCast operations</span>
         <span>Private local adapter · no cloud credentials connected</span>
       </footer>
     </div>
