@@ -50,10 +50,10 @@ export interface WearCastExecution {
 }
 
 export interface WorkflowRepository {
-  read(triggerId: string): WearCastExecution | null;
-  latest(): WearCastExecution | null;
-  save(execution: WearCastExecution): void;
-  reset(): void;
+  read(triggerId: string): WearCastExecution | null | Promise<WearCastExecution | null>;
+  latest(): WearCastExecution | null | Promise<WearCastExecution | null>;
+  save(execution: WearCastExecution): void | Promise<void>;
+  reset(): void | Promise<void>;
 }
 
 export interface TwinSnapshot {
@@ -62,7 +62,7 @@ export interface TwinSnapshot {
 }
 
 export interface TwinSnapshotReader {
-  read(): TwinSnapshot;
+  read(): TwinSnapshot | Promise<TwinSnapshot>;
 }
 
 export interface DomainEventSink {
@@ -125,26 +125,26 @@ export class WearCastWorkflow {
     this.now = dependencies.now ?? (() => new Date().toISOString());
   }
 
-  private save(execution: WearCastExecution): void {
+  private async save(execution: WearCastExecution): Promise<void> {
     execution.updatedAt = this.now();
-    this.dependencies.repository.save(structuredClone(execution));
+    await this.dependencies.repository.save(structuredClone(execution));
   }
 
-  private advance(
+  private async advance(
     execution: WearCastExecution,
     checkpoint: WorkflowCheckpoint,
     detail: string,
-  ): void {
+  ): Promise<void> {
     execution.checkpoint = checkpoint;
     execution.checkpointHistory.push({ checkpoint, reachedAt: this.now(), detail });
-    this.save(execution);
+    await this.save(execution);
   }
 
   async run(trigger: WearCastTrigger): Promise<WearCastExecution> {
-    const existing = this.dependencies.repository.read(trigger.triggerId);
+    const existing = await this.dependencies.repository.read(trigger.triggerId);
     if (existing?.status === "completed") {
       existing.duplicateTriggerCount += 1;
-      this.save(existing);
+      await this.save(existing);
       return structuredClone(existing);
     }
     const execution = existing ?? createExecution(trigger, this.now());
@@ -152,15 +152,15 @@ export class WearCastWorkflow {
       execution.status = "running";
       execution.failure = null;
       execution.attempts += 1;
-      this.save(execution);
+      await this.save(execution);
     } else {
-      this.save(execution);
+      await this.save(execution);
     }
 
     try {
       if (!reached(execution.checkpoint, "forecast-acquired")) {
         execution.forecast = await this.dependencies.forecastProvider.sevenDay();
-        this.advance(
+        await this.advance(
           execution,
           "forecast-acquired",
           `${execution.forecast.periods.length} forecast periods validated from ${execution.forecast.source}.`,
@@ -169,9 +169,9 @@ export class WearCastWorkflow {
 
       if (!reached(execution.checkpoint, "decision-simulated")) {
         if (!execution.forecast) throw new Error("Forecast checkpoint is missing its snapshot.");
-        const { state } = this.dependencies.twinReader.read();
+        const { state } = await this.dependencies.twinReader.read();
         execution.decision = evaluateWearCast(state, execution.forecast, trigger.triggeredAt);
-        this.advance(
+        await this.advance(
           execution,
           "decision-simulated",
           `${execution.decision.risks.length} outfit risk signal(s) evaluated in two non-destructive branches.`,
@@ -180,7 +180,7 @@ export class WearCastWorkflow {
 
       if (!reached(execution.checkpoint, "interventions-committed")) {
         if (!execution.decision) throw new Error("Decision checkpoint is missing its receipt.");
-        const { state, ledger } = this.dependencies.twinReader.read();
+        const { state, ledger } = await this.dependencies.twinReader.read();
         const events = commitWearCastDecision(state, ledger, {
           runId: execution.runId,
           triggerId: execution.triggerId,
@@ -189,7 +189,7 @@ export class WearCastWorkflow {
           occurredAt: this.now(),
         });
         await this.dependencies.eventSink.append(events);
-        this.advance(
+        await this.advance(
           execution,
           "interventions-committed",
           `${events.length} idempotent domain event(s) committed through the validated event sink.`,
@@ -200,14 +200,14 @@ export class WearCastWorkflow {
         if (!execution.decision) throw new Error("Decision checkpoint is missing its notifications.");
         for (const draft of execution.decision.notifications) {
           if (execution.deliveredNotificationIds.includes(draft.id)) continue;
-          const beforeDelivery = this.dependencies.twinReader.read();
+          const beforeDelivery = await this.dependencies.twinReader.read();
           const notification = beforeDelivery.state.autonomy.notifications[draft.id];
           if (!notification) throw new Error(`Queued notification ${draft.id} is missing.`);
           const delivery = await this.dependencies.notificationGateway.deliver(
             notification,
             `${execution.triggerId}:${notification.id}`,
           );
-          const afterGateway = this.dependencies.twinReader.read();
+          const afterGateway = await this.dependencies.twinReader.read();
           const events = markNotificationDelivered(afterGateway.state, afterGateway.ledger, {
             notificationId: notification.id,
             operationId: `wearcast:${execution.triggerId}:delivery:${notification.id}`,
@@ -215,9 +215,9 @@ export class WearCastWorkflow {
           });
           await this.dependencies.eventSink.append(events);
           execution.deliveredNotificationIds.push(notification.id);
-          this.save(execution);
+          await this.save(execution);
         }
-        this.advance(
+        await this.advance(
           execution,
           "notifications-delivered",
           `${execution.deliveredNotificationIds.length} notification(s) delivered with stable idempotency keys.`,
@@ -226,7 +226,7 @@ export class WearCastWorkflow {
 
       if (!reached(execution.checkpoint, "completed")) {
         execution.status = "completed";
-        this.advance(execution, "completed", "WearCast workflow completed without unresolved steps.");
+        await this.advance(execution, "completed", "WearCast workflow completed without unresolved steps.");
       }
       return structuredClone(execution);
     } catch (cause) {
@@ -238,7 +238,7 @@ export class WearCastWorkflow {
         failedAt: this.now(),
         retryable: true,
       };
-      this.save(execution);
+      await this.save(execution);
       return structuredClone(execution);
     }
   }

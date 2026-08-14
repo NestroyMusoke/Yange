@@ -16,16 +16,21 @@ Yange maintains a live Wardrobe Digital Twin. The current view is reconstructed 
 
 The domain owns no network or framework code. It exposes commands, events, projections, scores, and policies. Interfaces supply persistence, multimodal analysis, weather, calendar, notifications, and time.
 
-```text
-Responsive web experience
-        |
-Application commands
-        |
-Pure domain engine ---- Event ledger ---- Current projection
-        |
-Ports: repository | multimodal | weather | calendar | notification | clock
-        |
-Local adapters now / Google Cloud adapters in Phase 5
+```mermaid
+flowchart LR
+  Browser["Responsive web + Cloud Proof"] --> Edge["Public Cloud Run edge"]
+  Edge -->|"signed intents"| Storage["Private Cloud Storage"]
+  Edge -->|"stable task + OIDC"| Tasks["Cloud Tasks"]
+  Scheduler["Cloud Scheduler"] -->|"OIDC sweep"| Worker["Private Cloud Run worker"]
+  Tasks -->|"OIDC"| Worker
+  Steward["Private Google ADK + Gemini 3.5 Flash"] -->|"two approved tools + OIDC"| Worker
+  Worker --> Domain["Deterministic domain engine"]
+  Domain --> Firestore["Firestore ledger + projection + workflow + outbox"]
+  Worker --> Weather["Google Weather"]
+  Worker --> Calendar["Google Calendar, read-only"]
+  Worker --> PubSub["Pub/Sub ordered events + DLQ"]
+  Vertex["Vertex AI structured multimodal/explanations"] --> Contracts["Versioned runtime contracts"]
+  Contracts --> Domain
 ```
 
 Package ownership is explicit:
@@ -34,6 +39,9 @@ Package ownership is explicit:
 - `@yange/contracts`: versioned integration ports, runtime validation, and credential-free local adapters.
 - `@yange/orchestrator`: checkpointed workflow sequencing, retry, resume, and duplicate-trigger handling.
 - `@yange/web`: responsive presentation plus browser-backed repository implementations.
+- `@yange/cloud`: Firestore, Storage, Tasks, Pub/Sub, Weather, Calendar, Vertex AI, configuration, and observability adapters.
+- `@yange/api`: role-separated edge/worker HTTP boundary, session isolation, readiness, security headers, and static delivery.
+- `services/yange_steward`: Google ADK reasoning service with narrow workload-identity tools.
 
 ## Implemented event flows
 
@@ -144,13 +152,34 @@ triggered
 
 Retry loads the existing execution and skips every reached checkpoint. A completed trigger replay returns the saved receipt and increments `duplicateTriggerCount`; it does not call the event sink or notification gateway. Per-notification checkpoint state and stable idempotency keys also protect partial delivery loops.
 
-The current browser implementation uses `localStorage` for workflow checkpoints and the event ledger. Phase 5 replaces those repositories with Firestore and a transactional outbox while preserving the same workflow and domain interfaces.
+The browser implementation still uses `localStorage` for the free local product. In Google mode the same interfaces use Firestore plus a transactional outbox, so cloud execution did not require rewriting the workflow or domain engine.
+
+### Phase 5 — production Google Cloud boundary
+
+```text
+public request -> edge validation/session -> stable Cloud Task
+                                           |
+                                           v
+private worker -> read projection -> Google Weather -> WearCast policy
+       |                                      |
+       +-> Firestore transaction <------------+
+              event + projection + outbox
+                           |
+                           v
+                  Pub/Sub publish / retry sweep
+```
+
+The deployed Node container is role-shaped at runtime. The edge returns 404 for internal routes; the worker returns 404 for public routes. Cloud Run IAM is the primary internal authentication boundary, and the worker trusts `X-Yange-User` only after the platform has admitted the OIDC-authenticated caller. Stable Cloud Task names and workflow trigger IDs make duplicate transport delivery non-catastrophic.
+
+The separate ADK service reasons with Gemini and can inspect or request a verified WearCast run. It has no Firestore or Storage dependency and cannot mutate state. Its worker calls carry Google-issued identity tokens; the worker independently revalidates every action.
+
+Firestore stores four evidence surfaces under each opaque user partition: immutable events, a rebuildable current projection, checkpoint receipts, and outbox records. An append transaction either writes all matching evidence or none of it. Pub/Sub delivery is downstream, so transport failure cannot roll back a valid wardrobe decision.
 
 ### Replaceable model boundary
 
 `@yange/contracts` owns the versioned multimodal and explanation requests, responses, runtime parsers, and adapter ports. The React experience depends on those boundaries rather than a Gemini SDK. Phase 5 can add Vertex AI adapters without changing domain commands, persisted events, scoring, or review UI.
 
-### Split persistence
+### Local split persistence
 
 - `localStorage`: the small append-only domain event ledger.
 - `IndexedDB`: rewritten image blobs and media metadata.

@@ -2,9 +2,9 @@
 
 Yange is the wardrobe agent that learns what confidence looks like on you. Its name draws from the Luganda possessive *yange*—“my”—because the experience is built around my wardrobe, my preferences, and my confidence. Yange maintains a live Wardrobe Digital Twin, plans with real garment availability, and turns wear history into safer laundry and more personal outfit decisions.
 
-## Current build — Phase 4
+## Current build — Phase 5
 
-The first four vertical slices run entirely locally and require no cloud credentials. The build now includes:
+The first five vertical slices are complete. The full product and a production-shaped two-process cloud rehearsal run without credentials; Google adapters activate only at deployment. The build now includes:
 
 - A responsive mobile-first product shell
 - An event-driven Wardrobe Digital Twin
@@ -35,6 +35,16 @@ The first four vertical slices run entirely locally and require no cloud credent
 - A dedicated `@yange/orchestrator` package with six durable checkpoints
 - Notification outbox delivery that resumes after failure
 - Stable trigger and notification idempotency keys with visible duplicate suppression
+- A public edge and private deterministic worker built from one role-separated Cloud Run image
+- Firestore event, projection, checkpoint, and transactional-outbox persistence
+- Private Cloud Storage media with short-lived signed access
+- Cloud Tasks OIDC dispatch, Cloud Scheduler sweeps, and Pub/Sub ordered audit events with a dead-letter topic
+- Google Weather and optional read-only Google Calendar adapters
+- Schema-constrained Vertex AI multimodal and explanation adapters
+- A private Google ADK Yange Steward using Gemini 3.5 Flash and two narrow worker tools
+- Secret Manager, least-privilege service identities, readiness gates, structured logs, and trace correlation
+- Terraform, Cloud Build, GitHub CI, immutable containers, and an intentionally capped scale-to-zero cost profile
+- A judge-facing Cloud Proof surface that distinguishes local rehearsal from deployed Google evidence
 - Contract, domain, and browser image-pipeline tests
 
 The local model simulations are intentional. They make the complete workflow reproducible for contributors and judges; future Vertex AI adapters implement the same `@yange/contracts` interfaces.
@@ -48,16 +58,37 @@ npm.cmd run dev
 
 Then open the local URL printed by the development server.
 
+To run the production-shaped edge and web together, still with no credentials:
+
+```powershell
+npm.cmd run dev:cloud
+```
+
+Open `http://127.0.0.1:4173`, select **Cloud proof**, and run the server-side six-checkpoint rehearsal.
+
 ## Verify
 
 ```powershell
 npm.cmd test
 npm.cmd run typecheck
 npm.cmd run build
+npm.cmd audit --audit-level=high
 ```
+
+Phase 5 currently passes 56 automated tests (54 TypeScript and 2 ADK policy tests), strict TypeScript checks, production builds, Terraform 1.9.8 validation, and the high-severity dependency gate.
+
+## Deploy to Google Cloud
+
+No source edit is required. Once your funded project is ready:
+
+```powershell
+.\scripts\deploy-google-cloud.ps1 -ProjectId YOUR_PROJECT_ID
+```
+
+The script builds and deploys the edge, private worker, and Google ADK service; provisions Firestore, private Storage, Cloud Tasks, Scheduler, Pub/Sub, Secret Manager, and service identities; then prints and probes the public URL. Follow [docs/google-cloud-setup.md](docs/google-cloud-setup.md) for authentication, budget safeguards, optional Calendar sharing, proof capture, and rollback.
 
 ## Architecture rule
 
 AI may propose actions; validated domain rules commit state. The domain package has no React, browser, Gemini, or Google Cloud dependencies. Images live in a media repository while events store opaque asset IDs, so the domain can later run behind Cloud Run without being rewritten.
 
-See [docs/build-plan.md](docs/build-plan.md), [docs/architecture.md](docs/architecture.md), [docs/phase-4-spec.md](docs/phase-4-spec.md), and [docs/phase-4-verification.md](docs/phase-4-verification.md).
+See [docs/build-plan.md](docs/build-plan.md), [docs/architecture.md](docs/architecture.md), [docs/phase-5-spec.md](docs/phase-5-spec.md), [docs/phase-5-verification.md](docs/phase-5-verification.md), and [docs/google-cloud-setup.md](docs/google-cloud-setup.md).

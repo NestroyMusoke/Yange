@@ -7,3 +7,10 @@ coverage/
 .DS_Store
 *.log
 *.tsbuildinfo
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+services/yange_steward/.venv/
+services/yange_steward/**/__pycache__/
+services/yange_steward/.pytest_cache/

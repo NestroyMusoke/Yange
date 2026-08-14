@@ -1,0 +1,14 @@
+.git
+.github
+.codex
+.agents
+node_modules
+**/dist
+**/.env
+**/.env.*
+!.env.example
+coverage
+infra/terraform/.terraform
+infra/terraform/*.tfstate*
+services/yange_steward/.venv
+services/yange_steward/**/__pycache__

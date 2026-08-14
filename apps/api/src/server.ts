@@ -1,0 +1,89 @@
+import { createServer } from "node:http";
+import { resolve } from "node:path";
+import {
+  createFirestoreStore,
+  createGoogleEventPublisher,
+  createGoogleMediaStore,
+  createGoogleTaskScheduler,
+  createStructuredLogger,
+  GoogleWeatherForecastAdapter,
+  InMemoryUserStateStore,
+  readRuntimeConfiguration,
+} from "@yange/cloud";
+import { createYangeApi } from "./app";
+
+const configuration = readRuntimeConfiguration();
+const logger = createStructuredLogger(configuration.projectId);
+const port = Number.parseInt(process.env.PORT ?? "8080", 10);
+const webRoot = process.env.YANGE_WEB_ROOT
+  ? resolve(process.env.YANGE_WEB_ROOT)
+  : resolve(process.cwd(), "apps", "web", "dist");
+
+const google = configuration.mode === "google"
+  && configuration.projectId
+  && configuration.taskInvokerServiceAccount
+  ? {
+    projectId: configuration.projectId,
+    workerUrl: configuration.workerUrl,
+    mediaBucket: configuration.mediaBucket,
+    taskInvokerServiceAccount: configuration.taskInvokerServiceAccount,
+  }
+  : null;
+const store = google
+  ? createFirestoreStore(google.projectId, configuration.firestoreDatabase)
+  : new InMemoryUserStateStore();
+const taskScheduler = google
+  ? createGoogleTaskScheduler({
+    projectId: google.projectId,
+    location: configuration.taskLocation,
+    queue: configuration.wearCastQueue,
+    workerUrl: google.workerUrl ?? undefined,
+    serviceAccountEmail: google.taskInvokerServiceAccount,
+  })
+  : undefined;
+const eventPublisher = google && configuration.role !== "edge"
+  ? createGoogleEventPublisher(google.projectId, configuration.eventsTopic)
+  : undefined;
+const mediaStore = google && configuration.role !== "worker" && google.mediaBucket
+  ? createGoogleMediaStore(google.projectId, google.mediaBucket)
+  : undefined;
+const forecastProvider = google && configuration.role !== "edge"
+  ? new GoogleWeatherForecastAdapter({
+    latitude: configuration.weatherLatitude,
+    longitude: configuration.weatherLongitude,
+    locationLabel: "Kampala",
+  })
+  : undefined;
+
+const server = createServer(createYangeApi({
+  configuration,
+  store,
+  logger,
+  webRoot,
+  taskScheduler,
+  eventPublisher,
+  mediaStore,
+  forecastProvider,
+}));
+
+server.listen(port, "0.0.0.0", () => {
+  logger.write("NOTICE", "service.started", {
+    component: "yange-api",
+    port,
+    mode: configuration.mode,
+    role: configuration.role,
+  });
+});
+
+function shutdown(signal: string): void {
+  logger.write("NOTICE", "service.stopping", { component: "yange-api", signal });
+  server.close((error) => {
+    if (error) {
+      logger.write("ERROR", "service.stop_failed", { component: "yange-api", error: error.message });
+      process.exitCode = 1;
+    }
+  });
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

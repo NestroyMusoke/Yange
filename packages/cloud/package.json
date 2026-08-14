@@ -1,0 +1,30 @@
+{
+  "name": "@yange/cloud",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.11.5",
+    "@google-cloud/pubsub": "^4.11.0",
+    "@google-cloud/storage": "^7.16.0",
+    "@google-cloud/tasks": "^6.2.1",
+    "@google/genai": "^1.32.0",
+    "@yange/contracts": "0.1.0",
+    "@yange/domain": "0.1.0",
+    "@yange/orchestrator": "0.1.0",
+    "google-auth-library": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

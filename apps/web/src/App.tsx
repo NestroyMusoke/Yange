@@ -5,6 +5,7 @@ import type {
   PreferenceSignal,
 } from "@yange/domain";
 import { Atelier } from "./features/intelligence/Atelier";
+import { CloudProof } from "./features/cloud/CloudProof";
 import { WardrobeStudio } from "./features/studio/WardrobeStudio";
 import { WearCast } from "./features/wearcast/WearCast";
 import { useYange } from "./useYange";
@@ -74,7 +75,7 @@ export function App() {
     runWearCast,
     reset,
   } = useYange();
-  const [activeView, setActiveView] = useState<"today" | "studio" | "atelier" | "wearcast" | "activity">("today");
+  const [activeView, setActiveView] = useState<"today" | "studio" | "atelier" | "wearcast" | "cloud" | "activity">("today");
   const todayOutfit = state.outfits["today-city-calm"];
   const fridayOutfit = state.outfits["friday-rooftop"];
   const todayGarments = todayOutfit.garmentIds.map((id) => state.garments[id]);
@@ -163,6 +164,14 @@ export function App() {
             {(wearCastDecision.risks.length > 0 || autonomyExecution?.status === "failed") && (
               <span className="count">{wearCastDecision.risks.length || "!"}</span>
             )}
+          </button>
+          <button
+            type="button"
+            className={activeView === "cloud" ? "active" : ""}
+            onClick={() => setActiveView("cloud")}
+          >
+            Cloud proof
+            <span className="proof-dot" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -352,6 +361,8 @@ export function App() {
             onStage={stageWearCastPressure}
             onRun={runWearCast}
           />
+        ) : activeView === "cloud" ? (
+          <CloudProof />
         ) : (
           <section className="activity-panel">
             <div className="section-heading">
@@ -394,8 +405,8 @@ export function App() {
       </main>
 
       <footer>
-        <span>Phase 4 · Autonomous WearCast operations</span>
-        <span>Private local adapter · no cloud credentials connected</span>
+        <span>Phase 5 · Production cloud boundary</span>
+        <span>Local rehearsal now · Google credentials only at deployment</span>
       </footer>
     </div>
   );

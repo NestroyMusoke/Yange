@@ -128,6 +128,8 @@ Verification evidence:
 
 ## Phase 5 — Google Cloud adapters and production hardening
 
+**Status:** Complete and verified locally. Deployment proof awaits the user's funded Google Cloud project.
+
 **Goal:** Connect the finished local system to the required hackathon stack.
 
 Deliverables:
@@ -148,6 +150,17 @@ Credential step:
 - Deploy and run integration tests
 
 No application source should require credentials to compile or run in local mode.
+
+Verification evidence:
+
+- Public edge, private worker, and private Google ADK service are independently deployable Cloud Run roles
+- Firestore commits event ledger, projection, and transactional outbox records atomically
+- Cloud Tasks, Scheduler, Pub/Sub ordering, retry, and dead-letter policies are defined as validated Terraform
+- Gemini multimodal/explanation adapters use schema-constrained Vertex AI output and preserve deterministic authority
+- Service identities, private media, Secret Manager, OIDC, readiness checks, structured logs, and trace correlation are explicit
+- The Cloud Proof UI produces a judge-readable six-checkpoint server receipt and honestly labels local versus Google mode
+- All 56 automated tests (54 TypeScript + 2 ADK policy), strict type checking, production builds, Terraform validation, and high-severity audit pass
+- See `docs/phase-5-spec.md`, `docs/phase-5-verification.md`, and `docs/google-cloud-setup.md`
 
 ## Phase 6 — Style Aura, performance, demo, and submission readiness
 

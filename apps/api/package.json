@@ -1,0 +1,26 @@
+{
+  "name": "@yange/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.mjs",
+    "build": "tsc -p tsconfig.json --noEmit && esbuild ./src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.mjs --external:@google-cloud/* --external:@google/genai --external:google-auth-library --external:googleapis",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@yange/cloud": "0.1.0",
+    "@yange/contracts": "0.1.0",
+    "@yange/domain": "0.1.0",
+    "@yange/orchestrator": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "esbuild": "^0.25.9",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

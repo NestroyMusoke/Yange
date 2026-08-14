@@ -13,7 +13,7 @@ function readAll(): Record<string, WearCastExecution> {
   }
 }
 
-export const localWorkflowRepository: WorkflowRepository = {
+export const localWorkflowRepository = {
   read(triggerId) {
     return structuredClone(readAll()[triggerId] ?? null);
   },
@@ -32,4 +32,4 @@ export const localWorkflowRepository: WorkflowRepository = {
   reset() {
     window.localStorage.removeItem(WORKFLOW_KEY);
   },
-};
+} satisfies WorkflowRepository;

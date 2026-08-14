@@ -1,0 +1,42 @@
+steps:
+  - id: test
+    name: node:22-bookworm-slim
+    entrypoint: npm
+    args: ["ci"]
+  - id: verify
+    name: node:22-bookworm-slim
+    entrypoint: npm
+    args: ["test"]
+    waitFor: ["test"]
+  - id: typecheck
+    name: node:22-bookworm-slim
+    entrypoint: npm
+    args: ["run", "typecheck"]
+    waitFor: ["test"]
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --tag
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/yange-api:$SHORT_SHA
+      - .
+    waitFor: ["verify", "typecheck"]
+  - id: build-agent
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --tag
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/yange-steward:$SHORT_SHA
+      - services/yange_steward
+    waitFor: ["verify", "typecheck"]
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/yange-api:$SHORT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/yange-steward:$SHORT_SHA
+
+substitutions:
+  _REGION: africa-south1
+  _REPOSITORY: yange
+
+options:
+  logging: CLOUD_LOGGING_ONLY
