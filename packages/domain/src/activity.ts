@@ -26,11 +26,21 @@ export function deriveActivity(
             airing: "sent for airing",
             available: "returned to availability",
           };
+          const reservation = event.payload.reason === "outfit-reservation";
+          const laundryQueued = event.payload.reason === "laundry-queued";
           return {
             id: event.id,
             occurredAt: event.occurredAt,
-            title: garment?.name ?? "Garment assessed",
-            detail: stateLabels[event.payload.to] ?? `changed to ${event.payload.to}`,
+            title: reservation
+              ? "Outfit dependency reserved"
+              : laundryQueued
+                ? "Laundry basket updated"
+                : garment?.name ?? "Garment assessed",
+            detail: reservation
+              ? `${garment?.name ?? "Garment"} is protected for a planned outfit.`
+              : laundryQueued
+                ? `${garment?.name ?? "Garment"} entered the safe-clustering flow.`
+                : stateLabels[event.payload.to] ?? `changed to ${event.payload.to}`,
             tone: event.payload.to === "laundry" ? "warning" : "positive",
           };
         }
@@ -81,6 +91,15 @@ export function deriveActivity(
             title: "Inspiration decoded",
             detail: `${event.payload.look.name} became reusable Look DNA without copying the person in the image.`,
             tone: "neutral",
+          };
+        }
+        case "OutfitPlanned": {
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Outfit plan committed",
+            detail: `${event.payload.outfit.name} reserved ${event.payload.outfit.dependencies.length} real wardrobe dependencies at ${event.payload.outfit.personalMatch}% Personal Match.`,
+            tone: "positive",
           };
         }
       }

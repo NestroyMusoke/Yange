@@ -1,11 +1,13 @@
 import { applyEvent } from "./projection";
 import { isGarmentUsable } from "./readiness";
+import { generateOutfitCandidates } from "./outfitPlanning";
 import type {
   DomainEvent,
   EvidenceMeta,
   Garment,
   GarmentState,
   LookDna,
+  OutfitCandidate,
   PostWearMode,
   StyleProfile,
   TwinState,
@@ -283,4 +285,118 @@ export function captureLookDna(
       payload: { look: structuredClone(input.look) },
     },
   ];
+}
+
+export interface PlanOutfitInput {
+  candidate: OutfitCandidate;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function planOutfit(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: PlanOutfitInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const verified = generateOutfitCandidates(state, input.candidate.context, 12).find(
+    (candidate) => candidate.id === input.candidate.id,
+  );
+  if (!verified) {
+    throw new DomainError("This outfit is no longer feasible with current wardrobe availability.");
+  }
+  if (
+    verified.personalMatch !== input.candidate.personalMatch ||
+    JSON.stringify(verified.garmentIds) !== JSON.stringify(input.candidate.garmentIds)
+  ) {
+    throw new DomainError("The outfit candidate does not match the deterministic plan.");
+  }
+  const outfitId = `planned-${verified.id}`;
+  if (state.outfits[outfitId]) throw new DomainError("This outfit has already been planned.");
+  const outfit = {
+    id: outfitId,
+    name: verified.name,
+    occasion: verified.context.calendar.title,
+    scheduledFor: verified.context.calendar.startsAt,
+    garmentIds: verified.garmentIds,
+    status: "planned" as const,
+    personalMatch: verified.personalMatch,
+    styleSignals: verified.styleSignals,
+    source: "agent-planned" as const,
+    scheduledAt: verified.context.calendar.startsAt,
+    planningContext: structuredClone(verified.context),
+    scoreBreakdown: structuredClone(verified.scoreBreakdown),
+    engineVersion: verified.engineVersion,
+    dependencies: [...verified.garmentIds],
+  };
+  const events: DomainEvent[] = [
+    {
+      id: eventId(input.operationId, "outfit-planned"),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "OutfitPlanned",
+      payload: { outfit },
+    },
+  ];
+  verified.garmentIds.forEach((garmentId, index) => {
+    const garment = state.garments[garmentId];
+    if (!garment || !["available", "rewearable"].includes(garment.state)) {
+      throw new DomainError("A selected garment became unavailable before reservation.");
+    }
+    events.push({
+      id: eventId(input.operationId, `reservation-${index}`),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "GarmentStateChanged",
+      payload: {
+        garmentId,
+        from: garment.state,
+        to: "reserved",
+        wearsSinceWash: garment.wearsSinceWash,
+        reason: "outfit-reservation",
+      },
+    });
+  });
+  return events;
+}
+
+export interface QueueLaundryInput {
+  garmentIds: string[];
+  operationId: string;
+  occurredAt: string;
+}
+
+export function queueGarmentsForLaundry(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: QueueLaundryInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const garmentIds = [...new Set(input.garmentIds)];
+  if (!garmentIds.length || garmentIds.length > 20) {
+    throw new DomainError("Choose between 1 and 20 garments for laundry.");
+  }
+  const events: DomainEvent[] = [];
+  garmentIds.sort().forEach((garmentId, index) => {
+    const garment = state.garments[garmentId];
+    if (!garment) throw new DomainError(`Garment ${garmentId} not found.`);
+    if (garment.state === "laundry") return;
+    if (!["available", "rewearable", "airing"].includes(garment.state)) {
+      throw new DomainError(`${garment.name} cannot move to laundry from ${garment.state}.`);
+    }
+    events.push({
+      id: eventId(input.operationId, `laundry-${index}`),
+      operationId: input.operationId,
+      occurredAt: input.occurredAt,
+      type: "GarmentStateChanged",
+      payload: {
+        garmentId,
+        from: garment.state,
+        to: "laundry",
+        wearsSinceWash: garment.wearsSinceWash,
+        reason: "laundry-queued",
+      },
+    });
+  });
+  return events;
 }

@@ -68,9 +68,47 @@ User reviews and corrects field-level evidence
 Domain command validates provenance -> append-only event -> replayed twin
 ```
 
+### Phase 3 — auditable outfit planning
+
+```text
+Manual weather port + manual calendar port
+        |
+Validated, timestamped planning-context snapshot
+        |
+Pure constraint generator rejects unavailable dependencies
+        |
+Five deterministic factors -> Personal Match receipt
+        |
+Explanation-only adapter describes the completed result
+        |
+User selects candidate -> validated idempotent command
+        |
+OutfitPlanned + dependency reservation events -> replayed twin
+```
+
+The model boundary is downstream of the decision. Runtime parsing rejects responses that contain garment selection, state changes, actions, events, or a replacement score. An explanation outage therefore degrades prose only; ranked candidates, factor evidence, and planning remain operational.
+
+### Phase 3 — laundry safety graph
+
+```text
+Explicitly queued laundry garments
+        |
+Unknown / unreviewed care evidence -> fail-closed holdouts
+        |
+Confirmed care constraints -> incompatibility edges
+        |
+Stable graph colouring -> independent wash clusters
+        |
+Strictest bleach rule + per-garment drying routes
+        |
+Visible cluster evidence and separation trace
+```
+
+The clustering engine is pure TypeScript and deliberately conservative: extra loads are allowed; an incompatibility edge inside a recommended load is not.
+
 ### Replaceable model boundary
 
-`@yange/contracts` owns the versioned request, response, runtime parser, and analyzer port. The React experience depends on that boundary rather than a Gemini SDK. Phase 5 can add a Vertex AI adapter without changing domain commands, persisted events, or review UI.
+`@yange/contracts` owns the versioned multimodal and explanation requests, responses, runtime parsers, and adapter ports. The React experience depends on those boundaries rather than a Gemini SDK. Phase 5 can add Vertex AI adapters without changing domain commands, persisted events, scoring, or review UI.
 
 ### Split persistence
 

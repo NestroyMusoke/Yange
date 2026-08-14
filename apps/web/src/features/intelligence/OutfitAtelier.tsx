@@ -1,0 +1,305 @@
+import { useMemo, useState } from "react";
+import {
+  FakeGeminiExplanationAdapter,
+  ManualCalendarAdapter,
+  ManualWeatherAdapter,
+  OUTFIT_EXPLANATION_CONTRACT_VERSION,
+  planningContextFrom,
+  type OutfitExplanationV1,
+} from "@yange/contracts";
+import {
+  generateOutfitCandidates,
+  type DressCode,
+  type OutfitCandidate,
+  type PlanningOccasion,
+  type TwinState,
+  type WeatherCondition,
+} from "@yange/domain";
+import { GarmentPreview } from "./GarmentPreview";
+
+interface OutfitAtelierProps {
+  state: TwinState;
+  onPlan(candidate: OutfitCandidate): boolean;
+}
+
+interface ExplanationState {
+  status: "loading" | "ready" | "failed";
+  value?: OutfitExplanationV1;
+  error?: string;
+}
+
+const occasionOptions: Array<{ value: PlanningOccasion; label: string }> = [
+  { value: "creative-work", label: "Creative work" },
+  { value: "casual", label: "Casual day" },
+  { value: "dinner", label: "Dinner" },
+  { value: "formal", label: "Formal event" },
+  { value: "travel", label: "Travel" },
+];
+
+const dressOptions: Array<{ value: DressCode; label: string }> = [
+  { value: "relaxed", label: "Relaxed" },
+  { value: "smart-casual", label: "Smart casual" },
+  { value: "polished", label: "Polished" },
+  { value: "formal", label: "Formal" },
+];
+
+const conditions: Array<{ value: WeatherCondition; label: string }> = [
+  { value: "clear", label: "Clear" },
+  { value: "cloudy", label: "Cloudy" },
+  { value: "showers", label: "Passing showers" },
+  { value: "rain", label: "Rain" },
+  { value: "windy", label: "Windy" },
+];
+
+function CandidateCard({
+  candidate,
+  state,
+  explanation,
+  rank,
+  planned,
+  disabled,
+  onPlan,
+}: {
+  candidate: OutfitCandidate;
+  state: TwinState;
+  explanation: ExplanationState | undefined;
+  rank: number;
+  planned: boolean;
+  disabled: boolean;
+  onPlan(): void;
+}) {
+  return (
+    <article className={`candidate-card ${rank === 0 ? "candidate-leading" : ""}`}>
+      <div className="candidate-topline">
+        <span>{rank === 0 ? "Best deterministic match" : `Alternative ${rank + 1}`}</span>
+        <em>{candidate.engineVersion}</em>
+      </div>
+      <div className="candidate-heading">
+        <div>
+          <h3>{candidate.name}</h3>
+          <p>{candidate.context.calendar.title} · {candidate.context.weather.temperatureC}°C · {candidate.context.weather.condition}</p>
+        </div>
+        <div
+          className="candidate-score"
+          style={{ "--match": `${candidate.personalMatch * 3.6}deg` } as React.CSSProperties}
+          aria-label={`Personal Match ${candidate.personalMatch} percent`}
+        >
+          <strong>{candidate.personalMatch}</strong><span>%</span>
+        </div>
+      </div>
+
+      <div className="candidate-garments">
+        {candidate.garmentIds.map((id) => <GarmentPreview key={id} garment={state.garments[id]} compact />)}
+      </div>
+
+      <div className="factor-list">
+        {candidate.scoreBreakdown.map((entry) => (
+          <div className="factor-row" key={entry.key} title={entry.detail}>
+            <span>{entry.label}</span>
+            <div><i style={{ width: `${entry.score}%` }} /></div>
+            <strong>{entry.score}</strong>
+          </div>
+        ))}
+      </div>
+
+      <div className={`explanation-box explanation-${explanation?.status ?? "loading"}`}>
+        <span className="capture-kind">Explanation layer · never the decision</span>
+        {explanation?.status === "ready" && explanation.value ? (
+          <>
+            <strong>{explanation.value.headline}</strong>
+            <p>{explanation.value.rationale}</p>
+            {explanation.value.tradeoffs.length > 0 && (
+              <small>Trade-off: {explanation.value.tradeoffs[0]}</small>
+            )}
+          </>
+        ) : explanation?.status === "failed" ? (
+          <>
+            <strong>Explanation unavailable; score unaffected.</strong>
+            <p>{explanation.error} The deterministic factor receipt remains complete.</p>
+          </>
+        ) : (
+          <><strong>Writing a concise explanation…</strong><p>The ranked result is already complete.</p></>
+        )}
+      </div>
+
+      <div className="candidate-footer">
+        <div>
+          <strong>{candidate.garmentIds.length} wardrobe dependencies</strong>
+          <small>{candidate.constraintTrace.length} feasibility checks passed</small>
+        </div>
+        <button type="button" className="primary-action compact-action" disabled={disabled || planned} onClick={onPlan}>
+          {planned ? "Outfit reserved" : "Plan and reserve"}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
+  const [eventTitle, setEventTitle] = useState("Saturday rooftop dinner");
+  const [startsAt, setStartsAt] = useState("2026-08-15T19:00");
+  const [occasion, setOccasion] = useState<PlanningOccasion>("dinner");
+  const [dressCode, setDressCode] = useState<DressCode>("polished");
+  const [temperatureC, setTemperatureC] = useState(24);
+  const [rain, setRain] = useState(55);
+  const [condition, setCondition] = useState<WeatherCondition>("showers");
+  const [inspirationLookId, setInspirationLookId] = useState("");
+  const [candidates, setCandidates] = useState<OutfitCandidate[]>([]);
+  const [explanations, setExplanations] = useState<Record<string, ExplanationState>>({});
+  const [generating, setGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [plannedCandidateId, setPlannedCandidateId] = useState<string | null>(null);
+  const explainer = useMemo(() => new FakeGeminiExplanationAdapter({ latencyMs: 520 }), []);
+  const unavailableCount = Object.values(state.garments).filter((garment) =>
+    ["laundry", "drying", "airing", "reserved"].includes(garment.state),
+  ).length;
+
+  async function explain(generated: OutfitCandidate[]): Promise<void> {
+    const initial = Object.fromEntries(
+      generated.map((candidate) => [candidate.id, { status: "loading" as const }]),
+    );
+    setExplanations(initial);
+    const results = await Promise.all(
+      generated.map(async (candidate): Promise<[string, ExplanationState]> => {
+        try {
+          const value = await explainer.explain({
+            contractVersion: OUTFIT_EXPLANATION_CONTRACT_VERSION,
+            requestId: `explanation-${crypto.randomUUID()}`,
+            candidate,
+          });
+          return [candidate.id, { status: "ready", value }];
+        } catch (cause) {
+          return [
+            candidate.id,
+            {
+              status: "failed",
+              error: cause instanceof Error ? cause.message : "Explanation failed.",
+            },
+          ];
+        }
+      }),
+    );
+    setExplanations(Object.fromEntries(results));
+  }
+
+  async function generate(failExplanation = false): Promise<void> {
+    setGenerating(true);
+    setGenerationError(null);
+    setPlannedCandidateId(null);
+    try {
+      if (!eventTitle.trim()) throw new Error("Give the occasion a name.");
+      const startsAtIso = new Date(startsAt).toISOString();
+      const now = new Date();
+      const context = await planningContextFrom(
+        new ManualWeatherAdapter({
+          source: "manual-weather-v1",
+          location: "Kampala",
+          observedAt: now.toISOString(),
+          temperatureC,
+          precipitationProbability: rain,
+          condition,
+        }),
+        new ManualCalendarAdapter({
+          source: "manual-calendar-v1",
+          eventId: `manual-${startsAtIso.replace(/\W/g, "")}`,
+          title: eventTitle.trim(),
+          startsAt: startsAtIso,
+          occasion,
+          dressCode,
+          notes: "User-supplied Phase 3 planning context",
+        }),
+        inspirationLookId || null,
+      );
+      const generated = generateOutfitCandidates(state, context, 3);
+      if (!generated.length) {
+        throw new Error("No complete look is feasible. Yange needs an available top, bottom, and pair of shoes.");
+      }
+      setCandidates(generated);
+      if (failExplanation) explainer.failNext();
+      void explain(generated);
+    } catch (cause) {
+      setCandidates([]);
+      setExplanations({});
+      setGenerationError(cause instanceof Error ? cause.message : "Planning failed.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function reserve(candidate: OutfitCandidate): void {
+    if (onPlan(candidate)) setPlannedCandidateId(candidate.id);
+  }
+
+  return (
+    <section className="intelligence-panel" aria-labelledby="outfit-atelier-title">
+      <div className="intelligence-heading">
+        <div>
+          <p className="eyebrow">Constraint-based outfit intelligence</p>
+          <h2 id="outfit-atelier-title">Set the moment. Audit the match.</h2>
+          <p>Yange ranks only feasible combinations, then shows exactly where every Personal Match point came from.</p>
+        </div>
+        <div className="engine-chip"><span /> Deterministic engine · v1</div>
+      </div>
+
+      <div className="planning-workbench">
+        <form className="context-console" onSubmit={(event) => { event.preventDefault(); void generate(); }}>
+          <div className="console-topline"><span>Manual context adapters</span><em>Replaceable ports</em></div>
+          <label className="field-group full-field"><span>What are you dressing for?</span><input value={eventTitle} maxLength={80} onChange={(event) => setEventTitle(event.target.value)} /></label>
+          <div className="context-grid">
+            <label className="field-group"><span>Starts</span><input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
+            <label className="field-group"><span>Occasion</span><select value={occasion} onChange={(event) => setOccasion(event.target.value as PlanningOccasion)}>{occasionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            <label className="field-group"><span>Dress code</span><select value={dressCode} onChange={(event) => setDressCode(event.target.value as DressCode)}>{dressOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            <label className="field-group"><span>Conditions</span><select value={condition} onChange={(event) => setCondition(event.target.value as WeatherCondition)}>{conditions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+          </div>
+          <div className="weather-controls">
+            <label><span>Temperature <strong>{temperatureC}°C</strong></span><input type="range" min="12" max="36" value={temperatureC} onChange={(event) => setTemperatureC(Number(event.target.value))} /></label>
+            <label><span>Rain chance <strong>{rain}%</strong></span><input type="range" min="0" max="100" value={rain} onChange={(event) => setRain(Number(event.target.value))} /></label>
+          </div>
+          <label className="field-group full-field"><span>Inspiration memory <small>Optional</small></span><select value={inspirationLookId} onChange={(event) => setInspirationLookId(event.target.value)}><option value="">No saved Look DNA</option>{Object.values(state.inspirationLooks).map((look) => <option key={look.id} value={look.id}>{look.name}</option>)}</select></label>
+          <button type="submit" className="primary-action" disabled={generating}>{generating ? "Evaluating constraints…" : "Generate auditable looks"}</button>
+          <button type="button" className="resilience-link" disabled={generating} onClick={() => void generate(true)}>Generate with explanation outage</button>
+        </form>
+
+        <aside className="decision-receipt">
+          <span className="capture-kind">Decision boundary</span>
+          <h3>The model never gets the steering wheel.</h3>
+          <ol>
+            <li><strong>1</strong><span>Domain constraints choose real garments.</span></li>
+            <li><strong>2</strong><span>Five weighted factors calculate the score.</span></li>
+            <li><strong>3</strong><span>The language adapter explains after the fact.</span></li>
+            <li><strong>4</strong><span>A validated command reserves dependencies.</span></li>
+          </ol>
+          <div className="receipt-metrics"><span><strong>{Object.keys(state.garments).length}</strong> pieces considered</span><span><strong>{unavailableCount}</strong> unavailable rejected</span></div>
+        </aside>
+      </div>
+
+      {generationError && <div className="error-banner atelier-error" role="alert"><strong>Planning stopped safely.</strong> {generationError}</div>}
+
+      {candidates.length > 0 ? (
+        <div className="candidate-results" aria-live="polite">
+          <div className="results-heading"><div><p className="eyebrow">Ranked decision set</p><h3>Three feasible answers—not infinite inspiration.</h3></div><span>{candidates.length} of max 120 combinations surfaced</span></div>
+          <div className="candidate-list">
+            {candidates.map((candidate, index) => (
+              <CandidateCard
+                key={candidate.id}
+                candidate={candidate}
+                state={state}
+                explanation={explanations[candidate.id]}
+                rank={index}
+                planned={plannedCandidateId === candidate.id}
+                disabled={plannedCandidateId !== null}
+                onPlan={() => reserve(candidate)}
+              />
+            ))}
+          </div>
+          {plannedCandidateId && <div className="success-banner" role="status"><div><strong>Plan committed to the Digital Twin.</strong><span>Every dependency is reserved through replayable domain events.</span></div></div>}
+        </div>
+      ) : (
+        <div className="atelier-empty">
+          <div aria-hidden="true"><i /><i /><i /></div>
+          <section><span>Awaiting context</span><h3>A recommendation should be a decision receipt.</h3><p>Set the occasion and Kampala weather above. Yange will expose feasibility, score factors, trade-offs, and reservation events.</p></section>
+        </div>
+      )}
+    </section>
+  );
+}

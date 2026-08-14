@@ -4,6 +4,7 @@ import type {
   GarmentState,
   PreferenceSignal,
 } from "@yange/domain";
+import { Atelier } from "./features/intelligence/Atelier";
 import { WardrobeStudio } from "./features/studio/WardrobeStudio";
 import { useYange } from "./useYange";
 
@@ -62,9 +63,11 @@ export function App() {
     addWardrobeItem,
     saveStyleProfile,
     saveLookDna,
+    planCandidate,
+    queueLaundry,
     reset,
   } = useYange();
-  const [activeView, setActiveView] = useState<"today" | "studio" | "activity">("today");
+  const [activeView, setActiveView] = useState<"today" | "studio" | "atelier" | "activity">("today");
   const todayOutfit = state.outfits["today-city-calm"];
   const fridayOutfit = state.outfits["friday-rooftop"];
   const todayGarments = todayOutfit.garmentIds.map((id) => state.garments[id]);
@@ -144,6 +147,18 @@ export function App() {
             Wardrobe studio
             {Object.keys(state.inspirationLooks).length > 0 && (
               <span className="count">{Object.keys(state.inspirationLooks).length}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={activeView === "atelier" ? "active" : ""}
+            onClick={() => setActiveView("atelier")}
+          >
+            Decision atelier
+            {Object.values(state.outfits).some((outfit) => outfit.source === "agent-planned") && (
+              <span className="count">
+                {Object.values(state.outfits).filter((outfit) => outfit.source === "agent-planned").length}
+              </span>
             )}
           </button>
           <button
@@ -294,6 +309,12 @@ export function App() {
             onSaveStyle={saveStyleProfile}
             onSaveLook={saveLookDna}
           />
+        ) : activeView === "atelier" ? (
+          <Atelier
+            state={state}
+            onPlan={planCandidate}
+            onQueueLaundry={queueLaundry}
+          />
         ) : (
           <section className="activity-panel">
             <div className="section-heading">
@@ -336,7 +357,7 @@ export function App() {
       </main>
 
       <footer>
-        <span>Phase 2 · Multimodal Wardrobe Studio</span>
+        <span>Phase 3 · Auditable outfit and care intelligence</span>
         <span>Private local adapter · no cloud credentials connected</span>
       </footer>
     </div>

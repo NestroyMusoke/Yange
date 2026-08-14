@@ -111,6 +111,14 @@ export function applyEvent(state: TwinState, event: DomainEvent): TwinState {
           [event.payload.look.id]: structuredClone(event.payload.look),
         },
       };
+    case "OutfitPlanned":
+      return {
+        ...state,
+        outfits: {
+          ...state.outfits,
+          [event.payload.outfit.id]: structuredClone(event.payload.outfit),
+        },
+      };
   }
 }
 

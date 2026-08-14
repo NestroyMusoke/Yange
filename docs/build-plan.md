@@ -63,6 +63,8 @@ Verification evidence:
 
 ## Phase 3 — Outfit intelligence and safe laundry planning
 
+**Status:** Complete and verified locally. Google credentials are intentionally not required.
+
 **Goal:** Generate explainable personalised looks and material-safe laundry clusters.
 
 Deliverables:
@@ -79,6 +81,16 @@ Exit criteria:
 - Scores can be reproduced from stored inputs
 - A language-model response cannot directly mutate garment state
 - Confirmed incompatible care instructions never share a recommended load
+
+Verification evidence:
+
+- Identical state and context produce identical candidate IDs, rankings, and factor receipts
+- Laundry, drying, airing, and reserved pieces are excluded before scoring
+- Injected explanation failure leaves every deterministic candidate and score usable
+- Four staged laundry pieces form three conflict-free loads with five visible separation edges
+- Planning persists one outfit event and one reservation event per dependency across reload
+- All 27 automated tests, strict type checking, production build, high-severity dependency audit, desktop walkthrough, and 390 px responsive checks pass
+- See `docs/phase-3-verification.md` for the reproducible record
 
 ## Phase 4 — Autonomous WearCast and Laundry Window Optimizer
 

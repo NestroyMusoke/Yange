@@ -6,12 +6,15 @@ import {
   createSeedState,
   deriveActivity,
   markOutfitWorn,
+  planOutfit as planOutfitCommand,
+  queueGarmentsForLaundry as queueGarmentsForLaundryCommand,
   recordConfidence,
   replayEvents,
   updateStyleProfile as updateStyleProfileCommand,
   type DomainEvent,
   type Garment,
   type LookDna,
+  type OutfitCandidate,
   type StyleProfile,
 } from "@yange/domain";
 import { localEventRepository } from "./storage";
@@ -135,6 +138,38 @@ export function useYange() {
     }
   }
 
+  function planCandidate(candidate: OutfitCandidate): boolean {
+    try {
+      commit(
+        planOutfitCommand(state, ledger, {
+          candidate,
+          operationId: operationId("plan-outfit"),
+          occurredAt: new Date().toISOString(),
+        }),
+      );
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to reserve this outfit.");
+      return false;
+    }
+  }
+
+  function queueLaundry(garmentIds: string[]): boolean {
+    try {
+      commit(
+        queueGarmentsForLaundryCommand(state, ledger, {
+          garmentIds,
+          operationId: operationId("queue-laundry"),
+          occurredAt: new Date().toISOString(),
+        }),
+      );
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to update the laundry basket.");
+      return false;
+    }
+  }
+
   return {
     state,
     ledger,
@@ -146,6 +181,8 @@ export function useYange() {
     addWardrobeItem,
     saveStyleProfile,
     saveLookDna,
+    planCandidate,
+    queueLaundry,
     reset,
   };
 }

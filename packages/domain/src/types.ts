@@ -15,6 +15,11 @@ export type GarmentCategory =
 
 export type PostWearMode = "wash" | "rewearable" | "airing" | "available";
 
+export type GarmentStateChangeReason =
+  | PostWearMode
+  | "outfit-reservation"
+  | "laundry-queued";
+
 export type EvidenceProvenance =
   | "user-confirmed"
   | "label-extracted"
@@ -145,6 +150,81 @@ export interface LookDna {
   createdAt: string;
 }
 
+export type PlanningOccasion =
+  | "creative-work"
+  | "casual"
+  | "dinner"
+  | "formal"
+  | "travel";
+
+export type DressCode =
+  | "relaxed"
+  | "smart-casual"
+  | "polished"
+  | "formal";
+
+export type WeatherCondition =
+  | "clear"
+  | "cloudy"
+  | "showers"
+  | "rain"
+  | "windy";
+
+export interface WeatherSnapshot {
+  source: string;
+  location: string;
+  observedAt: string;
+  temperatureC: number;
+  precipitationProbability: number;
+  condition: WeatherCondition;
+}
+
+export interface CalendarSnapshot {
+  source: string;
+  eventId: string;
+  title: string;
+  startsAt: string;
+  occasion: PlanningOccasion;
+  dressCode: DressCode;
+  notes: string;
+}
+
+export interface PlanningContext {
+  version: 1;
+  weather: WeatherSnapshot;
+  calendar: CalendarSnapshot;
+  inspirationLookId: string | null;
+}
+
+export type MatchFactorKey =
+  | "availability"
+  | "colour"
+  | "style-memory"
+  | "context"
+  | "care-practicality";
+
+export interface MatchFactor {
+  key: MatchFactorKey;
+  label: string;
+  score: number;
+  weight: number;
+  weightedPoints: number;
+  evidence: string[];
+  detail: string;
+}
+
+export interface OutfitCandidate {
+  id: string;
+  engineVersion: "personal-match-v1";
+  name: string;
+  garmentIds: string[];
+  personalMatch: number;
+  scoreBreakdown: MatchFactor[];
+  styleSignals: string[];
+  context: PlanningContext;
+  constraintTrace: string[];
+}
+
 export interface Outfit {
   id: string;
   name: string;
@@ -154,6 +234,65 @@ export interface Outfit {
   status: "planned" | "worn";
   personalMatch: number;
   styleSignals: string[];
+  source: "seed" | "agent-planned";
+  scheduledAt: string | null;
+  planningContext: PlanningContext | null;
+  scoreBreakdown: MatchFactor[];
+  engineVersion: "seed" | "personal-match-v1";
+  dependencies: string[];
+}
+
+export type LaundryHoldoutReason =
+  | "wash-unknown"
+  | "care-needs-review"
+  | "drying-unknown"
+  | "bleach-unknown"
+  | "professional-care";
+
+export type LaundryConflictRule =
+  | "wash-method"
+  | "colour-family"
+  | "wash-separately"
+  | "similar-colours";
+
+export type LaundryColourFamily = "light" | "dark" | "vivid" | "neutral";
+
+export interface LaundryHoldout {
+  garmentId: string;
+  reason: LaundryHoldoutReason;
+  detail: string;
+}
+
+export interface LaundryIncompatibilityEdge {
+  leftGarmentId: string;
+  rightGarmentId: string;
+  rules: LaundryConflictRule[];
+  detail: string;
+}
+
+export interface LaundryDryingRoute {
+  method: Exclude<DryMethod, "unknown">;
+  garmentIds: string[];
+  instruction: string;
+}
+
+export interface LaundryCluster {
+  id: string;
+  washMethod: Exclude<WashMethod, "unknown" | "dry-clean">;
+  bleachMethod: Exclude<BleachMethod, "unknown">;
+  colourFamily: LaundryColourFamily;
+  garmentIds: string[];
+  dryingRoutes: LaundryDryingRoute[];
+  instruction: string;
+  safetyBasis: string[];
+}
+
+export interface LaundryPlan {
+  engineVersion: "laundry-graph-v1";
+  inputGarmentIds: string[];
+  clusters: LaundryCluster[];
+  holdouts: LaundryHoldout[];
+  incompatibilityEdges: LaundryIncompatibilityEdge[];
 }
 
 export interface ConfidenceFeedback {
@@ -205,7 +344,7 @@ export type DomainEvent =
         from: GarmentState;
         to: GarmentState;
         wearsSinceWash: number;
-        reason: PostWearMode;
+        reason: GarmentStateChangeReason;
       };
     })
   | (EventEnvelope & {
@@ -231,6 +370,10 @@ export type DomainEvent =
   | (EventEnvelope & {
       type: "LookDnaCaptured";
       payload: { look: LookDna };
+    })
+  | (EventEnvelope & {
+      type: "OutfitPlanned";
+      payload: { outfit: Outfit };
     });
 
 export interface ReadinessResult {
