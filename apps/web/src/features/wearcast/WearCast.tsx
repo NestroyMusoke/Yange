@@ -154,7 +154,8 @@ export function WearCast({
   onStage,
   onRun,
 }: WearCastProps) {
-  const pressureStaged = decision.capacity.triggered || decision.risks.length > 0;
+  const pressureStaged = decision.capacity.triggered;
+  const triggerReady = pressureStaged || decision.risks.length > 0;
   const failed = execution?.status === "failed";
   const complete = execution?.status === "completed";
   const notifications = Object.values(state.autonomy.notifications).sort(
@@ -198,8 +199,8 @@ export function WearCast({
             <span>02</span><div><strong>Fire scheduler</strong><small>Simulate, commit, notify</small></div>
             {!execution ? (
               <div className="trigger-actions">
-                <button type="button" onClick={() => void onRun(false)} disabled={!pressureStaged || running}>{running ? "Running…" : "Run normally"}</button>
-                <button type="button" onClick={() => void onRun(true)} disabled={!pressureStaged || running}>Inject outage</button>
+                <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Running…" : "Run normally"}</button>
+                <button type="button" onClick={() => void onRun(true)} disabled={!triggerReady || running}>Inject outage</button>
               </div>
             ) : <em>{execution.status}</em>}
           </div>

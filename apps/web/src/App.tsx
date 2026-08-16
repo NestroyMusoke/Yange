@@ -6,6 +6,10 @@ import type {
 } from "@yange/domain";
 import { Atelier } from "./features/intelligence/Atelier";
 import { CloudProof } from "./features/cloud/CloudProof";
+import { AuraControls } from "./features/aura/AuraControls";
+import { StyleAura, type AuraStatus } from "./features/aura/StyleAura";
+import { deriveStyleAuraProfile } from "./features/aura/palette";
+import { JudgeMode, type YangeView } from "./features/judge/JudgeMode";
 import { WardrobeStudio } from "./features/studio/WardrobeStudio";
 import { WearCast } from "./features/wearcast/WearCast";
 import { useYange } from "./useYange";
@@ -25,6 +29,16 @@ const stateLabels: Record<GarmentState, string> = {
   airing: "Airing",
   laundry: "Laundry",
   drying: "Drying",
+};
+
+const auraSceneTone: Record<YangeView, { energy: number; warmth: number }> = {
+  today: { energy: 0.83, warmth: 0.58 },
+  studio: { energy: 0.77, warmth: 0.7 },
+  atelier: { energy: 0.9, warmth: 0.54 },
+  wearcast: { energy: 0.96, warmth: 0.28 },
+  cloud: { energy: 1, warmth: 0.2 },
+  judge: { energy: 0.96, warmth: 0.48 },
+  activity: { energy: 0.72, warmth: 0.4 },
 };
 
 function garmentTone(garment: Garment): string {
@@ -75,7 +89,14 @@ export function App() {
     runWearCast,
     reset,
   } = useYange();
-  const [activeView, setActiveView] = useState<"today" | "studio" | "atelier" | "wearcast" | "cloud" | "activity">("today");
+  const [activeView, setActiveView] = useState<YangeView>(() =>
+    new URLSearchParams(window.location.search).get("mode") === "judge" ? "judge" : "today",
+  );
+  const [auraOpen, setAuraOpen] = useState(false);
+  const [auraEnergy, setAuraEnergy] = useState(0.72);
+  const [auraWarmth, setAuraWarmth] = useState(0.46);
+  const [auraStatus, setAuraStatus] = useState<AuraStatus>("starting");
+  const [auraFallbackForced, setAuraFallbackForced] = useState(false);
   const todayOutfit = state.outfits["today-city-calm"];
   const fridayOutfit = state.outfits["friday-rooftop"];
   const todayGarments = todayOutfit.garmentIds.map((id) => state.garments[id]);
@@ -96,17 +117,41 @@ export function App() {
   const fridayFallback = fridayRecovery
     ? state.outfits[fridayRecovery.fallbackOutfitId]
     : null;
+  const auraProfile = useMemo(() => deriveStyleAuraProfile(state), [state]);
+  const sceneTone = auraSceneTone[activeView];
+  const renderedAuraEnergy = Math.min(1, auraEnergy * sceneTone.energy);
+  const renderedAuraWarmth = Math.min(1, auraWarmth * 0.7 + sceneTone.warmth * 0.3);
 
   return (
-    <div className="app-shell">
+    <>
+      <StyleAura
+        profile={auraProfile}
+        energy={renderedAuraEnergy}
+        warmth={renderedAuraWarmth}
+        forcedFallback={auraFallbackForced}
+        onStatusChange={setAuraStatus}
+      />
+      <div className="app-shell">
       <header className="topbar">
         <a className="brand" href="#top" aria-label="Yange home">
           <span className="brand-mark" aria-hidden="true">Y</span>
           <span>Yange</span>
         </a>
-        <div className="profile-chip">
+        <div className="topbar-actions">
+          <AuraControls
+            profile={auraProfile}
+            status={auraStatus}
+            energy={auraEnergy}
+            warmth={auraWarmth}
+            open={auraOpen}
+            onToggle={() => setAuraOpen((current) => !current)}
+            onEnergyChange={setAuraEnergy}
+            onWarmthChange={setAuraWarmth}
+          />
+          <div className="profile-chip">
           <span className="profile-dot" aria-hidden="true" />
           Amina · Kampala
+          </div>
         </div>
       </header>
 
@@ -172,6 +217,14 @@ export function App() {
           >
             Cloud proof
             <span className="proof-dot" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={activeView === "judge" ? "active" : ""}
+            onClick={() => setActiveView("judge")}
+          >
+            Judge mode
+            <span className="judge-tab-mark" aria-hidden="true">✦</span>
           </button>
           <button
             type="button"
@@ -363,6 +416,20 @@ export function App() {
           />
         ) : activeView === "cloud" ? (
           <CloudProof />
+        ) : activeView === "judge" ? (
+          <JudgeMode
+            state={state}
+            readiness={readiness}
+            decision={wearCastDecision}
+            execution={autonomyExecution}
+            ledgerLength={ledger.length}
+            auraProfile={auraProfile}
+            auraStatus={auraStatus}
+            auraFallbackForced={auraFallbackForced}
+            onNavigate={setActiveView}
+            onReset={reset}
+            onToggleAuraFailure={() => setAuraFallbackForced((current) => !current)}
+          />
         ) : (
           <section className="activity-panel">
             <div className="section-heading">
@@ -405,9 +472,10 @@ export function App() {
       </main>
 
       <footer>
-        <span>Phase 5 · Production cloud boundary</span>
-        <span>Local rehearsal now · Google credentials only at deployment</span>
+        <span>Phase 6 · Submission-ready agent experience</span>
+        <span>Learned Style Aura · deterministic judge mode · Google-ready boundary</span>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

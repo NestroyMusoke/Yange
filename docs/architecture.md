@@ -198,3 +198,24 @@ Firestore stores four evidence surfaces under each opaque user partition: immuta
 - Future simulation clones its inputs and cannot write the event ledger.
 - Forecast heuristics express suitability and uncertainty, never a guaranteed drying completion time.
 - Workflow retries are idempotent even when the underlying scheduler or message transport delivers more than once.
+
+## Phase 6 — presentation and proof boundary
+
+Style Aura is deliberately downstream of product state. A pure palette function reads explicit colour preferences, confirmed inspiration palettes, positive confidence signals, and confirmed garment colours. The WebGL process receives only four colour targets plus energy/warmth settings. It has no event repository, command dispatcher, media repository, or network adapter.
+
+```mermaid
+flowchart LR
+  Events["Append-only events"] --> Twin["Replayed TwinState"]
+  Twin --> Product["Functional React surfaces"]
+  Twin --> Palette["Pure Style Aura palette"]
+  Palette --> WebGL["Disposable WebGL canvas"]
+  WebGL -->|"context loss"| Still["Static accessible fallback"]
+  Product --> Commands["Validated commands"]
+  Commands --> Events
+```
+
+The renderer clears and redraws every frame; it does not accumulate state in a framebuffer. Sustained frame pressure reduces only its drawing-buffer scale. A hidden tab pauses it, reduced-motion freezes it, and a lost context replaces it with a still composition while every product control remains mounted.
+
+Judge Mode is another read-only proof surface. Its six lights derive from committed media references, Look DNA, an agent-planned outfit, Confidence Check-in memory, WearCast risk projection, and workflow completion. It can navigate to the feature that creates each proof, reset the deterministic demo repositories, or disconnect the disposable renderer. It cannot directly mark a proof complete.
+
+For the presentation-ready diagram, see [Yange production architecture](assets/yange-architecture.svg).

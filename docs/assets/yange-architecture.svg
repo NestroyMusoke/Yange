@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="title description">
+  <title id="title">Yange production architecture</title>
+  <desc id="description">A diagram of the browser experience, public edge, private worker, deterministic domain, durable state, Google integrations, and isolated Style Aura.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#09100e"/>
+      <stop offset="0.58" stop-color="#111713"/>
+      <stop offset="1" stop-color="#16121b"/>
+    </linearGradient>
+    <linearGradient id="browserGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#253427"/>
+      <stop offset="1" stop-color="#171b19"/>
+    </linearGradient>
+    <linearGradient id="cloudGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172a28"/>
+      <stop offset="1" stop-color="#171b1a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000000" flood-opacity="0.32"/>
+    </filter>
+    <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#829989"/>
+    </marker>
+    <style>
+      .eyebrow { font: 700 14px Inter, Arial, sans-serif; letter-spacing: 3px; fill: #ddcfb3; }
+      .title { font: 400 56px Georgia, serif; letter-spacing: -2px; fill: #f4f0e8; }
+      .subtitle { font: 400 17px Inter, Arial, sans-serif; fill: #9da59f; }
+      .zone-title { font: 700 13px Inter, Arial, sans-serif; letter-spacing: 2px; fill: #d7c9ac; }
+      .node-title { font: 600 18px Inter, Arial, sans-serif; fill: #f0ece3; }
+      .node-copy { font: 400 13px Inter, Arial, sans-serif; fill: #9ea69f; }
+      .micro { font: 600 11px Inter, Arial, sans-serif; letter-spacing: 1px; fill: #aab7ae; }
+      .box { stroke: #ffffff; stroke-opacity: .10; stroke-width: 1; }
+      .line { fill: none; stroke: #829989; stroke-opacity: .75; stroke-width: 1.6; marker-end: url(#arrow); }
+      .line-dashed { fill: none; stroke: #a17dab; stroke-opacity: .72; stroke-width: 1.5; stroke-dasharray: 7 7; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#background)"/>
+  <circle cx="1395" cy="105" r="270" fill="#436f68" opacity=".07"/>
+  <circle cx="90" cy="820" r="330" fill="#755483" opacity=".06"/>
+
+  <g transform="translate(66 62)">
+    <text class="eyebrow" x="0" y="0">YANGE · PRODUCTION SYSTEM</text>
+    <text class="title" x="0" y="64">A wardrobe agent with evidence at every boundary.</text>
+    <text class="subtitle" x="0" y="101">Public experience → durable orchestration → deterministic decisions → private Google execution</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect class="box" x="66" y="210" width="372" height="520" rx="30" fill="url(#browserGlow)"/>
+    <rect class="box" x="474" y="210" width="478" height="520" rx="30" fill="#151a18"/>
+    <rect class="box" x="988" y="210" width="546" height="520" rx="30" fill="url(#cloudGlow)"/>
+  </g>
+
+  <text class="zone-title" x="98" y="252">01 · RESPONSIVE EXPERIENCE</text>
+  <text class="zone-title" x="506" y="252">02 · DECISION &amp; ORCHESTRATION PLANE</text>
+  <text class="zone-title" x="1020" y="252">03 · PRIVATE GOOGLE EXECUTION</text>
+
+  <g>
+    <rect class="box" x="98" y="280" width="308" height="93" rx="17" fill="#1a211d"/>
+    <circle cx="126" cy="310" r="8" fill="#a7b98c" filter="url(#softGlow)"/>
+    <text class="node-title" x="148" y="316">React web experience</text>
+    <text class="node-copy" x="126" y="344">Capture · Today · Atelier · WearCast · Judge Mode</text>
+
+    <rect x="98" y="393" width="308" height="113" rx="17" fill="#171a1c" stroke="#9d75ae" stroke-opacity=".32" stroke-dasharray="7 6"/>
+    <text class="micro" x="126" y="425">ISOLATED PRESENTATION PROCESS</text>
+    <text class="node-title" x="126" y="456">Learned Style Aura</text>
+    <text class="node-copy" x="126" y="482">One-way palette read · WebGL → still fallback</text>
+
+    <rect class="box" x="98" y="526" width="146" height="78" rx="15" fill="#181d1a"/>
+    <text class="node-title" x="119" y="557">Event view</text>
+    <text class="node-copy" x="119" y="580">Replayable twin</text>
+    <rect class="box" x="260" y="526" width="146" height="78" rx="15" fill="#181d1a"/>
+    <text class="node-title" x="281" y="557">Private media</text>
+    <text class="node-copy" x="281" y="580">Opaque asset IDs</text>
+
+    <rect x="98" y="625" width="308" height="73" rx="15" fill="#20251f" stroke="#a7b98c" stroke-opacity=".22"/>
+    <text class="micro" x="126" y="654">CREDENTIAL-FREE REHEARSAL</text>
+    <text class="node-copy" x="126" y="679">Same versioned ports · deterministic local adapters</text>
+  </g>
+
+  <g>
+    <rect x="506" y="280" width="414" height="87" rx="17" fill="#1c2420" stroke="#a7b98c" stroke-opacity=".24"/>
+    <text class="micro" x="534" y="310">PUBLIC CLOUD RUN EDGE</text>
+    <text class="node-title" x="534" y="340">Validate session · sign media · enqueue intent</text>
+
+    <rect class="box" x="506" y="390" width="198" height="83" rx="16" fill="#181d1a"/>
+    <text class="node-title" x="531" y="422">Cloud Scheduler</text>
+    <text class="node-copy" x="531" y="447">Periodic horizon sweep</text>
+    <rect class="box" x="722" y="390" width="198" height="83" rx="16" fill="#181d1a"/>
+    <text class="node-title" x="747" y="422">Cloud Tasks</text>
+    <text class="node-copy" x="747" y="447">Stable name · OIDC</text>
+
+    <rect x="506" y="498" width="414" height="171" rx="19" fill="#1c2420" stroke="#79aba2" stroke-opacity=".26"/>
+    <text class="micro" x="534" y="528">PRIVATE CLOUD RUN WORKER</text>
+    <rect x="534" y="548" width="168" height="88" rx="14" fill="#222a23"/>
+    <text class="node-title" x="554" y="578">Orchestrator</text>
+    <text class="node-copy" x="554" y="602">6 checkpoints</text>
+    <text class="node-copy" x="554" y="620">retry + resume</text>
+    <rect x="720" y="548" width="172" height="88" rx="14" fill="#293126" stroke="#a7b98c" stroke-opacity=".18"/>
+    <text class="node-title" x="740" y="578">Domain engine</text>
+    <text class="node-copy" x="740" y="602">constraints + policy</text>
+    <text class="node-copy" x="740" y="620">only commit authority</text>
+  </g>
+
+  <g>
+    <rect class="box" x="1020" y="280" width="232" height="112" rx="17" fill="#172320"/>
+    <text class="node-title" x="1047" y="312">Firestore</text>
+    <text class="node-copy" x="1047" y="338">Immutable event ledger</text>
+    <text class="node-copy" x="1047" y="359">Projection · checkpoints · outbox</text>
+    <rect class="box" x="1270" y="280" width="232" height="112" rx="17" fill="#172320"/>
+    <text class="node-title" x="1297" y="312">Cloud Storage</text>
+    <text class="node-copy" x="1297" y="338">Private rewritten media</text>
+    <text class="node-copy" x="1297" y="359">Short-lived signed access</text>
+
+    <rect class="box" x="1020" y="412" width="232" height="99" rx="17" fill="#172320"/>
+    <text class="node-title" x="1047" y="444">Pub/Sub + DLQ</text>
+    <text class="node-copy" x="1047" y="470">Ordered audit events</text>
+    <text class="node-copy" x="1047" y="489">outbox-driven recovery</text>
+    <rect class="box" x="1270" y="412" width="232" height="99" rx="17" fill="#172320"/>
+    <text class="node-title" x="1297" y="444">Google context</text>
+    <text class="node-copy" x="1297" y="470">Weather · Calendar read-only</text>
+    <text class="node-copy" x="1297" y="489">timestamped snapshots</text>
+
+    <rect x="1020" y="531" width="232" height="138" rx="17" fill="#1b2027" stroke="#a17dab" stroke-opacity=".3"/>
+    <text class="node-title" x="1047" y="566">Vertex AI Gemini</text>
+    <text class="node-copy" x="1047" y="592">Schema-constrained Look DNA</text>
+    <text class="node-copy" x="1047" y="613">Explanation-only outfit prose</text>
+    <rect x="1047" y="632" width="175" height="20" rx="10" fill="#7c6687" opacity=".22"/>
+    <text class="micro" x="1061" y="646">PROPOSES · NEVER COMMITS</text>
+    <rect x="1270" y="531" width="232" height="138" rx="17" fill="#1b2422" stroke="#79aba2" stroke-opacity=".3"/>
+    <text class="node-title" x="1297" y="566">Google ADK Steward</text>
+    <text class="node-copy" x="1297" y="592">Inspect twin</text>
+    <text class="node-copy" x="1297" y="613">Request verified WearCast</text>
+    <rect x="1297" y="632" width="174" height="20" rx="10" fill="#568f87" opacity=".2"/>
+    <text class="micro" x="1311" y="646">2 NARROW OIDC TOOLS</text>
+  </g>
+
+  <path class="line" d="M406 326 C454 326 458 323 506 323"/>
+  <path class="line" d="M704 431 L722 431"/>
+  <path class="line" d="M821 473 L821 498"/>
+  <path class="line" d="M713 367 L713 390"/>
+  <path class="line" d="M920 584 C964 584 977 337 1020 337"/>
+  <path class="line" d="M920 576 C970 576 971 462 1020 462"/>
+  <path class="line" d="M920 592 C1000 592 1190 464 1270 464"/>
+  <path class="line" d="M1252 600 L1270 600"/>
+  <path class="line-dashed" d="M1020 600 C972 600 962 604 920 604"/>
+  <path class="line-dashed" d="M1270 600 C1218 706 972 705 892 636"/>
+  <path class="line" d="M1270 338 C1200 395 1030 696 920 650"/>
+
+  <g transform="translate(66 774)">
+    <rect width="1468" height="72" rx="18" fill="#f0e5cc"/>
+    <text x="30" y="30" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#272d28">SYSTEM LAW</text>
+    <text x="30" y="52" font-family="Georgia, serif" font-size="22" fill="#161a17">AI proposes. Validated domain rules commit.</text>
+    <line x1="506" y1="18" x2="506" y2="54" stroke="#263029" stroke-opacity=".18"/>
+    <text x="540" y="32" class="micro" fill="#3b443d">OBSERVABLE</text>
+    <text x="540" y="53" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5d665f">append-only evidence</text>
+    <text x="755" y="32" class="micro" fill="#3b443d">RESUMABLE</text>
+    <text x="755" y="53" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5d665f">durable checkpoints</text>
+    <text x="975" y="32" class="micro" fill="#3b443d">IDEMPOTENT</text>
+    <text x="975" y="53" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5d665f">stable operation keys</text>
+    <text x="1200" y="32" class="micro" fill="#3b443d">FAIL-CLOSED</text>
+    <text x="1200" y="53" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5d665f">uncertainty stays visible</text>
+  </g>
+</svg>

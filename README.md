@@ -2,9 +2,9 @@
 
 Yange is the wardrobe agent that learns what confidence looks like on you. Its name draws from the Luganda possessive *yange*—“my”—because the experience is built around my wardrobe, my preferences, and my confidence. Yange maintains a live Wardrobe Digital Twin, plans with real garment availability, and turns wear history into safer laundry and more personal outfit decisions.
 
-## Current build — Phase 5
+## Current build — Phase 6
 
-The first five vertical slices are complete. The full product and a production-shaped two-process cloud rehearsal run without credentials; Google adapters activate only at deployment. The build now includes:
+All six vertical slices are complete. The full product and a production-shaped two-process cloud rehearsal run without credentials; Google adapters activate only at deployment. The build now includes:
 
 - A responsive mobile-first product shell
 - An event-driven Wardrobe Digital Twin
@@ -45,6 +45,13 @@ The first five vertical slices are complete. The full product and a production-s
 - Secret Manager, least-privilege service identities, readiness gates, structured logs, and trace correlation
 - Terraform, Cloud Build, GitHub CI, immutable containers, and an intentionally capped scale-to-zero cost profile
 - A judge-facing Cloud Proof surface that distinguishes local rehearsal from deployed Google evidence
+- A learned Style Aura derived from chosen colours, inspiration palettes, confidence evidence, and confirmed garments
+- An isolated five-octave WebGL renderer with three drifting ribbons, inertial 12-point dye trails, scroll response, and view tone
+- Adaptive resolution, tab pausing, a frozen reduced-motion composition, and a non-WebGL still fallback
+- An inspectable Aura receipt with evidence strength, palette sources, energy, and warmth controls
+- A deterministic Judge Mode whose six proof lights read live events, projections, and workflow checkpoints
+- A four-minute in-product demo runway plus deliberate renderer and notification failure demonstrations
+- A polished production architecture asset, deployment evidence slots, submission checklist, and one-command verification script
 - Contract, domain, and browser image-pipeline tests
 
 The local model simulations are intentional. They make the complete workflow reproducible for contributors and judges; future Vertex AI adapters implement the same `@yange/contracts` interfaces.
@@ -64,18 +71,15 @@ To run the production-shaped edge and web together, still with no credentials:
 npm.cmd run dev:cloud
 ```
 
-Open `http://127.0.0.1:4173`, select **Cloud proof**, and run the server-side six-checkpoint rehearsal.
+Open `http://127.0.0.1:4173/?mode=judge` for the four-minute director. Select **Cloud proof** to run the server-side six-checkpoint rehearsal.
 
 ## Verify
 
 ```powershell
-npm.cmd test
-npm.cmd run typecheck
-npm.cmd run build
-npm.cmd audit --audit-level=high
+.\scripts\verify-phase6.ps1
 ```
 
-Phase 5 currently passes 56 automated tests (54 TypeScript and 2 ADK policy tests), strict TypeScript checks, production builds, Terraform 1.9.8 validation, and the high-severity dependency gate.
+Phase 6 passes 60 automated tests (58 TypeScript and 2 ADK policy tests), strict TypeScript checks, production builds, and the high-severity dependency gate. GitHub CI owns the Terraform 1.9.8 gate when the CLI is unavailable locally. The exact verification receipt is recorded in [docs/phase-6-verification.md](docs/phase-6-verification.md).
 
 ## Deploy to Google Cloud
 
@@ -91,4 +95,6 @@ The script builds and deploys the edge, private worker, and Google ADK service; 
 
 AI may propose actions; validated domain rules commit state. The domain package has no React, browser, Gemini, or Google Cloud dependencies. Images live in a media repository while events store opaque asset IDs, so the domain can later run behind Cloud Run without being rewritten.
 
-See [docs/build-plan.md](docs/build-plan.md), [docs/architecture.md](docs/architecture.md), [docs/phase-5-spec.md](docs/phase-5-spec.md), [docs/phase-5-verification.md](docs/phase-5-verification.md), and [docs/google-cloud-setup.md](docs/google-cloud-setup.md).
+![Yange production architecture](docs/assets/yange-architecture.svg)
+
+See [docs/build-plan.md](docs/build-plan.md), [docs/architecture.md](docs/architecture.md), [docs/phase-6-spec.md](docs/phase-6-spec.md), [docs/demo-runbook.md](docs/demo-runbook.md), [docs/submission-checklist.md](docs/submission-checklist.md), and [docs/google-cloud-setup.md](docs/google-cloud-setup.md).
