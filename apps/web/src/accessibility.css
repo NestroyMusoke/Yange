@@ -1,0 +1,93 @@
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.drop-surface:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+button,
+summary,
+.brand,
+.view-tabs button,
+.studio-steps button,
+.atelier-tabs button,
+.text-action,
+.secondary-action,
+.resilience-link,
+.fault-action,
+.demo-act-list li > button,
+.architecture-ending > button {
+  min-height: 44px;
+}
+
+button,
+summary {
+  touch-action: manipulation;
+}
+
+input,
+select,
+textarea {
+  min-height: 44px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+}
+
+input[type="range"] {
+  min-height: 44px;
+}
+
+.laundry-selector label,
+.review-confirmation,
+.height-field {
+  min-height: 44px;
+}
+
+.checkpoint-list .is-pending {
+  opacity: 1;
+}
+
+.checkpoint-list .is-pending > span,
+.checkpoint-list .is-pending small,
+.checkpoint-list .is-pending em,
+.proof-signal > span,
+.proof-signal small,
+.proof-signal > i,
+.judge-palette small,
+.aura-source-list dt,
+.manual-source,
+.candidate-heading p,
+.window-card > small,
+.outbox-footnote {
+  color: var(--text-secondary);
+}
+
+[aria-current="page"],
+[aria-current="step"],
+[aria-pressed="true"] {
+  text-decoration-line: underline;
+  text-decoration-color: var(--selection);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+@media (forced-colors: active) {
+  :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible,
+  .drop-surface:focus-within {
+    outline-color: Highlight;
+  }
+
+  [aria-current="page"],
+  [aria-current="step"],
+  [aria-pressed="true"] {
+    border-color: Highlight;
+  }
+}

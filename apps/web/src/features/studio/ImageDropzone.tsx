@@ -55,8 +55,8 @@ export function ImageDropzone({
     <article className={`capture-slot capture-${slot.status}`}>
       <div className="capture-heading">
         <div>
-          <span className="capture-kind">{optional ? "Optional evidence" : "Required image"}</span>
           <h3>{title}</h3>
+          <span className="capture-kind">{optional ? "Optional" : "Required"}</span>
         </div>
         {slot.asset && (
           <button type="button" className="text-action" onClick={onRemove} disabled={busy}>

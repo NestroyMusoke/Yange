@@ -158,7 +158,7 @@ export function App() {
       <main id="top">
         <section className="hero">
           <div>
-            <p className="eyebrow">Friday, 14 August · Kampala</p>
+            <time className="context-date" dateTime="2026-08-14">Friday, 14 August · Kampala</time>
             <h1>Your wardrobe, thinking ahead.</h1>
             <p className="hero-copy">
               One recommendation. Real availability. A memory that learns what
@@ -196,6 +196,7 @@ export function App() {
           <button
             type="button"
             className={activeView === "today" ? "active" : ""}
+            aria-current={activeView === "today" ? "page" : undefined}
             onClick={() => setActiveView("today")}
           >
             Today
@@ -203,6 +204,7 @@ export function App() {
           <button
             type="button"
             className={activeView === "wearcast" ? "active" : ""}
+            aria-current={activeView === "wearcast" ? "page" : undefined}
             onClick={() => setActiveView("wearcast")}
           >
             WearCast
@@ -213,6 +215,7 @@ export function App() {
           <button
             type="button"
             className={activeView === "cloud" ? "active" : ""}
+            aria-current={activeView === "cloud" ? "page" : undefined}
             onClick={() => setActiveView("cloud")}
           >
             Cloud proof
@@ -221,6 +224,7 @@ export function App() {
           <button
             type="button"
             className={activeView === "judge" ? "active" : ""}
+            aria-current={activeView === "judge" ? "page" : undefined}
             onClick={() => setActiveView("judge")}
           >
             Judge mode
@@ -229,6 +233,7 @@ export function App() {
           <button
             type="button"
             className={activeView === "studio" ? "active" : ""}
+            aria-current={activeView === "studio" ? "page" : undefined}
             onClick={() => setActiveView("studio")}
           >
             Wardrobe studio
@@ -239,6 +244,7 @@ export function App() {
           <button
             type="button"
             className={activeView === "atelier" ? "active" : ""}
+            aria-current={activeView === "atelier" ? "page" : undefined}
             onClick={() => setActiveView("atelier")}
           >
             Decision atelier
@@ -251,6 +257,7 @@ export function App() {
           <button
             type="button"
             className={activeView === "activity" ? "active" : ""}
+            aria-current={activeView === "activity" ? "page" : undefined}
             onClick={() => setActiveView("activity")}
           >
             Agent activity
@@ -265,7 +272,6 @@ export function App() {
             <section className="outfit-card">
               <div className="section-heading">
                 <div>
-                  <p className="eyebrow">Today’s recommendation</p>
                   <h2>{todayOutfit.name}</h2>
                   <p>{todayOutfit.occasion}</p>
                 </div>
@@ -321,7 +327,6 @@ export function App() {
                 </div>
               ) : (
                 <div className="confidence-panel">
-                  <p className="eyebrow">Confidence Check-in</p>
                   <h3>How did this outfit make you feel?</h3>
                   <div className="confidence-scale" aria-label="Confidence rating">
                     {confidenceLabels.map((label, index) => {
@@ -434,7 +439,6 @@ export function App() {
           <section className="activity-panel">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Committed evidence</p>
                 <h2>Agent Activity</h2>
                 <p>Every visible item comes from the append-only event ledger.</p>
               </div>
@@ -472,8 +476,8 @@ export function App() {
       </main>
 
       <footer>
-        <span>Phase 6 · Submission-ready agent experience</span>
-        <span>Learned Style Aura · deterministic judge mode · Google-ready boundary</span>
+        <span>Yange wardrobe intelligence</span>
+        <span>Private evidence · inspectable decisions · care-safe planning</span>
       </footer>
       </div>
     </>

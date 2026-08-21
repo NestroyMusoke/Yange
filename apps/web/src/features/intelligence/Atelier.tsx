@@ -18,8 +18,7 @@ export function Atelier({ state, onPlan, onQueueLaundry }: AtelierProps) {
     <div className="atelier-shell">
       <section className="atelier-intro">
         <div>
-          <p className="eyebrow">Yange Decision Atelier · Phase 3</p>
-          <h2>Beautiful reasoning you can inspect.</h2>
+          <h2>Inspect every outfit decision.</h2>
           <p>One room for dressing decisions. One room for care decisions. Both grounded in the same live wardrobe state.</p>
         </div>
         <div className="atelier-proof">
@@ -30,8 +29,8 @@ export function Atelier({ state, onPlan, onQueueLaundry }: AtelierProps) {
       </section>
 
       <nav className="atelier-tabs" aria-label="Decision Atelier rooms">
-        <button type="button" className={mode === "outfit" ? "active" : ""} onClick={() => setMode("outfit")}><span>01</span><div><strong>Outfit Atelier</strong><small>Generate · explain · reserve</small></div></button>
-        <button type="button" className={mode === "laundry" ? "active" : ""} onClick={() => setMode("laundry")}><span>02</span><div><strong>Laundry Lab</strong><small>Cluster · separate · protect</small></div>{laundry > 0 && <em>{laundry}</em>}</button>
+        <button type="button" aria-pressed={mode === "outfit"} className={mode === "outfit" ? "active" : ""} onClick={() => setMode("outfit")}><div><strong>Outfit Atelier</strong><small>Choose, explain, reserve</small></div></button>
+        <button type="button" aria-pressed={mode === "laundry"} className={mode === "laundry" ? "active" : ""} onClick={() => setMode("laundry")}><div><strong>Laundry Lab</strong><small>Separate loads safely</small></div>{laundry > 0 && <em>{laundry}</em>}</button>
       </nav>
 
       <div hidden={mode !== "outfit"}><OutfitAtelier state={state} onPlan={onPlan} /></div>

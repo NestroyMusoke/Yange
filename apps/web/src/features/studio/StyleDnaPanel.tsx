@@ -98,7 +98,6 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
     <section className="studio-panel" aria-labelledby="style-dna-title">
       <div className="studio-panel-heading">
         <div>
-          <p className="eyebrow">User-controlled personalisation</p>
           <h2 id="style-dna-title">Teach Yange your point of view.</h2>
           <p>
             These are preferences, not body rules. Yange combines what you choose here with

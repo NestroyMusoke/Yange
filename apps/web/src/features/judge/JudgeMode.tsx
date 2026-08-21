@@ -163,7 +163,7 @@ export function JudgeMode({
     <div className="judge-shell">
       <section className="judge-hero">
         <div>
-          <p className="eyebrow">Seeded judge mode · live state only</p>
+          <span className="context-date">Live demo state</span>
           <h2>Four minutes. One wardrobe. No hand-waving.</h2>
           <p>
             This director never fabricates success. Each light turns on only when
@@ -189,32 +189,9 @@ export function JudgeMode({
         </div>
       </section>
 
-      <section className="proof-board">
-        <div className="judge-section-heading">
-          <div>
-            <span>Live evidence board</span>
-            <h3>The demo earns every green light.</h3>
-          </div>
-          <em>{proofCount === proofs.length ? "Demo state complete" : `${proofs.length - proofCount} proof(s) remaining`}</em>
-        </div>
-        <div className="proof-signal-grid">
-          {proofs.map((proof, index) => (
-            <article className={proof.proven ? "proof-signal is-proven" : "proof-signal"} key={proof.id}>
-              <span>{proof.proven ? "✓" : String(index + 1).padStart(2, "0")}</span>
-              <div>
-                <strong>{proof.label}</strong>
-                <small>{proof.detail}</small>
-              </div>
-              <i>{proof.proven ? "proven" : "waiting"}</i>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="demo-runway">
         <div className="judge-section-heading">
           <div>
-            <span>Unedited demo runway</span>
             <h3>One causal story, paced to 4:00.</h3>
           </div>
           <em>5 acts · 1 take</em>
@@ -238,11 +215,31 @@ export function JudgeMode({
         </ol>
       </section>
 
+      <section className="proof-board">
+        <div className="judge-section-heading">
+          <div>
+            <h3>The demo earns every green light.</h3>
+          </div>
+          <em>{proofCount === proofs.length ? "Demo state complete" : `${proofs.length - proofCount} proof(s) remaining`}</em>
+        </div>
+        <div className="proof-signal-grid">
+          {proofs.map((proof, index) => (
+            <article className={proof.proven ? "proof-signal is-proven" : "proof-signal"} key={proof.id}>
+              <span>{proof.proven ? "✓" : String(index + 1).padStart(2, "0")}</span>
+              <div>
+                <strong>{proof.label}</strong>
+                <small>{proof.detail}</small>
+              </div>
+              <i>{proof.proven ? "proven" : "waiting"}</i>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <div className="judge-lower-grid">
         <section className="fault-theatre">
           <div className="judge-section-heading">
             <div>
-              <span>Failure theatre</span>
               <h3>Break the beauty. Keep the product.</h3>
             </div>
             <em>{statusLabel[auraStatus]}</em>
@@ -272,7 +269,6 @@ export function JudgeMode({
         <section className="aura-evidence-card">
           <div className="judge-section-heading">
             <div>
-              <span>Style Aura receipt</span>
               <h3>Personality you can inspect.</h3>
             </div>
             <em>{Math.round(auraProfile.confidence * 100)}% evidence</em>
@@ -297,7 +293,6 @@ export function JudgeMode({
 
       <section className="architecture-ending">
         <div>
-          <span>Closing frame</span>
           <h3>Local rehearsal today. The same contracts on Google tomorrow.</h3>
           <p>
             End with a server receipt and architecture boundary: deterministic
@@ -310,4 +305,3 @@ export function JudgeMode({
     </div>
   );
 }
-

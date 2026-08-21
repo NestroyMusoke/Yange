@@ -36,7 +36,6 @@ export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }:
     <div className="wardrobe-studio">
       <section className="studio-intro">
         <div>
-          <p className="eyebrow">Wardrobe Studio · Phase 2</p>
           <h2>Give the agent eyes—with boundaries.</h2>
           <p>
             Build a trustworthy wardrobe twin from images, your corrections, and the visual
@@ -46,7 +45,7 @@ export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }:
         <div className="studio-proof">
           <span><strong>{userGarments.length}</strong> captured pieces</span>
           <span><strong>{looks.length}</strong> inspiration looks</span>
-          <span><strong>0</strong> cloud credentials</span>
+          <span><strong>Private</strong> media evidence</span>
         </div>
       </section>
 

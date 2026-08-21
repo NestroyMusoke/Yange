@@ -80,7 +80,6 @@ export function LookDnaPanel({ queue, analyzer, onSave }: LookDnaPanelProps) {
     <section className="studio-panel" aria-labelledby="look-dna-title">
       <div className="studio-panel-heading">
         <div>
-          <p className="eyebrow">Inspiration, translated</p>
           <h2 id="look-dna-title">Borrow the idea—not the shopping list.</h2>
           <p>
             Upload a Pinterest image, screenshot, or saved TikTok frame. Yange extracts the

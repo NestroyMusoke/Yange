@@ -42,7 +42,6 @@ export function WardrobeGallery({ garments, looks }: { garments: Garment[]; look
     <section className="studio-gallery" aria-labelledby="studio-gallery-title">
       <div className="studio-gallery-heading">
         <div>
-          <p className="eyebrow">New evidence in the twin</p>
           <h2 id="studio-gallery-title">Your private capture shelf.</h2>
         </div>
         <span>{garments.length} {garments.length === 1 ? "piece" : "pieces"} · {looks.length} {looks.length === 1 ? "look" : "looks"}</span>

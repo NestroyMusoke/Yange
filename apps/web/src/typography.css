@@ -1,0 +1,325 @@
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+}
+
+h1,
+.studio-intro h2,
+.atelier-intro h2,
+.wearcast-hero h2,
+.judge-hero h2 {
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-variation-settings: "opsz" 72, "wght" 520;
+  font-weight: 520;
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.studio-panel-heading h2,
+.studio-gallery-heading h2,
+.intelligence-heading h2,
+.results-heading h3,
+.forecast-heading h3,
+.simulation-heading h3,
+.judge-section-heading h3,
+.architecture-ending h3 {
+  max-width: 26ch;
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-variation-settings: "opsz" 48, "wght" 500;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.candidate-heading h3,
+.decision-receipt h3,
+.queue-heading h3,
+.load-heading h3,
+.window-card > h3,
+.fallback-card > h3,
+.workflow-heading h3,
+.act-copy h4,
+.fault-node strong,
+.studio-look-card strong {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-variation-settings: "opsz" 28, "wght" 520;
+  font-weight: 520;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.hero-copy,
+.studio-intro p:not(.eyebrow),
+.atelier-intro p:last-child,
+.wearcast-hero p:last-child,
+.judge-hero > div:first-child > p:last-of-type,
+.studio-panel-heading p:not(.eyebrow),
+.intelligence-heading p:last-child,
+.console-copy > p,
+.queue-heading p,
+.window-card > p,
+.fallback-card > p,
+.act-copy p,
+.architecture-ending p,
+.conflict-trace-body > p {
+  max-width: 70ch;
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+.field-group > span,
+.capture-description,
+.load-instruction,
+.explanation-box p,
+.candidate-heading p,
+.notification-list article > p,
+.checkpoint-list small,
+.proof-signal small,
+.act-copy small,
+.fault-node small,
+.judge-palette strong,
+.judge-palette small,
+.aura-source-list dt,
+.workflow-metrics span,
+.receipt-metrics span,
+.drying-routes p,
+.care-holdouts li,
+.conflict-trace li,
+.forecast-day small,
+.forecast-day em,
+.demo-step small,
+.scenario-card > p,
+.scenario-facts span,
+.window-card > small,
+.outbox-footnote {
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.eyebrow,
+.capture-kind,
+.choice-label,
+.candidate-topline,
+.console-topline,
+.engine-chip,
+.adapter-chip,
+.future-topline,
+.metric-label,
+.load-heading span,
+.intervention-topline span,
+.scenario-topline,
+.workflow-status,
+.judge-section-heading > div > span,
+.judge-section-heading > em,
+.act-copy time,
+.proof-signal > i,
+.notification-list article > span,
+.notification-list article > em,
+.aura-source-list dd,
+.manual-source {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+}
+
+.candidate-score strong,
+.scenario-number,
+.load-number strong,
+.studio-proof strong,
+.atelier-proof strong,
+.demo-readiness-orbit strong,
+.pulse-core strong,
+.laundry-status-rail strong,
+.workflow-metrics strong,
+.receipt-metrics strong {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.checkpoint-list em,
+.forecast-day strong,
+.demo-step > span,
+.act-index span,
+.proof-signal > span,
+.state,
+.count {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.studio-steps strong,
+.atelier-tabs strong,
+.view-tabs button,
+.primary-action,
+.quiet-action,
+.secondary-action,
+.resilience-link,
+.fault-action,
+.demo-act-list li > button,
+.architecture-ending > button,
+.decision-receipt > summary,
+.workflow-receipt > summary,
+.notification-center > summary,
+.conflict-trace > summary,
+.decision-details > summary,
+.test-controls > summary {
+  font-size: var(--text-small);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.studio-steps small,
+.atelier-tabs small,
+.profile-chip,
+.readiness-card small,
+.studio-proof span,
+.atelier-proof span,
+.safety-basis span,
+.window-loads span,
+.laundry-status-rail span {
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+/* Product metadata resolves to the same calibrated roles as its headings. */
+.factor-row span,
+.factor-row strong,
+.candidate-footer strong,
+.candidate-footer small,
+.explanation-box small,
+.load-heading span,
+.load-heading em,
+.drying-routes span,
+.drying-routes p,
+.safety-basis span,
+.care-holdouts li,
+.conflict-trace li,
+.conflict-trace li em,
+.capacity-meter > div:first-child,
+.capacity-meter small,
+.demo-step strong,
+.demo-step small,
+.demo-step button,
+.demo-step > em,
+.simulation-heading > span,
+.forecast-day > span,
+.forecast-day small,
+.forecast-day em,
+.scenario-topline span,
+.scenario-topline em,
+.scenario-number small,
+.scenario-card > p,
+.scenario-facts span,
+.intervention-topline span,
+.intervention-topline em,
+.window-card > small,
+.window-loads span,
+.workflow-status,
+.checkpoint-list strong,
+.checkpoint-list small,
+.checkpoint-list em,
+.workflow-metrics span,
+.notification-center .workflow-heading > span,
+.notification-list article > span,
+.notification-list article > em,
+.notification-list article > p,
+.outbox-footnote,
+.demo-readiness-orbit span,
+.demo-readiness-orbit > small,
+.judge-section-heading > div > span,
+.judge-section-heading > em,
+.proof-signal strong,
+.proof-signal small,
+.proof-signal > i,
+.act-copy time,
+.act-copy p,
+.act-copy small,
+.fault-node strong,
+.fault-node small,
+.fault-theatre > p,
+.fault-action,
+.architecture-ending > button,
+.judge-palette strong,
+.judge-palette small,
+.architecture-ending > div > span,
+.architecture-ending p {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.candidate-heading h3,
+.explanation-box > strong,
+.laundry-status-rail strong,
+.queue-heading h3,
+.load-heading h3,
+.conflict-trace h3,
+.forecast-day > strong,
+.fallback-card > h3,
+.wearcast-clear h3,
+.notification-list article > strong,
+.judge-section-heading h3,
+.act-copy h4,
+.architecture-ending h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-variation-settings: "opsz" 28, "wght" 520;
+  font-weight: 520;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.factor-row span,
+.factor-row strong,
+.load-heading span,
+.load-heading em,
+.drying-routes span,
+.safety-basis span,
+.forecast-day > span,
+.forecast-day small,
+.forecast-day em,
+.scenario-topline span,
+.scenario-topline em,
+.intervention-topline span,
+.intervention-topline em,
+.workflow-status,
+.checkpoint-list em,
+.notification-list article > span,
+.notification-list article > em,
+.demo-readiness-orbit span,
+.demo-readiness-orbit > small,
+.judge-section-heading > div > span,
+.judge-section-heading > em,
+.proof-signal > i,
+.act-copy time,
+.judge-palette strong,
+.judge-palette small,
+.architecture-ending > div > span {
+  font-size: var(--text-label);
+  line-height: 1.3;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --text-display: clamp(2.75rem, 13vw, 4.25rem);
+    --text-section: clamp(2rem, 9vw, 3rem);
+  }
+
+  .studio-proof span,
+  .atelier-proof span,
+  .laundry-status-rail span,
+  .judge-palette strong,
+  .judge-palette small {
+    font-size: var(--text-label);
+  }
+}

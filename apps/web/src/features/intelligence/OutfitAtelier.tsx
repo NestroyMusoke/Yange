@@ -71,8 +71,8 @@ function CandidateCard({
   return (
     <article className={`candidate-card ${rank === 0 ? "candidate-leading" : ""}`}>
       <div className="candidate-topline">
-        <span>{rank === 0 ? "Best deterministic match" : `Alternative ${rank + 1}`}</span>
-        <em>{candidate.engineVersion}</em>
+        <span>{rank === 0 ? "Best match" : `Alternative ${rank + 1}`}</span>
+        <em>{candidate.garmentIds.length} pieces</em>
       </div>
       <div className="candidate-heading">
         <div>
@@ -92,40 +92,42 @@ function CandidateCard({
         {candidate.garmentIds.map((id) => <GarmentPreview key={id} garment={state.garments[id]} compact />)}
       </div>
 
-      <div className="factor-list">
-        {candidate.scoreBreakdown.map((entry) => (
-          <div className="factor-row" key={entry.key} title={entry.detail}>
-            <span>{entry.label}</span>
-            <div><i style={{ width: `${entry.score}%` }} /></div>
-            <strong>{entry.score}</strong>
-          </div>
-        ))}
-      </div>
+      <details className="decision-details" open={rank === 0}>
+        <summary>Why this outfit ranked {rank === 0 ? "first" : `${rank + 1}`}</summary>
+        <div className="factor-list">
+          {candidate.scoreBreakdown.map((entry) => (
+            <div className="factor-row" key={entry.key} title={entry.detail}>
+              <span>{entry.label}</span>
+              <div><i style={{ width: `${entry.score}%` }} /></div>
+              <strong>{entry.score}</strong>
+            </div>
+          ))}
+        </div>
 
-      <div className={`explanation-box explanation-${explanation?.status ?? "loading"}`}>
-        <span className="capture-kind">Explanation layer · never the decision</span>
-        {explanation?.status === "ready" && explanation.value ? (
-          <>
-            <strong>{explanation.value.headline}</strong>
-            <p>{explanation.value.rationale}</p>
-            {explanation.value.tradeoffs.length > 0 && (
-              <small>Trade-off: {explanation.value.tradeoffs[0]}</small>
-            )}
-          </>
-        ) : explanation?.status === "failed" ? (
-          <>
-            <strong>Explanation unavailable; score unaffected.</strong>
-            <p>{explanation.error} The deterministic factor receipt remains complete.</p>
-          </>
-        ) : (
-          <><strong>Writing a concise explanation…</strong><p>The ranked result is already complete.</p></>
-        )}
-      </div>
+        <div className={`explanation-box explanation-${explanation?.status ?? "loading"}`}>
+          {explanation?.status === "ready" && explanation.value ? (
+            <>
+              <strong>{explanation.value.headline}</strong>
+              <p>{explanation.value.rationale}</p>
+              {explanation.value.tradeoffs.length > 0 && (
+                <small>Trade-off: {explanation.value.tradeoffs[0]}</small>
+              )}
+            </>
+          ) : explanation?.status === "failed" ? (
+            <>
+              <strong>Explanation unavailable; score unaffected.</strong>
+              <p>{explanation.error} The factor receipt remains available.</p>
+            </>
+          ) : (
+            <><strong>Writing the explanation…</strong><p>The ranked result is ready now.</p></>
+          )}
+        </div>
+      </details>
 
       <div className="candidate-footer">
         <div>
           <strong>{candidate.garmentIds.length} wardrobe dependencies</strong>
-          <small>{candidate.constraintTrace.length} feasibility checks passed</small>
+          <small>{candidate.constraintTrace.length} wardrobe checks passed</small>
         </div>
         <button type="button" className="primary-action compact-action" disabled={disabled || planned} onClick={onPlan}>
           {planned ? "Outfit reserved" : "Plan and reserve"}
@@ -234,16 +236,15 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
     <section className="intelligence-panel" aria-labelledby="outfit-atelier-title">
       <div className="intelligence-heading">
         <div>
-          <p className="eyebrow">Constraint-based outfit intelligence</p>
           <h2 id="outfit-atelier-title">Set the moment. Audit the match.</h2>
           <p>Yange ranks only feasible combinations, then shows exactly where every Personal Match point came from.</p>
         </div>
-        <div className="engine-chip"><span /> Deterministic engine · v1</div>
+        <div className="engine-chip"><span /> Available garments only</div>
       </div>
 
       <div className="planning-workbench">
         <form className="context-console" onSubmit={(event) => { event.preventDefault(); void generate(); }}>
-          <div className="console-topline"><span>Manual context adapters</span><em>Replaceable ports</em></div>
+          <div className="console-topline"><span>Occasion details</span><em>Kampala context</em></div>
           <label className="field-group full-field"><span>What are you dressing for?</span><input value={eventTitle} maxLength={80} onChange={(event) => setEventTitle(event.target.value)} /></label>
           <div className="context-grid">
             <label className="field-group"><span>Starts</span><input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
@@ -256,28 +257,33 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
             <label><span>Rain chance <strong>{rain}%</strong></span><input type="range" min="0" max="100" value={rain} onChange={(event) => setRain(Number(event.target.value))} /></label>
           </div>
           <label className="field-group full-field"><span>Inspiration memory <small>Optional</small></span><select value={inspirationLookId} onChange={(event) => setInspirationLookId(event.target.value)}><option value="">No saved Look DNA</option>{Object.values(state.inspirationLooks).map((look) => <option key={look.id} value={look.id}>{look.name}</option>)}</select></label>
-          <button type="submit" className="primary-action" disabled={generating}>{generating ? "Evaluating constraints…" : "Generate auditable looks"}</button>
-          <button type="button" className="resilience-link" disabled={generating} onClick={() => void generate(true)}>Generate with explanation outage</button>
+          <button type="submit" className="primary-action" disabled={generating}>{generating ? "Checking your wardrobe…" : "Find outfit options"}</button>
+          <details className="test-controls">
+            <summary>Test explanation recovery</summary>
+            <button type="button" className="resilience-link" disabled={generating} onClick={() => void generate(true)}>Generate without the explanation service</button>
+          </details>
         </form>
 
-        <aside className="decision-receipt">
-          <span className="capture-kind">Decision boundary</span>
-          <h3>The model never gets the steering wheel.</h3>
-          <ol>
-            <li><strong>1</strong><span>Domain constraints choose real garments.</span></li>
-            <li><strong>2</strong><span>Five weighted factors calculate the score.</span></li>
-            <li><strong>3</strong><span>The language adapter explains after the fact.</span></li>
-            <li><strong>4</strong><span>A validated command reserves dependencies.</span></li>
-          </ol>
-          <div className="receipt-metrics"><span><strong>{Object.keys(state.garments).length}</strong> pieces considered</span><span><strong>{unavailableCount}</strong> unavailable rejected</span></div>
-        </aside>
+        <details className="decision-receipt">
+          <summary>How this decision stays accountable</summary>
+          <div className="decision-receipt-body">
+            <h3>The model never gets the steering wheel.</h3>
+            <ol>
+              <li><strong>1</strong><span>Availability and care needs rule out unsuitable garments.</span></li>
+              <li><strong>2</strong><span>Five weighted factors calculate the score.</span></li>
+              <li><strong>3</strong><span>The explanation is written after the score is final.</span></li>
+              <li><strong>4</strong><span>Planning the outfit reserves every included garment.</span></li>
+            </ol>
+            <div className="receipt-metrics"><span><strong>{Object.keys(state.garments).length}</strong> pieces considered</span><span><strong>{unavailableCount}</strong> unavailable rejected</span></div>
+          </div>
+        </details>
       </div>
 
       {generationError && <div className="error-banner atelier-error" role="alert"><strong>Planning stopped safely.</strong> {generationError}</div>}
 
       {candidates.length > 0 ? (
         <div className="candidate-results" aria-live="polite">
-          <div className="results-heading"><div><p className="eyebrow">Ranked decision set</p><h3>Three feasible answers—not infinite inspiration.</h3></div><span>{candidates.length} of max 120 combinations surfaced</span></div>
+          <div className="results-heading"><div><h3>Three feasible answers—not infinite inspiration.</h3></div><span>{candidates.length} of 120 combinations shown</span></div>
           <div className="candidate-list">
             {candidates.map((candidate, index) => (
               <CandidateCard
@@ -292,12 +298,12 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
               />
             ))}
           </div>
-          {plannedCandidateId && <div className="success-banner" role="status"><div><strong>Plan committed to the Digital Twin.</strong><span>Every dependency is reserved through replayable domain events.</span></div></div>}
+          {plannedCandidateId && <div className="success-banner" role="status"><div><strong>Outfit planned.</strong><span>Every included garment is reserved for this occasion.</span></div></div>}
         </div>
       ) : (
         <div className="atelier-empty">
           <div aria-hidden="true"><i /><i /><i /></div>
-          <section><span>Awaiting context</span><h3>A recommendation should be a decision receipt.</h3><p>Set the occasion and Kampala weather above. Yange will expose feasibility, score factors, trade-offs, and reservation events.</p></section>
+          <section><span>Waiting for occasion details</span><h3>Every recommendation comes with its reasons.</h3><p>Set the occasion and Kampala weather above. Yange will show what is wearable, how each option scored, and any trade-offs.</p></section>
         </div>
       )}
     </section>

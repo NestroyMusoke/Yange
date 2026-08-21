@@ -62,10 +62,9 @@ function ForecastRail({ forecast, decision }: { forecast: SevenDayForecast; deci
     <section className="forecast-panel">
       <div className="forecast-heading">
         <div>
-          <span className="capture-kind">Seven-day forecast horizon</span>
           <h3>Kampala, read as operational context.</h3>
         </div>
-        <span className="manual-source">Manual fixture · not live weather</span>
+        <span className="manual-source">Demo forecast</span>
       </div>
       <div className="forecast-rail">
         {[...days.entries()].slice(0, 7).map(([date, periods], index) => {
@@ -114,9 +113,11 @@ function ScenarioCard({ scenario }: { scenario: WearCastScenario }) {
 function WorkflowReceipt({ execution }: { execution: WearCastExecution | null }) {
   const reached = new Map(execution?.checkpointHistory.map((entry) => [entry.checkpoint, entry]) ?? []);
   return (
-    <section className="workflow-receipt">
+    <details className="workflow-receipt" open={execution?.status === "failed" || undefined}>
+      <summary>Run history and recovery</summary>
+      <div className="workflow-receipt-body">
       <div className="workflow-heading">
-        <div><span className="capture-kind">Resumable workflow receipt</span><h3>Every side effect has a checkpoint.</h3></div>
+        <div><h3>Each action is saved before the next begins.</h3></div>
         <span className={`workflow-status workflow-${execution?.status ?? "idle"}`}>
           {execution?.status ?? "Awaiting trigger"}
         </span>
@@ -141,7 +142,8 @@ function WorkflowReceipt({ execution }: { execution: WearCastExecution | null })
           <span><strong>{execution.duplicateTriggerCount}</strong> duplicates ignored</span>
         </div>
       )}
-    </section>
+      </div>
+    </details>
   );
 }
 
@@ -168,22 +170,20 @@ export function WearCast({
     <div className="wearcast-shell">
       <section className="wearcast-hero">
         <div>
-          <p className="eyebrow">WearCast Operations · Phase 4</p>
           <h2>Your wardrobe should notice first.</h2>
           <p>Forecast pressure, future outfit dependencies, and care-safe action—evaluated before a small problem becomes Friday-night panic.</p>
         </div>
         <div className="operations-pulse">
           <div className={decision.risks.length ? "pulse-core pulse-alert" : "pulse-core"}><i /><strong>{decision.risks.length}</strong><span>live risks</span></div>
-          <span>Scheduler trigger</span>
+          <span>Friday check</span>
           <small>14 Aug · 10:30 EAT</small>
         </div>
       </section>
 
       <section className="autonomy-console">
         <div className="console-copy">
-          <span className="capture-kind">Transparent judge controls</span>
-          <h3>Friday Rooftop recovery drill</h3>
-          <p>These buttons fire the same ports and workflow used by a future Cloud Scheduler trigger. The clock and forecast are fixed so every judge sees the same proof.</p>
+          <h3>Test Friday's wardrobe plan</h3>
+          <p>Use the Kampala forecast to stage a laundry conflict, check the response, and confirm an interrupted alert can finish safely.</p>
           <div className="capacity-meter">
             <div><span>Core wardrobe pressure</span><strong>{Math.round(decision.capacity.ratio * 100)}%</strong></div>
             <div><i style={{ width: `${Math.min(100, decision.capacity.ratio * 100)}%` }} /></div>
@@ -196,17 +196,17 @@ export function WearCast({
             <button type="button" onClick={onStage} disabled={pressureStaged || running}>{pressureStaged ? "Staged" : "Stage 50% risk"}</button>
           </div>
           <div className={execution ? "demo-step step-complete" : "demo-step"}>
-            <span>02</span><div><strong>Fire scheduler</strong><small>Simulate, commit, notify</small></div>
+            <span>02</span><div><strong>Check the forecast</strong><small>Find risks and prepare an alert</small></div>
             {!execution ? (
               <div className="trigger-actions">
-                <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Running…" : "Run normally"}</button>
-                <button type="button" onClick={() => void onRun(true)} disabled={!triggerReady || running}>Inject outage</button>
+                <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Checking…" : "Run the check"}</button>
+                <button type="button" onClick={() => void onRun(true)} disabled={!triggerReady || running}>Test an interrupted alert</button>
               </div>
             ) : <em>{execution.status}</em>}
           </div>
           <div className={complete ? "demo-step step-complete" : failed ? "demo-step step-failed" : "demo-step"}>
-            <span>03</span><div><strong>{failed ? "Resume checkpoint" : "Prove idempotency"}</strong><small>{failed ? "Retry delivery only" : "Replay exact trigger"}</small></div>
-            <button type="button" onClick={() => void onRun(false)} disabled={!execution || running}>{running ? "Resuming…" : failed ? "Resume paused run" : complete ? "Replay exact trigger" : "Waiting"}</button>
+            <span>03</span><div><strong>{failed ? "Finish the alert" : "Confirm no duplicate alert"}</strong><small>{failed ? "Continue from the safe stopping point" : "Repeat the same Friday check"}</small></div>
+            <button type="button" onClick={() => void onRun(false)} disabled={!execution || running}>{running ? "Finishing…" : failed ? "Finish paused alert" : complete ? "Repeat Friday check" : "Waiting"}</button>
           </div>
         </div>
       </section>
@@ -217,8 +217,8 @@ export function WearCast({
         <>
           <section className="simulation-panel">
             <div className="simulation-heading">
-              <div><span className="capture-kind">Non-destructive future simulation</span><h3>Same wardrobe. Two possible Fridays.</h3></div>
-              <span>{decision.engineVersion} · inputs cloned</span>
+              <div><h3>Same wardrobe. Two possible Fridays.</h3></div>
+              <span>Compared from the same starting state</span>
             </div>
             <div className="scenario-grid">
               <ScenarioCard scenario={decision.scenarios.doNothing} />
@@ -256,14 +256,16 @@ export function WearCast({
       ) : (
         <section className="wearcast-clear">
           <div className="clear-radar" aria-hidden="true"><i /><i /><i /></div>
-          <div><span className="capture-kind">Continuous horizon clear</span><h3>No intervention is justified yet.</h3><p>Stage the transparent Friday scenario above. WearCast will detect the outfit conflict and 50% capacity threshold without a chat prompt.</p></div>
+          <div><h3>No intervention is justified yet.</h3><p>Stage the Friday scenario above. WearCast will detect the outfit conflict and 50% capacity threshold without a chat prompt.</p></div>
         </section>
       )}
 
       <div className="operations-grid">
         <WorkflowReceipt execution={execution} />
-        <section className="notification-center">
-          <div className="workflow-heading"><div><span className="capture-kind">Delivery outbox</span><h3>Notifications are state, not toast confetti.</h3></div><span>{notifications.length} queued</span></div>
+        <details className="notification-center" open={notifications.length > 0 || undefined}>
+          <summary>Notifications</summary>
+          <div className="notification-center-body">
+          <div className="workflow-heading"><div><h3>Sent notices stay visible.</h3></div><span>{notifications.length} queued</span></div>
           {notifications.length ? (
             <div className="notification-list">
               {notifications.map((notification) => (
@@ -277,7 +279,8 @@ export function WearCast({
             <div className="notification-empty"><span aria-hidden="true">○</span><p>No alerts have been committed. Drafts in simulation are not shown as delivered facts.</p></div>
           )}
           {scheduledWindows.length > 0 && <p className="outbox-footnote">{scheduledWindows.length} laundry intervention{scheduledWindows.length === 1 ? "" : "s"} committed independently of notification delivery.</p>}
-        </section>
+          </div>
+        </details>
       </div>
     </div>
   );

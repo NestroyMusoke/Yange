@@ -234,7 +234,6 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
     <section className="studio-panel" aria-labelledby="capture-title">
       <div className="studio-panel-heading">
         <div>
-          <p className="eyebrow">Multimodal wardrobe intake</p>
           <h2 id="capture-title">Photograph once. Keep the evidence.</h2>
           <p>
             Yange rewrites images privately on your device, then separates what it saw from
@@ -243,12 +242,12 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
         </div>
         <div className="adapter-chip">
           <span aria-hidden="true" />
-          Local Gemini simulation · contract 1.0
+          Private image analysis
         </div>
       </div>
 
       <div className="privacy-strip">
-        <strong>Private in Phase 2</strong>
+        <strong>Private by default</strong>
         <span>Original images never leave this browser. The event ledger stores IDs, not pixels.</span>
       </div>
 
@@ -294,10 +293,10 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
               void analyzeGarment();
             }}
           >
-            Run resilience drill
+            Test a failed analysis
           </button>
         )}
-        <small>Failure drill intentionally fails once, then the same prepared image can be retried.</small>
+        <small>This test pauses once so you can confirm the prepared image remains available to retry.</small>
       </div>
 
       {analysisError && (
@@ -310,10 +309,9 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
         <div className="review-card">
           <div className="review-heading">
             <div>
-              <p className="eyebrow">Evidence review</p>
               <h3>Correct anything that is not you.</h3>
             </div>
-            <span>{draft.adapter}</span>
+            <span>Image evidence ready</span>
           </div>
 
           {draft.warnings.length > 0 && (
@@ -345,7 +343,6 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
 
           <div className="care-review-heading">
             <div>
-              <span className="capture-kind">Care profile</span>
               <h3>Protect the piece before automating laundry.</h3>
             </div>
             {extractedCareNeedsReview && <span className="review-required">Review required</span>}
@@ -413,7 +410,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
 
           {savedName && (
             <div className="success-banner" role="status">
-              <div><strong>{savedName} is now in the Digital Twin.</strong><span>The image stays in IndexedDB; its evidence entered the append-only ledger.</span></div>
+              <div><strong>{savedName} is now in your wardrobe.</strong><span>The photo stays in this browser, and the confirmed evidence is saved with the garment.</span></div>
               <button type="button" className="quiet-action" onClick={() => void addAnother()}>Add another piece</button>
             </div>
           )}
