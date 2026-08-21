@@ -12,6 +12,7 @@ import { deriveStyleAuraProfile } from "./features/aura/palette";
 import { JudgeMode, type YangeView } from "./features/judge/JudgeMode";
 import { WardrobeStudio } from "./features/studio/WardrobeStudio";
 import { WearCast } from "./features/wearcast/WearCast";
+import { YangeLogo } from "./features/brand/YangeLogo";
 import { useYange } from "./useYange";
 
 const confidenceLabels = [
@@ -40,6 +41,20 @@ const auraSceneTone: Record<YangeView, { energy: number; warmth: number }> = {
   judge: { energy: 0.96, warmth: 0.48 },
   activity: { energy: 0.72, warmth: 0.4 },
 };
+
+const viewNavigation: ReadonlyArray<{
+  id: YangeView;
+  label: string;
+  description: string;
+}> = [
+  { id: "today", label: "Today", description: "One clear look" },
+  { id: "studio", label: "Studio", description: "Build your wardrobe" },
+  { id: "atelier", label: "Atelier", description: "Plan with evidence" },
+  { id: "wearcast", label: "WearCast", description: "See what is ahead" },
+  { id: "cloud", label: "Cloud proof", description: "Check the service" },
+  { id: "judge", label: "Judge mode", description: "Review the system" },
+  { id: "activity", label: "Activity", description: "Trace every action" },
+];
 
 function garmentTone(garment: Garment): string {
   const tones: Record<string, string> = {
@@ -132,10 +147,16 @@ export function App() {
         onStatusChange={setAuraStatus}
       />
       <div className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="#top" aria-label="Yange home">
-          <span className="brand-mark" aria-hidden="true">Y</span>
-          <span>Yange</span>
+      <header className="site-header">
+        <div className="topbar">
+          <a className="brand" href="#top" aria-label="Yange home" onClick={() => setActiveView("today")}>
+            <span className="brand-mark" aria-hidden="true">
+              <YangeLogo />
+            </span>
+          <span className="brand-wordmark">
+            <strong>Yange</strong>
+            <small>Wardrobe intelligence</small>
+          </span>
         </a>
         <div className="topbar-actions">
           <AuraControls
@@ -149,14 +170,51 @@ export function App() {
             onWarmthChange={setAuraWarmth}
           />
           <div className="profile-chip">
-          <span className="profile-dot" aria-hidden="true" />
-          Amina · Kampala
+            <span className="profile-dot" aria-hidden="true" />
+            <span>
+              <strong>Amina</strong>
+              <small>Kampala wardrobe</small>
+            </span>
           </div>
         </div>
+        </div>
+        <nav className="view-tabs" aria-label="Yange views">
+          {viewNavigation.map((item) => {
+            const studioCount = Object.keys(state.inspirationLooks).length;
+            const atelierCount = Object.values(state.outfits).filter((outfit) => outfit.source === "agent-planned").length;
+            const wearCastAlert = wearCastDecision.risks.length || (autonomyExecution?.status === "failed" ? "!" : null);
+            const indicator = item.id === "studio"
+              ? studioCount || null
+              : item.id === "atelier"
+                ? atelierCount || null
+                : item.id === "wearcast"
+                  ? wearCastAlert
+                  : item.id === "activity"
+                    ? ledger.length || null
+                    : null;
+            return (
+              <button
+                type="button"
+                key={item.id}
+                className={activeView === item.id ? "active" : ""}
+                aria-current={activeView === item.id ? "page" : undefined}
+                onClick={() => setActiveView(item.id)}
+              >
+                <span className="view-tab-copy">
+                  <strong>{item.label}</strong>
+                  <small>{item.description}</small>
+                </span>
+                {indicator !== null && <span className="count">{indicator}</span>}
+                {item.id === "cloud" && <span className="proof-dot" aria-hidden="true" />}
+                {item.id === "judge" && <span className="judge-tab-mark" aria-hidden="true">✦</span>}
+              </button>
+            );
+          })}
+        </nav>
       </header>
 
-      <main id="top">
-        <section className="hero">
+      <main id="top" data-view={activeView}>
+        {activeView === "today" && <section className="hero">
           <div>
             <time className="context-date" dateTime="2026-08-14">Friday, 14 August · Kampala</time>
             <h1>Your wardrobe, thinking ahead.</h1>
@@ -190,80 +248,8 @@ export function App() {
               </small>
             </div>
           </div>
-        </section>
+        </section>}
 
-        <nav className="view-tabs" aria-label="Yange views">
-          <button
-            type="button"
-            className={activeView === "today" ? "active" : ""}
-            aria-current={activeView === "today" ? "page" : undefined}
-            onClick={() => setActiveView("today")}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            className={activeView === "wearcast" ? "active" : ""}
-            aria-current={activeView === "wearcast" ? "page" : undefined}
-            onClick={() => setActiveView("wearcast")}
-          >
-            WearCast
-            {(wearCastDecision.risks.length > 0 || autonomyExecution?.status === "failed") && (
-              <span className="count">{wearCastDecision.risks.length || "!"}</span>
-            )}
-          </button>
-          <button
-            type="button"
-            className={activeView === "cloud" ? "active" : ""}
-            aria-current={activeView === "cloud" ? "page" : undefined}
-            onClick={() => setActiveView("cloud")}
-          >
-            Cloud proof
-            <span className="proof-dot" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className={activeView === "judge" ? "active" : ""}
-            aria-current={activeView === "judge" ? "page" : undefined}
-            onClick={() => setActiveView("judge")}
-          >
-            Judge mode
-            <span className="judge-tab-mark" aria-hidden="true">✦</span>
-          </button>
-          <button
-            type="button"
-            className={activeView === "studio" ? "active" : ""}
-            aria-current={activeView === "studio" ? "page" : undefined}
-            onClick={() => setActiveView("studio")}
-          >
-            Wardrobe studio
-            {Object.keys(state.inspirationLooks).length > 0 && (
-              <span className="count">{Object.keys(state.inspirationLooks).length}</span>
-            )}
-          </button>
-          <button
-            type="button"
-            className={activeView === "atelier" ? "active" : ""}
-            aria-current={activeView === "atelier" ? "page" : undefined}
-            onClick={() => setActiveView("atelier")}
-          >
-            Decision atelier
-            {Object.values(state.outfits).some((outfit) => outfit.source === "agent-planned") && (
-              <span className="count">
-                {Object.values(state.outfits).filter((outfit) => outfit.source === "agent-planned").length}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            className={activeView === "activity" ? "active" : ""}
-            aria-current={activeView === "activity" ? "page" : undefined}
-            onClick={() => setActiveView("activity")}
-          >
-            Agent activity
-            {ledger.length > 0 && <span className="count">{ledger.length}</span>}
-          </button>
-        </nav>
 
         {error && <div className="error-banner" role="alert">{error}</div>}
 
