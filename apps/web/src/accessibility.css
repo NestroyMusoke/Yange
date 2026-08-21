@@ -91,3 +91,26 @@ input[type="range"] {
     border-color: Highlight;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  .primary-action,
+  .studio-steps button,
+  .capture-slot,
+  .cloud-checkpoints > div,
+  .atelier-tabs button,
+  .capacity-meter i,
+  .style-aura canvas,
+  .style-aura-fallback {
+    transition: none !important;
+  }
+
+  .primary-action:hover,
+  .studio-steps button:hover,
+  .atelier-tabs button:hover {
+    transform: none;
+  }
+}

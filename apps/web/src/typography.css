@@ -10,7 +10,8 @@ h1,
 .studio-intro h2,
 .atelier-intro h2,
 .wearcast-hero h2,
-.judge-hero h2 {
+.judge-hero h2,
+.cloud-proof-hero h2 {
   max-width: 18ch;
   font-family: var(--font-display);
   font-size: var(--text-display);
@@ -28,7 +29,9 @@ h1,
 .forecast-heading h3,
 .simulation-heading h3,
 .judge-section-heading h3,
-.architecture-ending h3 {
+.architecture-ending h3,
+.cloud-command-copy h3,
+.proof-heading h3 {
   max-width: 26ch;
   font-family: var(--font-display);
   font-size: var(--text-section);
@@ -70,7 +73,10 @@ h1,
 .fallback-card > p,
 .act-copy p,
 .architecture-ending p,
-.conflict-trace-body > p {
+.conflict-trace-body > p,
+.cloud-proof-hero p,
+.cloud-command-copy > p,
+.cloud-boundary-card > p {
   max-width: 70ch;
   font-size: var(--text-body);
   line-height: 1.6;
@@ -103,6 +109,42 @@ h1,
 .outbox-footnote {
   font-size: var(--text-small);
   line-height: 1.45;
+}
+
+.cloud-checkpoints strong,
+.cloud-checkpoints small,
+.cloud-checkpoints em,
+.passport-list strong,
+.passport-list small,
+.passport-list em,
+.boundary-flow strong,
+.boundary-flow small,
+.cloud-receipt-strip span,
+.cloud-receipt-strip strong,
+.cloud-runtime-badge,
+.cloud-status-mark span,
+.proof-heading > span,
+.aura-chip strong,
+.aura-chip small,
+.aura-evidence-meter,
+.aura-slider,
+.aura-runtime {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.aura-panel-heading > div > span,
+.aura-palette-row small,
+.aura-evidence-meter > div:first-child,
+.aura-evidence-meter small,
+.aura-slider strong,
+.aura-slider small,
+.aura-runtime span,
+.aura-runtime small {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  line-height: 1.4;
 }
 
 .eyebrow,

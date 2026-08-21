@@ -13,11 +13,11 @@ interface AuraControlsProps {
 }
 
 const statusLabels: Record<AuraStatus, string> = {
-  starting: "Waking",
-  live: "WebGL live",
-  adaptive: "Adaptive quality",
-  frozen: "Reduced motion · frozen",
-  fallback: "Safe still fallback",
+  starting: "Starting",
+  live: "Aura active",
+  adaptive: "Balanced for this device",
+  frozen: "Still mode",
+  fallback: "Still background",
 };
 
 export function AuraControls({
@@ -46,7 +46,7 @@ export function AuraControls({
         </span>
         <span>
           <strong>Style Aura</strong>
-          <small>{profile.stage === "personal" ? "Deeply personal" : "Learning you"}</small>
+          <small>{profile.stage === "personal" ? "Personal palette" : "Learning your style"}</small>
         </span>
       </button>
 
@@ -54,7 +54,7 @@ export function AuraControls({
         <aside className="aura-panel" id="aura-control-panel">
           <div className="aura-panel-heading">
             <div>
-              <span>Visible style memory</span>
+              <span>Your Style Aura</span>
               <strong>Your colours are becoming the interface.</strong>
             </div>
             <button type="button" onClick={onToggle} aria-label="Close Style Aura controls">×</button>
@@ -69,7 +69,7 @@ export function AuraControls({
           </div>
           <div className="aura-evidence-meter">
             <div>
-              <span>Personalisation evidence</span>
+              <span>Style confidence</span>
               <strong>{Math.round(profile.confidence * 100)}%</strong>
             </div>
             <div><i style={{ width: `${profile.confidence * 100}%` }} /></div>
@@ -78,7 +78,7 @@ export function AuraControls({
             </small>
           </div>
           <label className="aura-slider">
-            <span><strong>Energy</strong><small>presence</small></span>
+            <span><strong>Energy</strong><small>movement</small></span>
             <input
               type="range"
               min="0.2"
@@ -89,7 +89,7 @@ export function AuraControls({
             />
           </label>
           <label className="aura-slider">
-            <span><strong>Warmth</strong><small>emotional temperature</small></span>
+            <span><strong>Warmth</strong><small>colour temperature</small></span>
             <input
               type="range"
               min="0"
@@ -102,11 +102,10 @@ export function AuraControls({
           <div className={`aura-runtime aura-runtime-${status}`}>
             <i aria-hidden="true" />
             <span>{statusLabels[status]}</span>
-            <small>The wardrobe agent works independently of this renderer.</small>
+            <small>Wardrobe decisions keep working even when the Aura is off.</small>
           </div>
         </aside>
       )}
     </div>
   );
 }
-
