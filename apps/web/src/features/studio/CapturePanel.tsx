@@ -2,9 +2,9 @@ import { useState } from "react";
 import {
   MULTIMODAL_CONTRACT_VERSION,
   type AnalysisImageRef,
-  type FakeGeminiMultimodalAdapter,
   type GarmentAnalysisV1,
 } from "@yange/contracts";
+import type { TestableMultimodalAnalyzer } from "../../aiRuntime";
 import type {
   BleachMethod,
   DryMethod,
@@ -22,7 +22,7 @@ import type { CaptureQueue } from "./useCaptureQueue";
 
 interface CapturePanelProps {
   queue: CaptureQueue;
-  analyzer: FakeGeminiMultimodalAdapter;
+  analyzer: TestableMultimodalAnalyzer;
   onAddGarment(garment: Garment): boolean;
 }
 
@@ -248,7 +248,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
 
       <div className="privacy-strip">
         <strong>Private by default</strong>
-        <span>Original images never leave this browser. The event ledger stores IDs, not pixels.</span>
+        <span>Images stay on-device locally; in Cloud mode, prepared copies use short-lived private uploads for analysis. The ledger stores IDs, not pixels.</span>
       </div>
 
       <div className="capture-grid">

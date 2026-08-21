@@ -1,4 +1,11 @@
 import type { WearCastExecution } from "@yange/orchestrator";
+import type { DomainEvent, TwinState } from "@yange/domain";
+import type {
+  MultimodalRequestV1,
+  MultimodalResponseV1,
+  OutfitExplanationRequestV1,
+  OutfitExplanationV1,
+} from "@yange/contracts";
 
 export interface CloudRuntimeSnapshot {
   sessionPartition: string;
@@ -33,6 +40,22 @@ interface RunResponse {
   outbox?: { attempted: number; published: number; failed: number } | null;
 }
 
+export interface CloudCommand {
+  type:
+    | "wear-outfit"
+    | "record-confidence"
+    | "add-garment"
+    | "update-style-profile"
+    | "capture-look-dna"
+    | "plan-outfit"
+    | "queue-laundry";
+  input: Record<string, unknown>;
+}
+
+export function isCloudSyncConfigured(): boolean {
+  return Boolean(import.meta.env.VITE_YANGE_API_BASE_URL) || !import.meta.env.DEV;
+}
+
 function baseUrl(): string {
   const configured = import.meta.env.VITE_YANGE_API_BASE_URL as string | undefined;
   if (configured) return configured.replace(/\/$/, "");
@@ -55,6 +78,51 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function probeCloudRuntime(): Promise<CloudRuntimeSnapshot> {
   return request<CloudRuntimeSnapshot>("/v1/runtime");
+}
+
+export async function getCloudTwin(): Promise<{ state: TwinState; ledger: DomainEvent[] }> {
+  return request<{ state: TwinState; ledger: DomainEvent[] }>("/v1/twin");
+}
+
+export function sendCloudCommand(command: CloudCommand): Promise<{
+  events: DomainEvent[];
+  receipt: { appendedEventIds: string[]; duplicateEventIds: string[] };
+}> {
+  return request("/v1/commands", {
+    method: "POST",
+    body: JSON.stringify(command),
+  });
+}
+
+export async function createMediaUploadIntent(asset: {
+  assetId: string;
+  mimeType: string;
+  byteLength: number;
+}): Promise<{
+  uploadUrl: string;
+  requiredHeaders: Record<string, string>;
+}> {
+  const response = await request<{ intent: { uploadUrl: string; requiredHeaders: Record<string, string> } }>(
+    "/v1/media/upload-intent",
+    { method: "POST", body: JSON.stringify(asset) },
+  );
+  return response.intent;
+}
+
+export async function analyzeWithCloud(requestBody: MultimodalRequestV1): Promise<MultimodalResponseV1> {
+  const response = await request<{ result: MultimodalResponseV1 }>("/v1/ai/analyze", {
+    method: "POST",
+    body: JSON.stringify(requestBody),
+  });
+  return response.result;
+}
+
+export async function explainWithCloud(requestBody: OutfitExplanationRequestV1): Promise<OutfitExplanationV1> {
+  const response = await request<{ result: OutfitExplanationV1 }>("/v1/ai/explain-outfit", {
+    method: "POST",
+    body: JSON.stringify(requestBody),
+  });
+  return response.result;
 }
 
 export async function stageCloudDemo(): Promise<void> {

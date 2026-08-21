@@ -6,10 +6,17 @@ import {
   createGoogleMediaStore,
   createGoogleTaskScheduler,
   createStructuredLogger,
+  GoogleVertexStructuredGenerationClient,
   GoogleWeatherForecastAdapter,
   InMemoryUserStateStore,
   readRuntimeConfiguration,
+  VertexMultimodalAdapter,
+  VertexOutfitExplanationAdapter,
 } from "@yange/cloud";
+import {
+  FakeGeminiExplanationAdapter,
+  FakeGeminiMultimodalAdapter,
+} from "@yange/contracts";
 import { createYangeApi } from "./app";
 
 const configuration = readRuntimeConfiguration();
@@ -54,6 +61,27 @@ const forecastProvider = google && configuration.role !== "edge"
     locationLabel: "Kampala",
   })
   : undefined;
+const vertexClient = google
+  ? new GoogleVertexStructuredGenerationClient(google.projectId, configuration.location)
+  : null;
+const multimodalAnalyzerForUser = vertexClient && mediaStore
+  ? (userId: string) => new VertexMultimodalAdapter({
+    client: vertexClient,
+    mediaStore,
+    userId,
+    model: configuration.geminiModel,
+  })
+  : configuration.mode === "local"
+    ? () => new FakeGeminiMultimodalAdapter()
+    : undefined;
+const outfitExplainer = vertexClient
+  ? new VertexOutfitExplanationAdapter({
+    client: vertexClient,
+    model: configuration.geminiModel,
+  })
+  : configuration.mode === "local"
+    ? new FakeGeminiExplanationAdapter()
+    : undefined;
 
 const server = createServer(createYangeApi({
   configuration,
@@ -64,6 +92,8 @@ const server = createServer(createYangeApi({
   eventPublisher,
   mediaStore,
   forecastProvider,
+  multimodalAnalyzerForUser,
+  outfitExplainer,
 }));
 
 server.listen(port, "0.0.0.0", () => {
@@ -80,8 +110,9 @@ function shutdown(signal: string): void {
   server.close((error) => {
     if (error) {
       logger.write("ERROR", "service.stop_failed", { component: "yange-api", error: error.message });
-      process.exitCode = 1;
+      process.exit(1);
     }
+    process.exit(0);
   });
 }
 

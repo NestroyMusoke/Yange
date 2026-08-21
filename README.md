@@ -41,11 +41,14 @@ All six vertical slices are complete. The full product and a production-shaped t
 - Cloud Tasks OIDC dispatch, Cloud Scheduler sweeps, and Pub/Sub ordered audit events with a dead-letter topic
 - Google Weather and optional read-only Google Calendar adapters
 - Schema-constrained Vertex AI multimodal and explanation adapters
+- A server-validated command API that mirrors the browser ledger into the authenticated Firestore user partition
+- Exact per-garment colour evidence with positive/negative attribution, recency decay, and explainable certainty
 - A private Google ADK Yange Steward using Gemini 3.5 Flash and two narrow worker tools
 - Secret Manager, least-privilege service identities, readiness gates, structured logs, and trace correlation
 - Terraform, Cloud Build, GitHub CI, immutable containers, and an intentionally capped scale-to-zero cost profile
 - A judge-facing Cloud Proof surface that distinguishes local rehearsal from deployed Google evidence
 - A learned Style Aura derived from chosen colours, inspiration palettes, confidence evidence, and confirmed garments
+- A persisted Style Aura projection capped at an 8% colour step per new evidence interaction
 - An isolated five-octave WebGL renderer with three drifting ribbons, inertial 12-point dye trails, scroll response, and view tone
 - Adaptive resolution, tab pausing, a frozen reduced-motion composition, and a non-WebGL still fallback
 - An inspectable Aura receipt with evidence strength, palette sources, energy, and warmth controls

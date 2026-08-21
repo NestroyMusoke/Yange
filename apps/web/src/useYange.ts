@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createKampalaDemoForecast,
   FakeNotificationGateway,
@@ -27,6 +27,13 @@ import { WearCastWorkflow, type WearCastExecution } from "@yange/orchestrator";
 import { localWorkflowRepository } from "./autonomyStorage";
 import { localEventRepository } from "./storage";
 import { indexedDbMediaRepository } from "./media/mediaRepository";
+import {
+  getCloudTwin,
+  isCloudSyncConfigured,
+  resetCloudDemo,
+  sendCloudCommand,
+  type CloudCommand,
+} from "./cloudRuntime";
 
 function operationId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -49,6 +56,21 @@ export function useYange() {
     localWorkflowRepository.latest(),
   );
   const [autonomyRunning, setAutonomyRunning] = useState(false);
+
+  useEffect(() => {
+    if (!isCloudSyncConfigured()) return;
+    let cancelled = false;
+    void getCloudTwin().then((cloudTwin) => {
+      if (cancelled || (!cloudTwin.ledger.length && ledgerRef.current.length)) return;
+      const next = localEventRepository.replace(cloudTwin.ledger);
+      ledgerRef.current = next;
+      stateRef.current = replayEvents(createSeedState(), next);
+      setLedger(next);
+    }).catch(() => {
+      // Local-first operation remains available if the cloud runtime is temporarily unreachable.
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const state = useMemo(
     () => replayEvents(createSeedState(), ledger),
@@ -112,16 +134,23 @@ export function useYange() {
     setError(null);
   }
 
+  function mirror(command: CloudCommand): void {
+    if (!isCloudSyncConfigured()) return;
+    void sendCloudCommand(command).catch(() => {
+      setError("Saved on this device. Cloud memory is temporarily unavailable.");
+    });
+  }
+
   function wearOutfit(outfitId: string) {
     try {
-      commit(
-        markOutfitWorn(state, ledger, {
-          outfitId,
-          wearContext: "normal",
-          operationId: operationId("wear"),
-          occurredAt: new Date().toISOString(),
-        }),
-      );
+      const input = {
+        outfitId,
+        wearContext: "normal",
+        operationId: operationId("wear"),
+        occurredAt: new Date().toISOString(),
+      };
+      commit(markOutfitWorn(state, ledger, input));
+      mirror({ type: "wear-outfit", input });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to mark outfit worn.");
     }
@@ -133,15 +162,15 @@ export function useYange() {
     tags: string[] = [],
   ) {
     try {
-      commit(
-        recordConfidence(state, ledger, {
-          outfitId,
-          value,
-          tags,
-          operationId: operationId("confidence"),
-          occurredAt: new Date().toISOString(),
-        }),
-      );
+      const input = {
+        outfitId,
+        value,
+        tags,
+        operationId: operationId("confidence"),
+        occurredAt: new Date().toISOString(),
+      };
+      commit(recordConfidence(state, ledger, input));
+      mirror({ type: "record-confidence", input });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save confidence.");
     }
@@ -159,17 +188,14 @@ export function useYange() {
     void indexedDbMediaRepository.clear().catch(() => {
       setError("The event ledger was reset, but some private image data could not be cleared.");
     });
+    if (isCloudSyncConfigured()) void resetCloudDemo().catch(() => undefined);
   }
 
   function addWardrobeItem(garment: Garment): boolean {
     try {
-      commit(
-        addGarmentCommand(state, ledger, {
-          garment,
-          operationId: operationId("garment"),
-          occurredAt: new Date().toISOString(),
-        }),
-      );
+      const input = { garment, operationId: operationId("garment"), occurredAt: new Date().toISOString() };
+      commit(addGarmentCommand(state, ledger, input));
+      mirror({ type: "add-garment", input });
       return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to add garment.");
@@ -179,13 +205,9 @@ export function useYange() {
 
   function saveStyleProfile(profile: StyleProfile): boolean {
     try {
-      commit(
-        updateStyleProfileCommand(ledger, {
-          profile,
-          operationId: operationId("style-profile"),
-          occurredAt: new Date().toISOString(),
-        }),
-      );
+      const input = { profile, operationId: operationId("style-profile"), occurredAt: new Date().toISOString() };
+      commit(updateStyleProfileCommand(ledger, input));
+      mirror({ type: "update-style-profile", input });
       return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save Style DNA.");
@@ -195,13 +217,9 @@ export function useYange() {
 
   function saveLookDna(look: LookDna): boolean {
     try {
-      commit(
-        captureLookDnaCommand(state, ledger, {
-          look,
-          operationId: operationId("look-dna"),
-          occurredAt: new Date().toISOString(),
-        }),
-      );
+      const input = { look, operationId: operationId("look-dna"), occurredAt: new Date().toISOString() };
+      commit(captureLookDnaCommand(state, ledger, input));
+      mirror({ type: "capture-look-dna", input });
       return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save Look DNA.");
@@ -211,13 +229,9 @@ export function useYange() {
 
   function planCandidate(candidate: OutfitCandidate): boolean {
     try {
-      commit(
-        planOutfitCommand(state, ledger, {
-          candidate,
-          operationId: operationId("plan-outfit"),
-          occurredAt: new Date().toISOString(),
-        }),
-      );
+      const input = { candidate, operationId: operationId("plan-outfit"), occurredAt: new Date().toISOString() };
+      commit(planOutfitCommand(state, ledger, input));
+      mirror({ type: "plan-outfit", input });
       return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to reserve this outfit.");
@@ -227,13 +241,9 @@ export function useYange() {
 
   function queueLaundry(garmentIds: string[]): boolean {
     try {
-      commit(
-        queueGarmentsForLaundryCommand(state, ledger, {
-          garmentIds,
-          operationId: operationId("queue-laundry"),
-          occurredAt: new Date().toISOString(),
-        }),
-      );
+      const input = { garmentIds, operationId: operationId("queue-laundry"), occurredAt: new Date().toISOString() };
+      commit(queueGarmentsForLaundryCommand(state, ledger, input));
+      mirror({ type: "queue-laundry", input });
       return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to update the laundry basket.");

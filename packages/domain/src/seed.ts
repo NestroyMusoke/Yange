@@ -302,6 +302,8 @@ export function createSeedState(): TwinState {
       feedbackCount: 0,
       averageConfidence: null,
       signals: {},
+      colourEvidence: [],
+      colourPreferences: {},
     },
     styleProfile: {
       version: 1,

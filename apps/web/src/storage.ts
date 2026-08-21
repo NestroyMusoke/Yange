@@ -9,6 +9,7 @@ const LEGACY_LEDGER_KEYS = [
 export interface EventRepository {
   read(): DomainEvent[];
   append(events: DomainEvent[]): DomainEvent[];
+  replace(events: DomainEvent[]): DomainEvent[];
   reset(): void;
 }
 
@@ -43,6 +44,11 @@ export const localEventRepository: EventRepository = {
     const next = [...current, ...uniqueEvents];
     window.localStorage.setItem(LEDGER_KEY, JSON.stringify(next));
     return next;
+  },
+  replace(events) {
+    const unique = [...new Map(events.map((event) => [event.id, event])).values()];
+    window.localStorage.setItem(LEDGER_KEY, JSON.stringify(unique));
+    return unique;
   },
   reset() {
     window.localStorage.removeItem(LEDGER_KEY);

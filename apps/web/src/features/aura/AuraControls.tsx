@@ -35,6 +35,7 @@ export function AuraControls({
       <button
         className="aura-chip"
         type="button"
+        aria-label={`Style Aura: ${profile.stage === "personal" ? "personal palette" : "learning your style"}`}
         aria-expanded={open}
         aria-controls="aura-control-panel"
         onClick={onToggle}
@@ -63,7 +64,7 @@ export function AuraControls({
             {profile.colours.map((colour, index) => (
               <span key={`${colour}-${index}`}>
                 <i style={{ backgroundColor: colour }} />
-                <small>{profile.labels[index]}</small>
+                <small title={profile.insights[index]}>{profile.labels[index]}</small>
               </span>
             ))}
           </div>
@@ -76,6 +77,15 @@ export function AuraControls({
             <small>
               {profile.sources.explicitPreferences} chosen colours · {profile.sources.inspirationPalettes} inspiration swatches · {profile.sources.confidenceSignals} confidence signals
             </small>
+          </div>
+          <div className="aura-reasons" aria-label="Why these colours are present">
+            {profile.colours.map((colour, index) => (
+              <div key={`reason-${colour}-${index}`}>
+                <i style={{ backgroundColor: colour }} aria-hidden="true" />
+                <span><strong>{profile.labels[index]}</strong><small>{profile.insights[index]}</small></span>
+              </div>
+            ))}
+            <p>{profile.sources.exactColourEvidence} exact-colour observations · {profile.sources.negativeSignals} negative or suggest-less signals</p>
           </div>
           <label className="aura-slider">
             <span><strong>Energy</strong><small>movement</small></span>

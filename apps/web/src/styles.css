@@ -14,6 +14,7 @@
   --muted: #a9ada8;
   --cream: #e6d8ba;
   --olive: #9cab78;
+  --lake: #77cfea;
   --rose: #c98c8d;
   --warning: #ddb56f;
   --danger: #d57f77;
@@ -32,6 +33,7 @@
   --divider: var(--border);
   --font-display: "Bodoni Moda Variable", Didot, Georgia, serif;
   --font-body: "Spline Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-utility: var(--font-body);
   --text-display: clamp(3.5rem, 7.5vw, 6.5rem);
   --text-section: clamp(2.5rem, 4.8vw, 4.5rem);
   --text-title: clamp(1.6rem, 2.6vw, 2.25rem);
@@ -315,10 +317,11 @@ h1 {
 
 .view-tabs {
   display: grid;
-  grid-template-columns: repeat(7, minmax(148px, 1fr));
-  gap: 0;
-  overflow-x: auto;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  overflow: visible;
   margin: 0;
+  padding: 5px 4px 6px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   scrollbar-width: none;
@@ -337,62 +340,71 @@ h1 {
 .view-tabs button {
   position: relative;
   display: inline-flex;
-  min-width: 148px;
-  min-height: 82px;
-  gap: 10px;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 18px clamp(12px, 1.4vw, 22px) 17px 0;
+  min-width: 0;
+  min-height: 58px;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px;
   border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  text-align: left;
+  border-radius: 8px;
+  text-align: center;
+  transition: color 160ms ease, background-color 160ms ease;
 }
 
 .view-tabs button.active {
-  border-bottom-color: var(--cream);
   color: var(--text-primary);
-  background: transparent;
+  background: color-mix(in srgb, var(--cream) 7%, transparent);
 }
 
-.view-tabs button:hover { color: var(--cream); }
+.view-tabs button:hover { color: var(--cream); background: color-mix(in srgb, var(--cream) 4%, transparent); }
 .view-tabs button[aria-current="page"] { text-decoration: none; }
-.view-tabs button.active .view-tab-copy small { color: var(--muted); }
+
+.view-tab-icon {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 21px;
+  place-items: center;
+  color: color-mix(in srgb, currentColor 84%, var(--lake, #77cfea));
+}
+
+.view-tab-icon svg { width: 100%; height: 100%; }
+.view-tabs button.active .view-tab-icon { color: var(--cream); }
 
 .view-tab-copy,
-.view-tab-copy strong,
-.view-tab-copy small { display: block; }
+.view-tab-copy strong { display: block; }
 
 .view-tab-copy strong {
   color: inherit;
-  font-family: var(--font-display);
-  font-size: clamp(1rem, 1.25vw, 1.22rem);
-  font-variation-settings: "opsz" 28, "wght" 520;
-  font-weight: 520;
+  font-family: var(--font-utility);
+  font-size: clamp(0.67rem, 0.75vw, 0.76rem);
+  font-weight: 670;
   line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.view-tab-copy small {
-  margin-top: 8px;
-  color: var(--text-secondary);
-  font-size: 0.64rem;
-  line-height: 1.25;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
 }
 
 .count {
-  display: inline-grid;
-  min-width: 19px;
-  height: 19px;
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  display: grid;
+  min-width: 17px;
+  height: 17px;
   place-items: center;
   border: 1px solid var(--border);
-  border-radius: 2px;
+  border-radius: 999px;
   color: var(--cream);
-  font-size: 0.64rem;
+  background: color-mix(in srgb, var(--canvas) 78%, transparent);
+  font-size: 0.57rem;
 }
 
 @media (max-width: 1100px) {
-  .view-tabs { grid-template-columns: repeat(7, 156px); }
+  .view-tabs {
+    grid-template-columns: repeat(7, minmax(82px, 1fr));
+    overflow-x: auto;
+  }
 }
 
 @media (max-width: 720px) {
@@ -408,8 +420,13 @@ h1 {
   .brand-mark { width: 34px; height: 41px; }
   .brand-wordmark strong { font-size: 1.45rem; }
   .brand-wordmark small { display: none; }
-  .view-tabs { grid-template-columns: repeat(7, 142px); }
-  .view-tabs button { min-width: 142px; min-height: 74px; padding-top: 15px; }
+  .view-tabs {
+    grid-template-columns: repeat(7, 78px);
+    margin-inline: -4px;
+  }
+  .view-tabs button { min-width: 78px; min-height: 58px; gap: 6px; padding-inline: 6px; }
+  .view-tab-icon { width: 19px; height: 19px; flex-basis: 19px; }
+  .view-tab-copy strong { font-size: 0.62rem; }
   main { padding-bottom: 48px; }
 }
 
@@ -496,7 +513,7 @@ h1 {
 
 .garment-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(112px, 1fr));
   gap: clamp(12px, 1.5vw, 22px);
   margin: var(--space-7) 0;
 }
@@ -505,34 +522,50 @@ h1 {
   min-width: 0;
 }
 
-.garment-swatch {
+.garment-media {
   position: relative;
-  height: clamp(116px, 15vw, 192px);
+  aspect-ratio: 3 / 4.65;
   overflow: hidden;
-  border-radius: 2px;
-  box-shadow: inset 0 -60px 80px color-mix(in srgb, var(--canvas) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cream) 11%, transparent);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 15px 34px color-mix(in srgb, var(--canvas) 20%, transparent);
 }
 
-.garment-swatch::after {
+.garment-media::after {
   position: absolute;
-  inset: 12% 14%;
-  border: 1px solid color-mix(in srgb, var(--text) 13%, transparent);
-  border-radius: 42% 42% 26% 26%;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 64%, color-mix(in srgb, var(--canvas) 72%, transparent));
   content: "";
+  pointer-events: none;
 }
 
-.garment-swatch span {
+.garment-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 320ms ease;
+}
+
+.garment-tile:hover .garment-media img { transform: scale(1.018); }
+
+.garment-category,
+.garment-evidence {
   position: absolute;
-  z-index: 1;
-  right: 10px;
+  z-index: 2;
   bottom: 9px;
-  color: color-mix(in srgb, var(--text) 82%, transparent);
-  font-size: 0.62rem;
+  color: color-mix(in srgb, var(--cream) 90%, white);
+  font-size: 0.54rem;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
-.garment-tile > div:last-child {
+.garment-category { right: 9px; }
+.garment-evidence { left: 9px; color: color-mix(in srgb, var(--cream) 70%, transparent); }
+.garment-photo-pending { display: grid; height: 100%; place-items: center; color: var(--muted); font-size: 0.65rem; }
+
+.garment-details {
   padding: 11px 3px 0;
 }
 
@@ -543,19 +576,26 @@ h1 {
 }
 
 .garment-tile strong {
+  display: -webkit-box;
   overflow: hidden;
+  min-height: 2.45em;
   margin-bottom: 4px;
-  font-size: 0.78rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.75rem;
+  line-height: 1.22;
 }
 
-.garment-tile span {
+.garment-details > span {
   overflow: hidden;
   color: var(--muted);
   font-size: 0.68rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .garment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .state {
@@ -3071,7 +3111,8 @@ body {
 
 .style-aura canvas {
   display: block;
-  opacity: 0.68;
+  opacity: 0.9;
+  filter: blur(0.35px) saturate(1.12);
   mix-blend-mode: screen;
   transition: opacity 700ms ease;
 }
@@ -3093,8 +3134,8 @@ body {
 
 .style-aura-legibility {
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--canvas) 48%, transparent), color-mix(in srgb, var(--canvas) 8%, transparent) 45%, color-mix(in srgb, var(--canvas) 30%, transparent)),
-    linear-gradient(180deg, color-mix(in srgb, var(--canvas) 8%, transparent), color-mix(in srgb, var(--canvas) 24%, transparent));
+    linear-gradient(90deg, color-mix(in srgb, var(--canvas) 22%, transparent), color-mix(in srgb, var(--canvas) 3%, transparent) 45%, color-mix(in srgb, var(--canvas) 14%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--canvas) 3%, transparent), color-mix(in srgb, var(--canvas) 11%, transparent));
 }
 
 .app-shell {
@@ -3309,9 +3350,22 @@ body {
 
 @media (max-width: 720px) {
   .topbar-actions { gap: 5px; }
+  .topbar {
+    background-color: rgba(7, 11, 11, 0.94);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
   .aura-chip { grid-template-columns: auto; padding: 6px; }
   .aura-chip > span:last-child { display: none; }
-  .aura-panel { position: fixed; top: 72px; right: 14px; }
+  .aura-panel {
+    position: fixed;
+    top: 142px;
+    right: 0;
+    width: calc(100vw - 36px);
+    max-height: calc(100dvh - 154px);
+    overflow-y: auto;
+    background-color: rgba(7, 11, 11, 0.97);
+  }
   .judge-hero { min-height: 0; grid-template-columns: 1fr; padding: 28px 18px; border-radius: 23px; }
   .judge-hero::after { right: -170px; bottom: -180px; }
   .demo-readiness-orbit { grid-template-columns: 110px 1fr; gap: 15px; justify-items: start; align-items: center; }
@@ -3418,7 +3472,763 @@ body {
   .architecture-ending { padding: var(--space-6) 0; border-radius: 0; }
 }
 
+/* Keep the compact Aura receipt viewport-bound instead of glass-container-bound. */
+@media (max-width: 720px) {
+  .topbar {
+    background-color: rgba(7, 11, 11, 0.94);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .aura-panel {
+    position: fixed;
+    top: 142px;
+    right: 14px;
+    max-height: calc(100dvh - 154px);
+    overflow-y: auto;
+    background: rgba(7, 11, 11, 0.97);
+  }
+}
+
+/* Official Yange identity and supplied dimensional navigation iconography. */
+.brand-mark {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+}
+
+.brand-mark .yange-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 14px rgba(0, 0, 0, 0.32));
+}
+
+.brand-wordmark small {
+  max-width: 250px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.view-tab-icon {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.view-tab-icon img,
+.view-tab-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.view-tab-icon img {
+  filter: saturate(0.86) drop-shadow(0 4px 7px rgba(0, 0, 0, 0.34));
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.view-tabs button:hover .view-tab-icon img,
+.view-tabs button.active .view-tab-icon img {
+  filter: saturate(1.08) brightness(1.08) drop-shadow(0 5px 10px rgba(45, 155, 114, 0.22));
+  transform: translateY(-1px);
+}
+
+footer {
+  align-items: center;
+  gap: 28px;
+}
+
+.footer-brand-lockup {
+  display: block;
+  width: clamp(138px, 14vw, 190px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 9px 20px rgba(0, 0, 0, 0.28));
+}
+
+@media (max-width: 720px) {
+  .brand-mark {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .view-tab-icon {
+    width: 27px;
+    height: 27px;
+    flex-basis: 27px;
+  }
+
+  footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .footer-brand-lockup { width: 150px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .style-aura canvas,
   .style-aura-fallback { transition: none; }
+}
+
+.aura-reasons { display: grid; gap: 7px; margin-top: 13px; }
+.aura-reasons > div { display: grid; grid-template-columns: 9px minmax(0, 1fr); gap: 9px; align-items: center; }
+.aura-reasons > div > i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
+.aura-reasons strong,
+.aura-reasons small { display: block; }
+.aura-reasons strong { color: var(--text); font-size: 0.55rem; text-transform: capitalize; }
+.aura-reasons small { margin-top: 2px; color: var(--muted); font-size: 0.49rem; }
+.aura-reasons p { margin: 3px 0 0; color: var(--muted); font-size: 0.49rem; line-height: 1.45; }
+
+.confidence-prompt {
+  max-width: 650px;
+  margin: -3px 0 14px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.colour-attribution {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.colour-attribution button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid rgba(221, 247, 255, 0.1);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(8, 12, 11, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  cursor: pointer;
+}
+
+.colour-attribution button.selected {
+  color: var(--cream);
+  border-color: rgba(221, 247, 255, 0.22);
+  background: linear-gradient(112deg, rgba(119, 207, 234, 0.1), rgba(168, 138, 232, 0.075), rgba(217, 140, 165, 0.09));
+}
+
+/* Yange optical material system
+   The learned Style Aura is the pigment; these surfaces behave as quiet lenses. */
+:root {
+  --glass-ink: rgba(9, 13, 13, 0.52);
+  --glass-ink-strong: rgba(7, 11, 11, 0.68);
+  --glass-ink-soft: rgba(18, 23, 22, 0.34);
+  --glass-ice: rgba(221, 247, 255, 0.19);
+  --glass-ice-soft: rgba(221, 247, 255, 0.08);
+  --glass-cyan: rgba(119, 207, 234, 0.16);
+  --glass-violet: rgba(168, 138, 232, 0.13);
+  --glass-rose: rgba(217, 140, 165, 0.11);
+  --glass-cream: rgba(243, 231, 200, 0.14);
+  --glass-blur: 22px;
+  --glass-radius-xl: 28px;
+  --glass-radius-lg: 21px;
+  --glass-radius-md: 15px;
+  --glass-depth:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 1px 0 0 rgba(119, 207, 234, 0.075),
+    inset -1px 0 0 rgba(217, 140, 165, 0.06),
+    inset 0 -1px 0 rgba(168, 138, 232, 0.055),
+    0 18px 48px rgba(0, 0, 0, 0.22),
+    0 2px 8px rgba(0, 0, 0, 0.14);
+  --glass-depth-raised:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 1px 0 0 rgba(119, 207, 234, 0.11),
+    inset -1px 0 0 rgba(217, 140, 165, 0.08),
+    0 13px 31px rgba(0, 0, 0, 0.27),
+    0 2px 7px rgba(0, 0, 0, 0.18);
+}
+
+/* Two floating header lenses keep all seven destinations legible without crowding. */
+.site-header {
+  padding-top: 10px;
+  background: linear-gradient(180deg, rgba(7, 10, 10, 0.72), rgba(7, 10, 10, 0.12) 88%, transparent);
+  backdrop-filter: none;
+}
+
+.topbar,
+.view-tabs {
+  border: 1px solid var(--glass-ice-soft);
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0.075), transparent 24%, rgba(119, 207, 234, 0.035) 57%, rgba(217, 140, 165, 0.045)),
+    var(--glass-ink-strong);
+  background-clip: padding-box;
+  box-shadow: var(--glass-depth);
+  -webkit-backdrop-filter: blur(26px) saturate(1.32);
+  backdrop-filter: blur(26px) saturate(1.32);
+}
+
+.topbar {
+  min-height: 82px;
+  padding: 0 clamp(15px, 2.3vw, 28px);
+  border-radius: 24px 24px 10px 10px;
+}
+
+.view-tabs {
+  gap: 5px;
+  margin-top: 7px;
+  padding: 6px;
+  border-radius: 10px 10px 24px 24px;
+}
+
+.view-tabs button {
+  min-height: 54px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.012);
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.view-tabs button:hover {
+  color: var(--text-primary);
+  border-color: rgba(221, 247, 255, 0.09);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), transparent 50%),
+    rgba(221, 247, 255, 0.026);
+  transform: translateY(-1px);
+}
+
+.view-tabs button.active {
+  color: var(--text-primary);
+  border-color: rgba(221, 247, 255, 0.17);
+  background:
+    radial-gradient(ellipse at 14% -18%, rgba(255, 255, 255, 0.22), transparent 43%),
+    linear-gradient(112deg, rgba(119, 207, 234, 0.09), rgba(168, 138, 232, 0.06) 54%, rgba(217, 140, 165, 0.075)),
+    rgba(255, 255, 255, 0.035);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 1px 0 0 rgba(119, 207, 234, 0.11),
+    inset -1px 0 0 rgba(217, 140, 165, 0.08),
+    0 7px 20px rgba(0, 0, 0, 0.2);
+}
+
+.view-tabs button.active::after {
+  position: absolute;
+  right: 18%;
+  bottom: 3px;
+  left: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--aura-two), var(--cream), var(--aura-four), transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--aura-three) 46%, transparent);
+  content: "";
+}
+
+.view-tab-icon {
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.26));
+}
+
+.profile-chip {
+  padding: 9px 12px;
+  border: 1px solid var(--glass-ice-soft);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Primary vitrines: depth without obscuring the wardrobe or the atmosphere. */
+:is(
+  .readiness-card,
+  .outfit-card,
+  .future-card,
+  .memory-card,
+  .activity-panel,
+  .studio-intro,
+  .studio-panel,
+  .studio-gallery,
+  .atelier-intro,
+  .intelligence-panel,
+  .wearcast-hero,
+  .autonomy-console,
+  .forecast-panel,
+  .simulation-panel,
+  .workflow-receipt,
+  .notification-center,
+  .cloud-proof-hero,
+  .cloud-command-deck,
+  .architecture-passport,
+  .cloud-boundary-card,
+  .judge-hero,
+  .proof-board,
+  .demo-runway,
+  .fault-theatre,
+  .aura-evidence-card,
+  .architecture-ending
+) {
+  border: 1px solid var(--glass-ice-soft);
+  border-radius: var(--glass-radius-xl);
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.07), transparent 19%, rgba(119, 207, 234, 0.03) 52%, rgba(168, 138, 232, 0.025) 74%, rgba(217, 140, 165, 0.04)),
+    var(--glass-ink);
+  background-clip: padding-box;
+  box-shadow: var(--glass-depth);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.26);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.26);
+}
+
+.outfit-card,
+.activity-panel,
+.studio-panel,
+.studio-gallery,
+.intelligence-panel,
+.forecast-panel,
+.simulation-panel,
+.proof-board,
+.demo-runway,
+.fault-theatre,
+.aura-evidence-card {
+  padding: clamp(20px, 3.2vw, 36px);
+}
+
+.future-card,
+.memory-card {
+  padding: clamp(20px, 2.5vw, 28px);
+  border: 1px solid var(--glass-ice-soft);
+}
+
+.future-card.future-risk {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--glass-ice-soft));
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.06), transparent 24%, color-mix(in srgb, var(--danger) 8%, transparent)),
+    var(--glass-ink);
+}
+
+.studio-intro,
+.atelier-intro,
+.wearcast-hero,
+.cloud-proof-hero,
+.judge-hero {
+  min-height: 0;
+  padding: clamp(28px, 4.8vw, 58px);
+  overflow: hidden;
+  border: 1px solid var(--glass-ice-soft);
+}
+
+.studio-intro::after,
+.atelier-intro::after,
+.wearcast-hero::before,
+.cloud-proof-hero::after,
+.judge-hero::after { display: none; }
+
+.architecture-passport,
+.cloud-boundary-card {
+  padding: clamp(19px, 2.7vw, 30px);
+}
+
+.architecture-ending { padding: clamp(24px, 4vw, 43px); }
+
+/* Secondary panes use thinner glass so nested information still has clear depth. */
+:is(
+  .studio-proof,
+  .capture-slot,
+  .drop-surface,
+  .review-card,
+  .dna-section,
+  .agency-note,
+  .privacy-strip,
+  .studio-look-card,
+  .look-result,
+  .atelier-proof,
+  .context-console,
+  .laundry-queue-card,
+  .candidate-card,
+  .decision-details,
+  .laundry-status-rail,
+  .laundry-cluster,
+  .weather-controls,
+  .capacity-meter,
+  .demo-step,
+  .forecast-day,
+  .scenario-card,
+  .window-card,
+  .fallback-card,
+  .wearcast-clear,
+  .notification-list article,
+  .cloud-runtime-badge,
+  .cloud-checkpoints > div,
+  .boundary-flow > div,
+  .proof-signal,
+  .fault-node,
+  .aura-source-list,
+  .aura-panel
+) {
+  border: 1px solid rgba(221, 247, 255, 0.075);
+  border-radius: var(--glass-radius-lg);
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.05), transparent 27%, rgba(119, 207, 234, 0.022) 62%, rgba(217, 140, 165, 0.027)),
+    var(--glass-ink-soft);
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    inset 1px 0 0 rgba(119, 207, 234, 0.045),
+    inset -1px 0 0 rgba(217, 140, 165, 0.035),
+    0 10px 24px rgba(0, 0, 0, 0.13);
+  -webkit-backdrop-filter: blur(15px) saturate(1.18);
+  backdrop-filter: blur(15px) saturate(1.18);
+}
+
+.capture-slot,
+.review-card,
+.dna-section,
+.candidate-card,
+.laundry-cluster { border-color: rgba(221, 247, 255, 0.075); }
+
+.candidate-card,
+.laundry-cluster {
+  margin-bottom: 10px;
+  padding: clamp(17px, 2.5vw, 27px);
+}
+
+.scenario-card + .scenario-card {
+  padding-left: clamp(20px, 3vw, 30px);
+  border-left: 1px solid rgba(221, 247, 255, 0.075);
+}
+
+.forecast-rail,
+.scenario-grid,
+.proof-signal-grid,
+.laundry-clusters {
+  gap: 8px;
+  border: 0;
+}
+
+.forecast-day,
+.proof-signal { padding: 14px; }
+.forecast-day { border-width: 1px; }
+
+.proof-signal:nth-child(3n + 2),
+.proof-signal:nth-child(3n + 3) {
+  padding-left: 14px;
+  border-left: 1px solid rgba(221, 247, 255, 0.075);
+}
+
+/* Compact controls are the most lens-like elements: convex, edged and tactile. */
+:is(
+  .primary-action,
+  .quiet-action,
+  .secondary-action,
+  .text-action,
+  .fault-action,
+  .cloud-actions button,
+  .demo-step button,
+  .demo-act-list li > button,
+  .architecture-ending > button,
+  .aura-chip,
+  .aura-close,
+  .studio-steps button,
+  .atelier-tabs button,
+  .relationship-grid button,
+  .colour-choice-grid button,
+  .pill-choices button
+) {
+  border: 1px solid rgba(221, 247, 255, 0.13);
+  border-radius: 14px;
+  color: var(--text-primary);
+  background:
+    radial-gradient(ellipse at 18% -28%, rgba(255, 255, 255, 0.2), transparent 48%),
+    linear-gradient(118deg, rgba(119, 207, 234, 0.065), rgba(168, 138, 232, 0.045) 53%, rgba(217, 140, 165, 0.06)),
+    rgba(15, 21, 20, 0.5);
+  background-clip: padding-box;
+  box-shadow: var(--glass-depth-raised);
+  -webkit-backdrop-filter: blur(17px) saturate(1.28);
+  backdrop-filter: blur(17px) saturate(1.28);
+  transition: transform 160ms ease, border-color 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+.primary-action.primary-action {
+  color: #121614;
+  border-color: rgba(243, 231, 200, 0.46);
+  background:
+    radial-gradient(ellipse at 21% -30%, rgba(255, 255, 255, 0.64), transparent 50%),
+    linear-gradient(118deg, color-mix(in srgb, var(--cream) 88%, #77cfea), color-mix(in srgb, var(--cream) 85%, #d98ca5));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -1px 0 rgba(80, 62, 36, 0.18),
+    0 12px 26px rgba(0, 0, 0, 0.25);
+}
+
+:is(
+  .primary-action,
+  .quiet-action,
+  .secondary-action,
+  .text-action,
+  .fault-action,
+  .cloud-actions button,
+  .demo-step button,
+  .demo-act-list li > button,
+  .architecture-ending > button,
+  .aura-chip,
+  .aura-close,
+  .studio-steps button,
+  .atelier-tabs button,
+  .relationship-grid button,
+  .colour-choice-grid button,
+  .pill-choices button
+):not(:disabled):hover {
+  border-color: rgba(221, 247, 255, 0.25);
+  filter: brightness(1.08) saturate(1.08);
+  transform: translateY(-1px);
+}
+
+:is(
+  .primary-action,
+  .quiet-action,
+  .secondary-action,
+  .text-action,
+  .fault-action,
+  .cloud-actions button,
+  .demo-step button,
+  .demo-act-list li > button,
+  .architecture-ending > button,
+  .aura-chip,
+  .aura-close,
+  .studio-steps button,
+  .atelier-tabs button,
+  .relationship-grid button,
+  .colour-choice-grid button,
+  .pill-choices button
+):not(:disabled):active {
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transform: translateY(0) scale(0.992);
+}
+
+.studio-steps,
+.atelier-tabs {
+  gap: 7px;
+  padding: 6px;
+  border: 1px solid var(--glass-ice-soft);
+  border-radius: 20px;
+  background: rgba(8, 12, 11, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  -webkit-backdrop-filter: blur(18px) saturate(1.18);
+  backdrop-filter: blur(18px) saturate(1.18);
+}
+
+.studio-steps button,
+.atelier-tabs button {
+  margin: 0;
+  border-bottom-width: 1px;
+}
+
+.atelier-tabs button {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 14px 16px;
+}
+
+.studio-steps button + button,
+.atelier-tabs button + button { margin-left: 0; }
+
+.studio-steps button.active,
+.atelier-tabs button.active,
+.relationship-grid button.selected,
+.pill-choices button.selected,
+.colour-choice-grid button.selected {
+  border-color: rgba(221, 247, 255, 0.22);
+  background:
+    radial-gradient(ellipse at 18% -24%, rgba(255, 255, 255, 0.24), transparent 48%),
+    linear-gradient(112deg, rgba(119, 207, 234, 0.1), rgba(168, 138, 232, 0.075), rgba(217, 140, 165, 0.09)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.field-group input,
+.field-group select,
+.field-group textarea,
+.height-field input {
+  border: 1px solid rgba(221, 247, 255, 0.095);
+  border-radius: 12px;
+  color: var(--text-primary);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 54%),
+    rgba(5, 9, 8, 0.48);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.22), 0 1px 0 rgba(255, 255, 255, 0.035);
+  -webkit-backdrop-filter: blur(11px);
+  backdrop-filter: blur(11px);
+}
+
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus,
+.height-field input:focus {
+  border-color: color-mix(in srgb, var(--aura-two) 47%, rgba(221, 247, 255, 0.18));
+  box-shadow:
+    inset 0 1px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 3px color-mix(in srgb, var(--aura-two) 11%, transparent),
+    0 0 18px color-mix(in srgb, var(--aura-three) 8%, transparent);
+  outline: 0;
+}
+
+.state,
+.future-topline em,
+.adapter-chip,
+.engine-chip,
+.evidence-badge,
+.workflow-status,
+.manual-source,
+.simulation-heading > span,
+.proof-heading > span,
+.judge-section-heading > em,
+.count {
+  border: 1px solid rgba(221, 247, 255, 0.1);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), transparent 55%),
+    rgba(15, 22, 20, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+}
+
+.garment-media,
+.studio-garment-image {
+  border-color: rgba(221, 247, 255, 0.13);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 16px 38px rgba(0, 0, 0, 0.24);
+}
+
+.garment-category,
+.garment-evidence,
+.studio-garment-image em {
+  padding: 5px 7px;
+  border: 1px solid rgba(221, 247, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(5, 9, 8, 0.52);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(11px) saturate(1.2);
+  backdrop-filter: blur(11px) saturate(1.2);
+}
+
+.garment-category { right: 8px; bottom: 8px; }
+.garment-evidence { bottom: 8px; left: 8px; }
+
+.aura-panel {
+  border-color: rgba(221, 247, 255, 0.14);
+  background:
+    radial-gradient(ellipse at 12% -8%, rgba(119, 207, 234, 0.12), transparent 42%),
+    radial-gradient(ellipse at 100% 100%, rgba(217, 140, 165, 0.08), transparent 45%),
+    rgba(7, 11, 11, 0.76);
+  box-shadow: var(--glass-depth-raised);
+  -webkit-backdrop-filter: blur(30px) saturate(1.38);
+  backdrop-filter: blur(30px) saturate(1.38);
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .topbar,
+  .view-tabs,
+  :is(
+    .readiness-card,
+    .outfit-card,
+    .future-card,
+    .memory-card,
+    .activity-panel,
+    .studio-intro,
+    .studio-panel,
+    .studio-gallery,
+    .atelier-intro,
+    .intelligence-panel,
+    .wearcast-hero,
+    .autonomy-console,
+    .forecast-panel,
+    .simulation-panel,
+    .workflow-receipt,
+    .notification-center,
+    .cloud-proof-hero,
+    .cloud-command-deck,
+    .architecture-passport,
+    .cloud-boundary-card,
+    .judge-hero,
+    .proof-board,
+    .demo-runway,
+    .fault-theatre,
+    .aura-evidence-card,
+    .architecture-ending,
+    .aura-panel
+  ) { background-color: rgba(9, 13, 13, 0.94); }
+}
+
+@media (max-width: 720px) {
+  .site-header { margin-inline: -18px; padding: 8px 18px 0; }
+  .topbar { min-height: 70px; padding-inline: 12px; border-radius: 20px 20px 9px 9px; }
+  .view-tabs { margin: 6px 0 0; border-radius: 9px 9px 20px 20px; }
+  .view-tabs button { min-width: 76px; }
+
+  :is(
+    .readiness-card,
+    .outfit-card,
+    .future-card,
+    .memory-card,
+    .activity-panel,
+    .studio-intro,
+    .studio-panel,
+    .studio-gallery,
+    .atelier-intro,
+    .intelligence-panel,
+    .wearcast-hero,
+    .autonomy-console,
+    .forecast-panel,
+    .simulation-panel,
+    .workflow-receipt,
+    .notification-center,
+    .cloud-proof-hero,
+    .cloud-command-deck,
+    .architecture-passport,
+    .cloud-boundary-card,
+    .judge-hero,
+    .proof-board,
+    .demo-runway,
+    .fault-theatre,
+    .aura-evidence-card,
+    .architecture-ending
+  ) { border-radius: 21px; }
+
+  .studio-intro,
+  .atelier-intro,
+  .wearcast-hero,
+  .cloud-proof-hero,
+  .judge-hero { padding: 25px 18px; }
+
+  .scenario-card + .scenario-card { padding-left: 20px; border-left-width: 1px; }
+}
+
+@media (max-width: 430px) {
+  .topbar-actions { gap: 4px; }
+  .aura-chip { border-radius: 12px; }
+  .view-tabs { grid-template-columns: repeat(7, 76px); }
+  .atelier-proof span {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 10px;
+    place-content: initial;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-tabs button,
+  :is(.primary-action, .quiet-action, .secondary-action, .text-action, .fault-action, .cloud-actions button, .demo-step button, .aura-chip) {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* Final mobile override: backdrop-filter otherwise makes fixed children use the header as their viewport. */
+@media (max-width: 720px) {
+  .topbar {
+    background-color: rgba(7, 11, 11, 0.94);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .aura-panel {
+    position: fixed;
+    top: 142px;
+    right: 0;
+    width: calc(100vw - 36px);
+    max-height: calc(100dvh - 154px);
+    overflow-y: auto;
+    background: rgba(7, 11, 11, 0.97);
+  }
 }

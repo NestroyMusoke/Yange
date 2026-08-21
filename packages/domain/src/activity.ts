@@ -66,6 +66,16 @@ export function deriveActivity(
             tone: "positive",
           };
         }
+        case "ColourEvidenceRecorded": {
+          const evidence = event.payload.evidence;
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: `${evidence.label} colour evidence recorded`,
+            detail: `${evidence.direction === "positive" ? "Positive" : "Negative"} ${evidence.attribution === "user-attributed" ? "user-attributed" : "outfit-inferred"} evidence was added at ${Math.round(evidence.strength * 100)}% strength.`,
+            tone: evidence.direction === "positive" ? "positive" : "neutral",
+          };
+        }
         case "GarmentAdded": {
           return {
             id: event.id,

@@ -1,7 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
-  Garment,
-  GarmentState,
   PreferenceSignal,
 } from "@yange/domain";
 import { Atelier } from "./features/intelligence/Atelier";
@@ -9,10 +7,13 @@ import { CloudProof } from "./features/cloud/CloudProof";
 import { AuraControls } from "./features/aura/AuraControls";
 import { StyleAura, type AuraStatus } from "./features/aura/StyleAura";
 import { deriveStyleAuraProfile } from "./features/aura/palette";
+import { resetAuraProjection, useGradualAuraProfile } from "./features/aura/projection";
 import { JudgeMode, type YangeView } from "./features/judge/JudgeMode";
 import { WardrobeStudio } from "./features/studio/WardrobeStudio";
 import { WearCast } from "./features/wearcast/WearCast";
 import { YangeLogo } from "./features/brand/YangeLogo";
+import { ViewIcon } from "./features/navigation/ViewIcon";
+import { TodayGarmentCard } from "./features/today/TodayGarmentCard";
 import { useYange } from "./useYange";
 
 const confidenceLabels = [
@@ -22,15 +23,6 @@ const confidenceLabels = [
   "Confident",
   "Amazing",
 ] as const;
-
-const stateLabels: Record<GarmentState, string> = {
-  available: "Available",
-  reserved: "Reserved",
-  rewearable: "Rewearable",
-  airing: "Airing",
-  laundry: "Laundry",
-  drying: "Drying",
-};
 
 const auraSceneTone: Record<YangeView, { energy: number; warmth: number }> = {
   today: { energy: 0.83, warmth: 0.58 },
@@ -51,22 +43,10 @@ const viewNavigation: ReadonlyArray<{
   { id: "studio", label: "Studio", description: "Build your wardrobe" },
   { id: "atelier", label: "Atelier", description: "Plan with evidence" },
   { id: "wearcast", label: "WearCast", description: "See what is ahead" },
-  { id: "cloud", label: "Cloud proof", description: "Check the service" },
-  { id: "judge", label: "Judge mode", description: "Review the system" },
+  { id: "cloud", label: "Cloud", description: "Check the live service" },
+  { id: "judge", label: "Judge", description: "Review the system" },
   { id: "activity", label: "Activity", description: "Trace every action" },
 ];
-
-function garmentTone(garment: Garment): string {
-  const tones: Record<string, string> = {
-    "cream-blouse": "#d8c7a7",
-    "chocolate-trousers": "#6e4937",
-    "olive-jacket": "#5e6948",
-    "gold-earrings": "#b99b55",
-    "black-loafers": "#292a28",
-    "ivory-knit": "#e3dccb",
-  };
-  return tones[garment.id] ?? "#77756f";
-}
 
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -108,11 +88,15 @@ export function App() {
     new URLSearchParams(window.location.search).get("mode") === "judge" ? "judge" : "today",
   );
   const [auraOpen, setAuraOpen] = useState(false);
-  const [auraEnergy, setAuraEnergy] = useState(0.72);
+  const [auraEnergy, setAuraEnergy] = useState(0.82);
   const [auraWarmth, setAuraWarmth] = useState(0.46);
   const [auraStatus, setAuraStatus] = useState<AuraStatus>("starting");
   const [auraFallbackForced, setAuraFallbackForced] = useState(false);
-  const todayOutfit = state.outfits["today-city-calm"];
+  const [colourAttribution, setColourAttribution] = useState<"automatic" | "loved-colour" | "colour-missed">("automatic");
+  const latestAgentOutfit = Object.values(state.outfits)
+    .filter((outfit) => outfit.source === "agent-planned")
+    .sort((left, right) => (right.scheduledAt ?? "").localeCompare(left.scheduledAt ?? ""))[0];
+  const todayOutfit = latestAgentOutfit ?? state.outfits["today-city-calm"];
   const fridayOutfit = state.outfits["friday-rooftop"];
   const todayGarments = todayOutfit.garmentIds.map((id) => state.garments[id]);
   const todayFeedback = state.feedback.find(
@@ -132,10 +116,20 @@ export function App() {
   const fridayFallback = fridayRecovery
     ? state.outfits[fridayRecovery.fallbackOutfitId]
     : null;
-  const auraProfile = useMemo(() => deriveStyleAuraProfile(state), [state]);
+  const learnedAuraProfile = useMemo(() => deriveStyleAuraProfile(state), [state]);
+  const auraProfile = useGradualAuraProfile(learnedAuraProfile);
   const sceneTone = auraSceneTone[activeView];
   const renderedAuraEnergy = Math.min(1, auraEnergy * sceneTone.energy);
   const renderedAuraWarmth = Math.min(1, auraWarmth * 0.7 + sceneTone.warmth * 0.3);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [activeView]);
+
+  const resetExperience = () => {
+    resetAuraProjection();
+    reset();
+  };
 
   return (
     <>
@@ -155,7 +149,7 @@ export function App() {
             </span>
           <span className="brand-wordmark">
             <strong>Yange</strong>
-            <small>Wardrobe intelligence</small>
+            <small>Fashion app · Your style. Discovered.</small>
           </span>
         </a>
         <div className="topbar-actions">
@@ -198,15 +192,16 @@ export function App() {
                 key={item.id}
                 className={activeView === item.id ? "active" : ""}
                 aria-current={activeView === item.id ? "page" : undefined}
+                aria-label={`${item.label}: ${item.description}`}
+                title={item.description}
                 onClick={() => setActiveView(item.id)}
               >
+                <span className="view-tab-icon"><ViewIcon view={item.id} /></span>
                 <span className="view-tab-copy">
                   <strong>{item.label}</strong>
-                  <small>{item.description}</small>
                 </span>
                 {indicator !== null && <span className="count">{indicator}</span>}
                 {item.id === "cloud" && <span className="proof-dot" aria-hidden="true" />}
-                {item.id === "judge" && <span className="judge-tab-mark" aria-hidden="true">✦</span>}
               </button>
             );
           })}
@@ -268,24 +263,7 @@ export function App() {
               </div>
 
               <div className="garment-grid">
-                {todayGarments.map((garment) => (
-                  <article className="garment-tile" key={garment.id}>
-                    <div
-                      className="garment-swatch"
-                      style={{ backgroundColor: garmentTone(garment) }}
-                      aria-hidden="true"
-                    >
-                      <span>{garment.category}</span>
-                    </div>
-                    <div>
-                      <strong>{garment.name}</strong>
-                      <span>{garment.material}</span>
-                      <em className={`state state-${garment.state}`}>
-                        {stateLabels[garment.state]}
-                      </em>
-                    </div>
-                  </article>
-                ))}
+                {todayGarments.map((garment) => <TodayGarmentCard garment={garment} key={garment.id} />)}
               </div>
 
               <div className="why-row">
@@ -314,6 +292,22 @@ export function App() {
               ) : (
                 <div className="confidence-panel">
                   <h3>How did this outfit make you feel?</h3>
+                  <p className="confidence-prompt">Tell Yange whether colour influenced the feeling. “Whole look” keeps colour credit deliberately weak.</p>
+                  <div className="colour-attribution" aria-label="Colour attribution">
+                    {([
+                      ["automatic", "Whole look"],
+                      ["loved-colour", "Colours felt right"],
+                      ["colour-missed", "Colours felt off"],
+                    ] as const).map(([value, label]) => (
+                      <button
+                        type="button"
+                        key={value}
+                        className={colourAttribution === value ? "selected" : ""}
+                        aria-pressed={colourAttribution === value}
+                        onClick={() => setColourAttribution(value)}
+                      >{label}</button>
+                    ))}
+                  </div>
                   <div className="confidence-scale" aria-label="Confidence rating">
                     {confidenceLabels.map((label, index) => {
                       const value = (index + 1) as 1 | 2 | 3 | 4 | 5;
@@ -321,7 +315,11 @@ export function App() {
                         <button
                           type="button"
                           key={label}
-                          onClick={() => checkIn(todayOutfit.id, value)}
+                          onClick={() => checkIn(
+                            todayOutfit.id,
+                            value,
+                            colourAttribution === "automatic" ? [] : [colourAttribution],
+                          )}
                           aria-label={`${value} out of 5, ${label}`}
                         >
                           <span>{value}</span>
@@ -418,7 +416,7 @@ export function App() {
             auraStatus={auraStatus}
             auraFallbackForced={auraFallbackForced}
             onNavigate={setActiveView}
-            onReset={reset}
+            onReset={resetExperience}
             onToggleAuraFailure={() => setAuraFallbackForced((current) => !current)}
           />
         ) : (
@@ -429,7 +427,7 @@ export function App() {
                 <p>Every visible item comes from the append-only event ledger.</p>
               </div>
               {ledger.length > 0 && (
-                <button type="button" className="quiet-action" onClick={reset}>
+                <button type="button" className="quiet-action" onClick={resetExperience}>
                   Reset Yange demo
                 </button>
               )}
@@ -462,7 +460,15 @@ export function App() {
       </main>
 
       <footer>
-        <span>Yange wardrobe intelligence</span>
+        <img
+          className="footer-brand-lockup"
+          src="/brand/yange-official-lockup.png"
+          alt="Yange Fashion App — Your Style. Discovered."
+          width="745"
+          height="746"
+          loading="lazy"
+          decoding="async"
+        />
         <span>Private evidence · inspectable decisions · care-safe planning</span>
       </footer>
       </div>

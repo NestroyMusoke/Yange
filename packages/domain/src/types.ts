@@ -459,10 +459,42 @@ export interface PreferenceSignal {
   certainty: number;
 }
 
+export type ColourEvidenceDirection = "positive" | "negative";
+export type ColourEvidenceAttribution = "user-attributed" | "outfit-inferred";
+
+export interface ColourEvidence {
+  id: string;
+  colourFamily: string;
+  exactHex: string;
+  label: string;
+  source: "confidence-check-in";
+  direction: ColourEvidenceDirection;
+  strength: number;
+  attribution: ColourEvidenceAttribution;
+  garmentId: string;
+  outfitId: string;
+  occurredAt: string;
+}
+
+export interface ColourPreferenceSignal {
+  colourFamily: string;
+  representativeHex: string;
+  label: string;
+  positiveEvidence: number;
+  negativeEvidence: number;
+  observations: number;
+  score: number;
+  certainty: number;
+  lastObservedAt: string;
+  userAttributedObservations: number;
+}
+
 export interface StyleMemory {
   feedbackCount: number;
   averageConfidence: number | null;
   signals: Record<string, PreferenceSignal>;
+  colourEvidence: ColourEvidence[];
+  colourPreferences: Record<string, ColourPreferenceSignal>;
 }
 
 export interface TwinState {
@@ -507,6 +539,10 @@ export type DomainEvent =
         value: 1 | 2 | 3 | 4 | 5;
         tags: string[];
       };
+    })
+  | (EventEnvelope & {
+      type: "ColourEvidenceRecorded";
+      payload: { evidence: ColourEvidence };
     })
   | (EventEnvelope & {
       type: "GarmentAdded";

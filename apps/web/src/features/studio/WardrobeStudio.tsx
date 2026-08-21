@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { FakeGeminiMultimodalAdapter } from "@yange/contracts";
 import type { Garment, LookDna, StyleProfile, TwinState } from "@yange/domain";
+import { RuntimeMultimodalAnalyzer } from "../../aiRuntime";
 import { CapturePanel } from "./CapturePanel";
 import { LookDnaPanel } from "./LookDnaPanel";
 import { StyleDnaPanel } from "./StyleDnaPanel";
@@ -25,7 +25,7 @@ const steps: Array<{ id: StudioStep; number: string; label: string; detail: stri
 export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }: WardrobeStudioProps) {
   const [activeStep, setActiveStep] = useState<StudioStep>("capture");
   const queue = useCaptureQueue();
-  const analyzer = useMemo(() => new FakeGeminiMultimodalAdapter({ latencyMs: 720 }), []);
+  const analyzer = useMemo(() => new RuntimeMultimodalAnalyzer(), []);
   const userGarments = useMemo(
     () => Object.values(state.garments).filter((garment) => garment.source === "user-added").reverse(),
     [state.garments],

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  FakeGeminiExplanationAdapter,
   ManualCalendarAdapter,
   ManualWeatherAdapter,
   OUTFIT_EXPLANATION_CONTRACT_VERSION,
@@ -15,6 +14,7 @@ import {
   type TwinState,
   type WeatherCondition,
 } from "@yange/domain";
+import { RuntimeOutfitExplainer } from "../../aiRuntime";
 import { GarmentPreview } from "./GarmentPreview";
 
 interface OutfitAtelierProps {
@@ -151,7 +151,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [plannedCandidateId, setPlannedCandidateId] = useState<string | null>(null);
-  const explainer = useMemo(() => new FakeGeminiExplanationAdapter({ latencyMs: 520 }), []);
+  const explainer = useMemo(() => new RuntimeOutfitExplainer(), []);
   const unavailableCount = Object.values(state.garments).filter((garment) =>
     ["laundry", "drying", "airing", "reserved"].includes(garment.state),
   ).length;

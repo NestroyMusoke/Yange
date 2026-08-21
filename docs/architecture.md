@@ -152,7 +152,7 @@ triggered
 
 Retry loads the existing execution and skips every reached checkpoint. A completed trigger replay returns the saved receipt and increments `duplicateTriggerCount`; it does not call the event sink or notification gateway. Per-notification checkpoint state and stable idempotency keys also protect partial delivery loops.
 
-The browser implementation still uses `localStorage` for the free local product. In Google mode the same interfaces use Firestore plus a transactional outbox, so cloud execution did not require rewriting the workflow or domain engine.
+The browser keeps an optimistic `localStorage` mirror so taps remain immediate and the free local product works offline. When an API base URL is configured (or the app is served by Cloud Run), each mutation is sent as a typed command—not a trusted event—to the authenticated API session. The API rebuilds the user's current twin, re-runs domain validation, and appends the resulting idempotent events through Firestore's transaction and outbox. On startup, an existing cloud ledger hydrates the browser mirror.
 
 ### Phase 5 — production Google Cloud boundary
 
@@ -201,7 +201,7 @@ Firestore stores four evidence surfaces under each opaque user partition: immuta
 
 ## Phase 6 — presentation and proof boundary
 
-Style Aura is deliberately downstream of product state. A pure palette function reads explicit colour preferences, confirmed inspiration palettes, positive confidence signals, and confirmed garment colours. The WebGL process receives only four colour targets plus energy/warmth settings. It has no event repository, command dispatcher, media repository, or network adapter.
+Style Aura is deliberately downstream of product state. A pure palette function reads explicit colour preferences, confirmed inspiration palettes, exact positive and negative garment-colour evidence, broader confidence signals, and confirmed garment colours. Whole-outfit ratings receive deliberately weak attribution; “Colours felt right/off” creates stronger user-attributed evidence. Aggregates use recency decay, evidence thresholds, explainable counts, and certainty. A persisted display projection advances no more than 8% toward a new target for each changed evidence signature, while the WebGL renderer interpolates that step over 2.8 seconds. It receives only four colour targets plus energy/warmth settings and has no command authority.
 
 ```mermaid
 flowchart LR

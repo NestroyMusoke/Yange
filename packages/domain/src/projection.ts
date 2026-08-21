@@ -1,8 +1,44 @@
 import type {
+  ColourEvidence,
+  ColourPreferenceSignal,
   DomainEvent,
   PreferenceSignal,
   TwinState,
 } from "./types";
+
+function decayed(value: number, from: string, to: string): number {
+  const days = Math.max(0, (Date.parse(to) - Date.parse(from)) / 86_400_000);
+  return value * Math.pow(0.985, days);
+}
+
+function updatedColourPreference(
+  existing: ColourPreferenceSignal | undefined,
+  evidence: ColourEvidence,
+): ColourPreferenceSignal {
+  const positive = existing
+    ? decayed(existing.positiveEvidence, existing.lastObservedAt, evidence.occurredAt)
+    : 0;
+  const negative = existing
+    ? decayed(existing.negativeEvidence, existing.lastObservedAt, evidence.occurredAt)
+    : 0;
+  const positiveEvidence = positive + (evidence.direction === "positive" ? evidence.strength : 0);
+  const negativeEvidence = negative + (evidence.direction === "negative" ? evidence.strength : 0);
+  const observations = (existing?.observations ?? 0) + 1;
+  const evidenceMass = positiveEvidence + negativeEvidence;
+  return {
+    colourFamily: evidence.colourFamily,
+    representativeHex: evidence.exactHex,
+    label: evidence.label,
+    positiveEvidence,
+    negativeEvidence,
+    observations,
+    score: (positiveEvidence + 1) / (evidenceMass + 2),
+    certainty: Math.min(1, evidenceMass / 2.4),
+    lastObservedAt: evidence.occurredAt,
+    userAttributedObservations: (existing?.userAttributedObservations ?? 0)
+      + (evidence.attribution === "user-attributed" ? 1 : 0),
+  };
+}
 
 function updatedSignal(
   existing: PreferenceSignal | undefined,
@@ -82,9 +118,25 @@ export function applyEvent(state: TwinState, event: DomainEvent): TwinState {
         ...state,
         feedback: [...state.feedback, feedback],
         styleMemory: {
+          ...state.styleMemory,
           feedbackCount: nextCount,
           averageConfidence: (previousTotal + event.payload.value) / nextCount,
           signals,
+        },
+      };
+    }
+    case "ColourEvidenceRecorded": {
+      const evidence = structuredClone(event.payload.evidence);
+      const existing = state.styleMemory.colourPreferences?.[evidence.colourFamily];
+      return {
+        ...state,
+        styleMemory: {
+          ...state.styleMemory,
+          colourEvidence: [...(state.styleMemory.colourEvidence ?? []), evidence],
+          colourPreferences: {
+            ...(state.styleMemory.colourPreferences ?? {}),
+            [evidence.colourFamily]: updatedColourPreference(existing, evidence),
+          },
         },
       };
     }

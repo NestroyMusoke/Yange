@@ -2,16 +2,16 @@ import { useState } from "react";
 import {
   MULTIMODAL_CONTRACT_VERSION,
   type AnalysisImageRef,
-  type FakeGeminiMultimodalAdapter,
   type LookDnaAnalysisV1,
 } from "@yange/contracts";
+import type { TestableMultimodalAnalyzer } from "../../aiRuntime";
 import type { LookDna } from "@yange/domain";
 import { ImageDropzone } from "./ImageDropzone";
 import type { CaptureQueue } from "./useCaptureQueue";
 
 interface LookDnaPanelProps {
   queue: CaptureQueue;
-  analyzer: FakeGeminiMultimodalAdapter;
+  analyzer: TestableMultimodalAnalyzer;
   onSave(look: LookDna): boolean;
 }
 

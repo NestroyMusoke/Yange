@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import type { StyleAuraProfile } from "./palette";
+import {
+  AURORA_SPECTRUM,
+  composeAuraSpectrum,
+  type StyleAuraProfile,
+} from "./palette";
 
 export type AuraStatus = "starting" | "live" | "adaptive" | "frozen" | "fallback";
 
@@ -44,13 +48,10 @@ const DT = 0.16;
 const RELAXATION_STEPS = 4;
 
 const PROFILE_WEIGHTS = [0.9, 0.7, 0.55, 0.4] as const;
-const DEFAULT_AURA_PALETTE: AuraPaletteEntry[] = [
-  { hex: "#0D0F0E", weight: 0.18 },
-  { hex: "#E6D8BA", weight: 0.45 },
-  { hex: "#9CAB78", weight: 0.9 },
-  { hex: "#6E4937", weight: 0.65 },
-  { hex: "#C98C8D", weight: 0.55 },
-];
+const DEFAULT_AURA_PALETTE: AuraPaletteEntry[] = AURORA_SPECTRUM.map((hex, index) => ({
+  hex,
+  weight: PROFILE_WEIGHTS[index],
+}));
 
 function createFields(): FluidFields {
   return {
@@ -89,27 +90,49 @@ function validPalette(entries: AuraPaletteEntry[]): AuraPaletteEntry[] | null {
 }
 
 function profilePalette(profile: StyleAuraProfile): AuraPaletteEntry[] {
-  return profile.colours.map((hex, index) => ({
+  const expressiveColours = composeAuraSpectrum(
+    profile.colours,
+    0.22 + profile.confidence * 0.09,
+  );
+  return expressiveColours.map((hex, index) => ({
     hex,
     weight: PROFILE_WEIGHTS[index] ?? PROFILE_WEIGHTS.at(-1)!,
   }));
 }
 
 function semanticDefaultPalette(): AuraPaletteEntry[] {
-  const styles = getComputedStyle(document.documentElement);
-  const token = (name: string, fallback: string) => styles.getPropertyValue(name).trim() || fallback;
-  return [
-    { hex: token("--canvas", DEFAULT_AURA_PALETTE[0].hex), weight: DEFAULT_AURA_PALETTE[0].weight },
-    { hex: token("--cream", DEFAULT_AURA_PALETTE[1].hex), weight: DEFAULT_AURA_PALETTE[1].weight },
-    { hex: token("--olive", DEFAULT_AURA_PALETTE[2].hex), weight: DEFAULT_AURA_PALETTE[2].weight },
-    DEFAULT_AURA_PALETTE[3],
-    { hex: token("--rose", DEFAULT_AURA_PALETTE[4].hex), weight: DEFAULT_AURA_PALETTE[4].weight },
-  ];
+  return DEFAULT_AURA_PALETTE.map((entry) => ({ ...entry }));
 }
 
 function hexToRgb(hex: string): readonly [number, number, number] {
   const value = Number.parseInt(hex.slice(1), 16);
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+function rgbToHex(red: number, green: number, blue: number): string {
+  return `#${[red, green, blue]
+    .map((value) => Math.round(clamp(value, 0, 255)).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function interpolatePalette(
+  from: AuraPaletteEntry[],
+  to: AuraPaletteEntry[],
+  amount: number,
+): AuraPaletteEntry[] {
+  return to.map((target, index) => {
+    const source = from[index] ?? target;
+    const [fromRed, fromGreen, fromBlue] = hexToRgb(source.hex);
+    const [toRed, toGreen, toBlue] = hexToRgb(target.hex);
+    return {
+      hex: rgbToHex(
+        fromRed + (toRed - fromRed) * amount,
+        fromGreen + (toGreen - fromGreen) * amount,
+        fromBlue + (toBlue - fromBlue) * amount,
+      ),
+      weight: source.weight + (target.weight - source.weight) * amount,
+    };
+  });
 }
 
 export function StyleAura({
@@ -126,13 +149,30 @@ export function StyleAura({
   const onStatusRef = useRef(onStatusChange);
   const redrawFrozenRef = useRef<(() => void) | null>(null);
   const [fallback, setFallback] = useState(forcedFallback);
-  const profilePaletteKey = profile.colours.join("|");
+  const profilePaletteKey = `${profile.colours.join("|")}|${profile.confidence.toFixed(3)}`;
 
   onStatusRef.current = onStatusChange;
 
   useEffect(() => {
-    paletteRef.current = profilePalette(profile);
-    redrawFrozenRef.current?.();
+    const from = paletteRef.current.map((entry) => ({ ...entry }));
+    const to = profilePalette(profile);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      paletteRef.current = to;
+      redrawFrozenRef.current?.();
+      return;
+    }
+    const startedAt = performance.now();
+    let handle = 0;
+    const tick = (now: number) => {
+      const progress = clamp((now - startedAt) / 2_800);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      paletteRef.current = interpolatePalette(from, to, eased);
+      redrawFrozenRef.current?.();
+      if (progress < 1) handle = window.requestAnimationFrame(tick);
+    };
+    handle = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(handle);
   }, [profilePaletteKey]);
 
   useEffect(() => {
@@ -146,7 +186,11 @@ export function StyleAura({
     const setter = (entries: AuraPaletteEntry[]) => {
       const nextPalette = validPalette(entries);
       if (!nextPalette) return;
-      paletteRef.current = nextPalette;
+      const expressiveColours = composeAuraSpectrum(nextPalette.map((entry) => entry.hex));
+      paletteRef.current = expressiveColours.map((hex, index) => ({
+        hex,
+        weight: nextPalette[index % nextPalette.length]?.weight ?? PROFILE_WEIGHTS[index],
+      }));
       redrawFrozenRef.current?.();
     };
     window.setAuraPalette = setter;
@@ -337,8 +381,13 @@ export function StyleAura({
       project(fields.u, fields.v, fields.u0, fields.v0);
     }
 
-    function weightedColor(): readonly [number, number, number] {
+    function weightedColor(preferredIndex?: number): readonly [number, number, number] {
       const palette = paletteRef.current.length > 0 ? paletteRef.current : semanticDefaultPalette();
+      if (preferredIndex !== undefined) {
+        const selected = palette[preferredIndex % palette.length];
+        const [red, green, blue] = hexToRgb(selected.hex);
+        return [red / 255, green / 255, blue / 255];
+      }
       const total = palette.reduce((sum, entry) => sum + entry.weight, 0);
       let random = Math.random() * total;
       let accumulated = 0;
@@ -360,6 +409,7 @@ export function StyleAura({
       deltaX: number,
       deltaY: number,
       strength: number,
+      colourIndex?: number,
     ) {
       const column = Math.max(1, Math.min(N, Math.floor(coordinateX * N)));
       const row = Math.max(1, Math.min(N, Math.floor(coordinateY * N)));
@@ -368,7 +418,7 @@ export function StyleAura({
       const scaledStrength = strength * energyScale;
       fields.u[index] += deltaX * scaledStrength;
       fields.v[index] += deltaY * scaledStrength;
-      const [red, green, blue] = weightedColor();
+      const [red, green, blue] = weightedColor(colourIndex);
       const amount = 90 * Math.min(1, scaledStrength * 4);
       fields.dR[index] += red * amount;
       fields.dG[index] += green * amount;
@@ -401,10 +451,17 @@ export function StyleAura({
 
     function ambient(at = performance.now()) {
       const time = (at - startedAt) / 9000;
-      for (let index = 0; index < 3; index += 1) {
+      for (let index = 0; index < 4; index += 1) {
         const x = 0.5 + 0.32 * Math.sin(time * 0.7 + index * 2.1);
         const y = 0.5 + 0.32 * Math.cos(time * 0.55 + index * 1.3);
-        injectAt(x, y, Math.cos(time + index) * 0.5, Math.sin(time * 1.3 + index) * 0.5, 0.06);
+        injectAt(
+          x,
+          y,
+          Math.cos(time + index) * 0.5,
+          Math.sin(time * 1.3 + index) * 0.5,
+          0.068,
+          index,
+        );
       }
     }
 
@@ -455,14 +512,14 @@ export function StyleAura({
           const normalisedGreen = greenDensity / peakDensity;
           const normalisedBlue = blueDensity / peakDensity;
           const luminance = normalisedRed * 0.2126 + normalisedGreen * 0.7152 + normalisedBlue * 0.0722;
-          const saturation = 1.12;
-          const exposed = 1 - Math.exp(-peakDensity * 0.045);
+          const saturation = 1.28;
+          const exposed = 1 - Math.exp(-peakDensity * 0.052);
           const channel = (value: number) => clamp(luminance + (value - luminance) * saturation);
 
           data[pixel] = Math.round(channel(normalisedRed) * exposed * 255);
           data[pixel + 1] = Math.round(channel(normalisedGreen) * exposed * 255);
           data[pixel + 2] = Math.round(channel(normalisedBlue) * exposed * 255);
-          data[pixel + 3] = Math.round((1 - Math.exp(-peakDensity * 0.07)) * 214);
+          data[pixel + 3] = Math.round((1 - Math.exp(-peakDensity * 0.075)) * 235);
         }
       }
       offscreenContext.putImageData(frame, 0, 0);
@@ -470,9 +527,9 @@ export function StyleAura({
       context.imageSmoothingQuality = "high";
       context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--canvas").trim() || DEFAULT_AURA_PALETTE[0].hex;
       context.fillRect(0, 0, width, height);
-      const smoothingRadius = Math.max(5, 7.5 * pixelRatio);
+      const smoothingRadius = Math.max(0.8, 1.35 * pixelRatio);
       context.save();
-      context.filter = `blur(${smoothingRadius}px) saturate(1.06)`;
+      context.filter = `blur(${smoothingRadius}px) saturate(1.22) contrast(1.04)`;
       context.drawImage(
         offscreen,
         0,
@@ -492,6 +549,36 @@ export function StyleAura({
       velocityStep();
       advectDye();
       decay();
+      renderDye();
+    }
+
+    function primeAura() {
+      const currents = [
+        [0.19, 0.25, 0.68, 0.24],
+        [0.43, 0.68, -0.5, 0.31],
+        [0.7, 0.3, 0.56, -0.26],
+        [0.82, 0.72, -0.62, -0.2],
+      ] as const;
+      currents.forEach(([centreX, centreY, velocityX, velocityY], colourIndex) => {
+        for (let point = -2; point <= 2; point += 1) {
+          injectAt(
+            centreX + point * 0.028,
+            centreY + Math.sin(point * 0.9 + colourIndex) * 0.023,
+            velocityX,
+            velocityY + point * 0.025,
+            0.16,
+            colourIndex,
+          );
+        }
+      });
+      // Build a composed first frame with the real fluid solver. This avoids a
+      // blank or blob-like opening without introducing a separate animation.
+      for (let step = 0; step < 20; step += 1) {
+        ambient(startedAt + step * 110);
+        velocityStep();
+        advectDye();
+        decay();
+      }
       renderDye();
     }
 
@@ -585,6 +672,7 @@ export function StyleAura({
       if (!offscreenContext) throw new Error("Aura buffer canvas is unavailable.");
       frame = offscreenContext.createImageData(STRIDE, STRIDE);
       resize();
+      primeAura();
     } catch {
       fail();
       return;

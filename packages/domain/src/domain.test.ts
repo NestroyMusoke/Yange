@@ -96,6 +96,65 @@ describe("Wardrobe Digital Twin", () => {
     expect(learned.styleMemory.feedbackCount).toBe(1);
     expect(learned.styleMemory.averageConfidence).toBe(5);
     expect(learned.styleMemory.signals["warm-neutral"].score).toBeGreaterThan(0.5);
+    expect(confidenceEvents.filter((event) => event.type === "ColourEvidenceRecorded")).toHaveLength(5);
+    expect(learned.styleMemory.colourPreferences.cream.positiveEvidence).toBeGreaterThan(0);
+    expect(learned.styleMemory.colourPreferences.cream.userAttributedObservations).toBe(1);
+  });
+
+  it("records explicit negative evidence for the exact colours in a low-confidence outfit", () => {
+    const seed = createSeedState();
+    const wearEvents = markOutfitWorn(seed, [], {
+      outfitId: "today-city-calm",
+      wearContext: "normal",
+      operationId: "wear-negative",
+      occurredAt: now,
+    });
+    const worn = replayEvents(seed, wearEvents);
+    const feedback = recordConfidence(worn, wearEvents, {
+      outfitId: "today-city-calm",
+      value: 1,
+      tags: ["colour-missed"],
+      operationId: "confidence-negative",
+      occurredAt: now,
+    });
+    const learned = replayEvents(worn, feedback);
+
+    expect(learned.styleMemory.colourPreferences.cream.negativeEvidence).toBeGreaterThan(0);
+    expect(learned.styleMemory.colourPreferences.cream.score).toBeLessThan(0.5);
+    expect(learned.styleMemory.colourEvidence.every((entry) => entry.direction === "negative")).toBe(true);
+  });
+
+  it("decays older colour evidence when a newer observation arrives", () => {
+    const seed = createSeedState();
+    const first = {
+      id: "colour-old",
+      operationId: "colour-old",
+      occurredAt: "2026-01-01T00:00:00.000Z",
+      type: "ColourEvidenceRecorded" as const,
+      payload: { evidence: {
+        id: "colour-old",
+        colourFamily: "emerald",
+        exactHex: "#2D9B72",
+        label: "emerald",
+        source: "confidence-check-in" as const,
+        direction: "positive" as const,
+        strength: 1,
+        attribution: "user-attributed" as const,
+        garmentId: "emerald-top",
+        outfitId: "look-old",
+        occurredAt: "2026-01-01T00:00:00.000Z",
+      } },
+    };
+    const second = structuredClone(first);
+    second.id = "colour-new";
+    second.operationId = "colour-new";
+    second.occurredAt = "2026-04-01T00:00:00.000Z";
+    second.payload.evidence.id = "colour-new";
+    second.payload.evidence.occurredAt = second.occurredAt;
+    const learned = replayEvents(seed, [first, second]);
+
+    expect(learned.styleMemory.colourPreferences.emerald.positiveEvidence).toBeGreaterThan(1);
+    expect(learned.styleMemory.colourPreferences.emerald.positiveEvidence).toBeLessThan(2);
   });
 
   it("does not accept confidence feedback before wear", () => {

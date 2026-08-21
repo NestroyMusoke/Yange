@@ -14,6 +14,7 @@ import type {
   TwinState,
 } from "./types";
 import { evaluateWearCast } from "./wearcast";
+import { colourEvidenceForConfidence } from "./colourLearning";
 
 export class DomainError extends Error {
   constructor(message: string) {
@@ -164,8 +165,7 @@ export function recordConfidence(
     throw new DomainError("Confidence has already been recorded for this outfit.");
   }
 
-  return [
-    {
+  const confidenceEvent: DomainEvent = {
       id: eventId(input.operationId, "confidence"),
       operationId: input.operationId,
       occurredAt: input.occurredAt,
@@ -175,8 +175,22 @@ export function recordConfidence(
         value: input.value,
         tags: input.tags,
       },
-    },
-  ];
+    };
+  const colourEvents: DomainEvent[] = colourEvidenceForConfidence({
+    garments: outfit.garmentIds.map((id) => state.garments[id]).filter((garment): garment is Garment => Boolean(garment)),
+    outfitId: outfit.id,
+    rating: input.value,
+    tags: input.tags,
+    operationId: input.operationId,
+    occurredAt: input.occurredAt,
+  }).map((evidence) => ({
+    id: evidence.id,
+    operationId: input.operationId,
+    occurredAt: input.occurredAt,
+    type: "ColourEvidenceRecorded",
+    payload: { evidence },
+  }));
+  return [confidenceEvent, ...colourEvents];
 }
 
 export interface AddGarmentInput {

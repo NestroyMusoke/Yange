@@ -88,6 +88,43 @@ describe("Yange production API", () => {
     expect(await response.json()).toEqual({ error: "REQUEST_BODY_INVALID" });
   });
 
+  it("revalidates wardrobe commands, persists exact colour evidence, and deduplicates retries", async () => {
+    const origin = await start();
+    const firstTwin = await fetch(`${origin}/v1/twin`);
+    const cookie = firstTwin.headers.get("set-cookie")?.split(";")[0];
+    if (!cookie) throw new Error("Session cookie missing.");
+    const command = (type: string, input: Record<string, unknown>) => fetch(`${origin}/v1/commands`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookie },
+      body: JSON.stringify({ type, input }),
+    });
+    const wornInput = {
+      outfitId: "today-city-calm",
+      wearContext: "normal",
+      operationId: "api-test-wear",
+      occurredAt: "2026-08-14T07:30:00.000Z",
+    };
+    expect((await command("wear-outfit", wornInput)).status).toBe(200);
+    const confidenceInput = {
+      outfitId: "today-city-calm",
+      value: 5,
+      tags: ["loved-colour"],
+      operationId: "api-test-confidence",
+      occurredAt: "2026-08-14T18:30:00.000Z",
+    };
+    const confidence = await command("record-confidence", confidenceInput);
+    const confidenceBody = await confidence.json();
+    expect(confidence.status).toBe(200);
+    expect(confidenceBody.events.some((event: { type: string }) => event.type === "ColourEvidenceRecorded")).toBe(true);
+    const duplicate = await command("record-confidence", confidenceInput);
+    expect((await duplicate.json()).events).toEqual([]);
+    const twin = await fetch(`${origin}/v1/twin`, { headers: { Cookie: cookie } });
+    const twinBody = await twin.json();
+    expect(twinBody.ledger.some((event: { type: string }) => event.type === "ColourEvidenceRecorded")).toBe(true);
+    const invalid = await command("record-confidence", { ...confidenceInput, operationId: "bad-rating", value: 99 });
+    expect(invalid.status).toBe(400);
+  });
+
   it("keeps public routes off a private worker role", async () => {
     const origin = await start({
       NODE_ENV: "test",
