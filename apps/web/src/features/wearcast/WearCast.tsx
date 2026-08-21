@@ -186,7 +186,7 @@ export function WearCast({
           <p>Use the Kampala forecast to stage a laundry conflict, check the response, and confirm an interrupted alert can finish safely.</p>
           <div className="capacity-meter">
             <div><span>Core wardrobe pressure</span><strong>{Math.round(decision.capacity.ratio * 100)}%</strong></div>
-            <div><i style={{ width: `${Math.min(100, decision.capacity.ratio * 100)}%` }} /></div>
+            <div><i style={{ transform: `scaleX(${Math.min(1, decision.capacity.ratio)})` }} /></div>
             <small>{decision.capacity.unavailableCount} of {decision.capacity.totalCoreClothing} tops, bottoms, and layers unavailable · alert at 50%</small>
           </div>
         </div>

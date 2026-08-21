@@ -18,7 +18,7 @@ export function GarmentPreview({ garment, compact = false }: { garment: Garment;
   return (
     <div className={`intelligence-garment ${compact ? "is-compact" : ""}`}>
       <div style={{ backgroundColor: garmentTone(garment) }}>
-        {imageUrl && <img src={imageUrl} alt="" />}
+        {imageUrl && <img src={imageUrl} alt="" loading="lazy" decoding="async" />}
         <span>{garment.category}</span>
       </div>
       <section>

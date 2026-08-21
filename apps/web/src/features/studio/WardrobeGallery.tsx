@@ -7,7 +7,7 @@ function GarmentThumbnail({ garment }: { garment: Garment }) {
   return (
     <article className="studio-garment-card">
       <div className="studio-garment-image">
-        {url ? <img src={url} alt="" /> : <span>{garment.category}</span>}
+        {url ? <img src={url} alt="" loading="lazy" decoding="async" /> : <span>{garment.category}</span>}
         <em>{garment.state}</em>
       </div>
       <div>
@@ -23,7 +23,7 @@ function LookThumbnail({ look }: { look: LookDna }) {
   const url = useMediaUrl(look.sourceAssetId);
   return (
     <article className="studio-look-card">
-      <div>{url ? <img src={url} alt="" /> : <span aria-hidden="true">✦</span>}</div>
+      <div>{url ? <img src={url} alt="" loading="lazy" decoding="async" /> : <span aria-hidden="true">✦</span>}</div>
       <section>
         <span>Saved Look DNA</span>
         <strong>{look.name}</strong>

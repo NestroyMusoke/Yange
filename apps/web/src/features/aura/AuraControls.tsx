@@ -57,7 +57,7 @@ export function AuraControls({
               <span>Your Style Aura</span>
               <strong>Your colours are becoming the interface.</strong>
             </div>
-            <button type="button" onClick={onToggle} aria-label="Close Style Aura controls">×</button>
+            <button className="aura-close" type="button" onClick={onToggle} aria-label="Close Style Aura controls">×</button>
           </div>
           <div className="aura-palette-row" aria-label="Current learned colourways">
             {profile.colours.map((colour, index) => (

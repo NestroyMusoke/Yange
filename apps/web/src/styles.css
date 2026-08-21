@@ -38,6 +38,14 @@
   --text-body: 1rem;
   --text-small: 0.875rem;
   --text-label: 0.75rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 }
 
 * {
@@ -1692,6 +1700,80 @@ footer {
   .studio-gallery-heading { align-items: flex-start; flex-direction: column; }
 }
 
+/* Studio operating surface */
+.wardrobe-studio { gap: var(--space-7); }
+
+.studio-intro,
+.studio-panel,
+.studio-gallery {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.studio-intro {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.55fr);
+  gap: var(--space-8);
+  padding: var(--space-8) 0 var(--space-7);
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.studio-intro::after { display: none; }
+
+.studio-proof {
+  align-self: end;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.studio-proof span { padding: var(--space-4) var(--space-3); }
+.studio-steps { gap: 0; border-bottom: 1px solid var(--border); }
+.studio-steps button {
+  padding: var(--space-4) 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+}
+.studio-steps button + button { margin-left: var(--space-6); }
+.studio-steps button:hover { transform: none; background: transparent; }
+.studio-steps button.active { border-bottom-color: var(--cream); background: transparent; }
+.studio-panel,
+.studio-gallery { padding: 0; border: 0; }
+.studio-panel-heading,
+.studio-gallery-heading { padding-bottom: var(--space-5); border-bottom: 1px solid var(--border); }
+.capture-grid { gap: var(--space-6); }
+.capture-slot,
+.review-card,
+.dna-section,
+.studio-look-card { border-radius: 0; box-shadow: none; }
+.capture-slot,
+.review-card { background: transparent; }
+.capture-slot { border-color: var(--border); }
+.review-card { margin-top: var(--space-7); }
+
+@media (max-width: 720px) {
+  .wardrobe-studio { gap: var(--space-6); }
+  .studio-intro {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    padding: var(--space-7) 0 var(--space-6);
+    border-radius: 0;
+  }
+  .studio-panel,
+  .studio-gallery { padding: 0; border-radius: 0; }
+  .studio-steps button + button { margin-left: 0; }
+  .capture-grid { gap: var(--space-5); }
+}
+
 /* Phase 5 — cloud deployment proof */
 .proof-dot {
   display: inline-block;
@@ -1704,33 +1786,25 @@ footer {
   vertical-align: middle;
 }
 
-.cloud-proof { display: grid; gap: 14px; }
+.cloud-proof { display: grid; gap: var(--space-7); }
 .cloud-proof-hero {
   position: relative;
   display: grid;
-  min-height: 315px;
-  grid-template-columns: minmax(0, 1fr) 260px;
-  gap: 35px;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.35fr);
+  gap: var(--space-8);
   align-items: center;
-  padding: clamp(28px, 5vw, 56px);
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at 78% 32%, color-mix(in srgb, var(--olive) 15%, transparent), transparent 24rem),
-    radial-gradient(circle at 34% 120%, color-mix(in srgb, var(--olive) 13%, transparent), transparent 28rem),
-    color-mix(in srgb, var(--canvas) 87%, transparent);
+  padding: var(--space-8) 0 var(--space-7);
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 .cloud-proof-hero::after {
-  position: absolute;
-  right: -80px;
-  bottom: -120px;
-  width: 360px;
-  height: 360px;
-  border: 1px solid color-mix(in srgb, var(--text) 3.5%, transparent);
-  border-radius: 50%;
-  box-shadow: 0 0 0 52px color-mix(in srgb, var(--text) 1.2%, transparent), 0 0 0 104px color-mix(in srgb, var(--text) 0.8%, transparent);
-  content: "";
+  display: none;
 }
 .cloud-proof-hero > div:first-child { position: relative; z-index: 1; max-width: 820px; }
 .cloud-proof-hero h2 {
@@ -1765,11 +1839,14 @@ footer {
 .cloud-command-deck {
   display: grid;
   grid-template-columns: minmax(300px, .78fr) minmax(0, 1.22fr);
-  gap: 12px;
-  padding: clamp(22px, 3.7vw, 40px);
-  border: 1px solid var(--border);
-  border-radius: 27px;
-  background: color-mix(in srgb, var(--canvas) 82%, transparent);
+  gap: var(--space-7);
+  padding: 0 0 var(--space-7);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 .cloud-command-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; padding-right: clamp(0px,2vw,24px); }
 .cloud-runtime-badge { display: inline-grid; grid-template-columns: 8px auto auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 99px; color: var(--muted); background: color-mix(in srgb, var(--text) 2.5%, transparent); font-size: .56rem; }
@@ -1785,8 +1862,8 @@ footer {
 .cloud-actions button:disabled { color: var(--olive); border-color: var(--border); background: color-mix(in srgb, var(--text) 4%, transparent); cursor: not-allowed; }
 .cloud-actions .cloud-secondary { color: var(--muted); border-color: var(--border); background: color-mix(in srgb, var(--text) 2.5%, transparent); }
 
-.cloud-checkpoints { display: grid; gap: 7px; }
-.cloud-checkpoints > div { display: grid; min-width: 0; grid-template-columns: 35px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 13px 14px; border: 1px solid var(--border); border-radius: 14px; background: color-mix(in srgb, var(--text) 1.8%, transparent); transition: border-color 220ms ease, background 220ms ease; }
+.cloud-checkpoints { display: grid; gap: 0; border-top: 1px solid var(--border); }
+.cloud-checkpoints > div { display: grid; min-width: 0; grid-template-columns: 35px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: var(--space-4) 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; transition: border-color 220ms ease, background 220ms ease; }
 .cloud-checkpoints > div > span { display: grid; width: 35px; height: 35px; place-items: center; border: 1px solid var(--border); border-radius: 50%; color: var(--olive); font-family: var(--font-body); font-size: var(--text-label); font-variant-numeric: tabular-nums; }
 .cloud-checkpoints strong,
 .cloud-checkpoints small { display: block; }
@@ -1797,12 +1874,10 @@ footer {
 .cloud-checkpoints .reached > span { color: var(--canvas); border-color: color-mix(in srgb, var(--muted) 35%, transparent); background: var(--muted); }
 .cloud-checkpoints .active { border-color: color-mix(in srgb, var(--cream) 20%, transparent); }
 
-.cloud-proof-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.cloud-proof-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: var(--space-7); }
 .architecture-passport,
-.cloud-boundary-card { min-width: 0; padding: clamp(22px,3.5vw,36px); border: 1px solid var(--border); border-radius: 25px; background: color-mix(in srgb, var(--canvas) 78%, transparent); }
-.architecture-passport { background: radial-gradient(circle at 100% 0%,color-mix(in srgb, var(--olive) 10%, transparent),transparent 25rem),color-mix(in srgb, var(--canvas) 78%, transparent); }
-.cloud-boundary-card { background: radial-gradient(circle at 100% 0%,color-mix(in srgb, var(--olive) 12%, transparent),transparent 25rem),color-mix(in srgb, var(--canvas) 78%, transparent); }
-.proof-heading { display: flex; gap: 18px; align-items: flex-start; justify-content: space-between; }
+.cloud-boundary-card { min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.proof-heading { display: flex; gap: 18px; align-items: flex-start; justify-content: space-between; padding-bottom: var(--space-5); border-bottom: 1px solid var(--border); }
 .proof-heading h3 { margin: 8px 0 0; font-family: var(--font-display); font-size: var(--text-title); font-weight: 520; letter-spacing: -.02em; }
 .proof-heading > span { flex: 0 0 auto; padding: 7px 9px; border: 1px solid var(--border); border-radius: 99px; color: var(--muted); font-size: .55rem; }
 .passport-list { display: grid; gap: 0; margin-top: 22px; border-top: 1px solid var(--border); }
@@ -1817,7 +1892,7 @@ footer {
 .passport-list > p { color: var(--muted); font-size: .66rem; line-height: 1.55; }
 .passport-list code { color: var(--cream); }
 .boundary-flow { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); gap: 8px; align-items: center; margin-top: 27px; }
-.boundary-flow > div { min-height: 130px; padding: 15px 12px; border: 1px solid var(--border); border-radius: 15px; background: color-mix(in srgb, var(--text) 2%, transparent); }
+.boundary-flow > div { min-height: 0; padding: 15px 12px; border: 1px solid var(--border); border-radius: 0; background: transparent; }
 .boundary-flow > div > span { display: block; margin-bottom: 24px; color: var(--olive); font-family: var(--font-body); font-size: var(--text-label); font-variant-numeric: tabular-nums; }
 .boundary-flow strong,
 .boundary-flow small { display: block; }
@@ -1826,8 +1901,8 @@ footer {
 .boundary-flow > i { color: var(--olive); font-size: .75rem; font-style: normal; }
 .cloud-boundary-card > p { margin: 20px 0 0; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: .61rem; line-height: 1.55; }
 
-.cloud-receipt-strip { display: grid; grid-template-columns: 1.35fr repeat(4,minmax(0,.65fr)); gap: 1px; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--border); }
-.cloud-receipt-strip > div { min-width: 0; padding: 17px; background: color-mix(in srgb, var(--canvas) 96%, transparent); }
+.cloud-receipt-strip { display: grid; grid-template-columns: 1.35fr repeat(4,minmax(0,.65fr)); gap: 1px; overflow: hidden; border: 1px solid var(--border); border-width: 1px 0; border-radius: 0; background: transparent; }
+.cloud-receipt-strip > div { min-width: 0; padding: 17px; background: transparent; }
 .cloud-receipt-strip span,
 .cloud-receipt-strip strong { display: block; }
 .cloud-receipt-strip span { margin-bottom: 6px; color: var(--muted); font-size: .51rem; letter-spacing: .07em; text-transform: uppercase; }
@@ -1841,11 +1916,13 @@ footer {
 }
 
 @media (max-width: 720px) {
-  .cloud-proof-hero { grid-template-columns: 1fr; min-height: 0; padding: 27px 19px; border-radius: 23px; }
+  .cloud-proof { gap: var(--space-6); }
+  .cloud-proof-hero { grid-template-columns: 1fr; gap: var(--space-6); padding: var(--space-7) 0 var(--space-6); border-radius: 0; }
   .cloud-status-mark { width: 100%; place-self: stretch; text-align: left; }
-  .cloud-command-deck,
+  .cloud-command-deck { gap: var(--space-6); padding: 0 0 var(--space-6); border-radius: 0; }
+  .cloud-proof-grid { gap: var(--space-6); }
   .architecture-passport,
-  .cloud-boundary-card { padding: 20px 14px; border-radius: 21px; }
+  .cloud-boundary-card { padding: 0; border-radius: 0; }
   .cloud-runtime-badge { grid-template-columns: 8px auto; }
   .cloud-runtime-badge em { display: none; }
   .cloud-checkpoints > div { grid-template-columns: 33px minmax(0,1fr); }
@@ -2373,8 +2450,124 @@ footer {
   .conflict-trace li { grid-template-columns: minmax(70px, 1fr) 24px minmax(70px, 1fr); }
 }
 
+/* Atelier operating surface */
+.atelier-shell { gap: var(--space-7); }
+.atelier-intro,
+.intelligence-panel {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.atelier-intro {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.55fr);
+  gap: var(--space-8);
+  padding: var(--space-8) 0 var(--space-7);
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+.atelier-intro::after { display: none; }
+.atelier-proof {
+  align-self: end;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+.atelier-proof span { padding: var(--space-4) var(--space-3); }
+.atelier-tabs { gap: 0; border-bottom: 1px solid var(--border); }
+.atelier-tabs button {
+  padding: var(--space-4) 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+}
+.atelier-tabs button + button { margin-left: var(--space-6); }
+.atelier-tabs button:hover { transform: none; background: transparent; }
+.atelier-tabs button.active { border-bottom-color: var(--cream); background: transparent; }
+.intelligence-panel { padding: 0; border: 0; }
+.intelligence-heading { padding-bottom: var(--space-5); border-bottom: 1px solid var(--border); }
+.look-workbench,
+.planning-workbench { gap: var(--space-6); }
+.context-console,
+.decision-receipt,
+.laundry-queue-card,
+.candidate-card,
+.intelligence-garment,
+.factor-row,
+.laundry-status-rail,
+.laundry-cluster,
+.load-instruction,
+.drying-routes div,
+.care-holdouts,
+.conflict-trace { border-radius: 0; box-shadow: none; }
+.context-console,
+.decision-receipt,
+.laundry-queue-card,
+.candidate-card,
+.laundry-status-rail,
+.laundry-cluster,
+.care-holdouts,
+.conflict-trace { background: transparent; }
+.context-console,
+.decision-receipt,
+.laundry-queue-card,
+.candidate-card,
+.laundry-cluster { border-color: var(--border); }
+.candidate-results,
+.laundry-plan { margin-top: var(--space-7); }
+.decision-receipt,
+.conflict-trace,
+.decision-details { overflow: clip; }
+.decision-receipt > summary,
+.conflict-trace > summary,
+.decision-details > summary {
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  color: var(--cream);
+  cursor: pointer;
+  list-style-position: inside;
+}
+.decision-receipt-body,
+.conflict-trace-body { padding: var(--space-5) 0; }
+.decision-details { margin-top: var(--space-5); }
+.decision-details .factor-list { margin-top: var(--space-4); }
+.candidate-list,
+.laundry-clusters { gap: 0; }
+.candidate-card,
+.laundry-cluster { padding: var(--space-6) 0; border-width: 0 0 1px; }
+.candidate-leading,
+.load-number { background: transparent; }
+.candidate-garments,
+.load-garments { gap: var(--space-3); }
+.factor-row { padding: var(--space-3) 0; border-width: 1px 0 0; }
+.explanation-box { border-width: 1px 0 0; border-radius: 0; background: transparent; }
+.laundry-status-rail { margin-bottom: var(--space-6); padding: var(--space-4) 0; border-width: 1px 0; }
+.safety-basis span,
+.window-loads span { border-radius: 2px; }
+
+@media (max-width: 720px) {
+  .atelier-shell { gap: var(--space-6); }
+  .atelier-intro {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    padding: var(--space-7) 0 var(--space-6);
+    border-radius: 0;
+  }
+  .intelligence-panel { padding: 0; border-radius: 0; }
+  .atelier-tabs button + button { margin-left: 0; }
+  .look-workbench,
+  .planning-workbench { gap: var(--space-5); }
+}
+
 /* Phase 4 · WearCast Operations */
-.wearcast-shell { display: grid; gap: 16px; }
+.wearcast-shell { display: grid; gap: var(--space-7); }
 
 .wearcast-hero {
   position: relative;
@@ -2455,7 +2648,7 @@ footer {
 .capacity-meter > div:first-child { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.65rem; }
 .capacity-meter > div:first-child strong { color: var(--cream); }
 .capacity-meter > div:nth-child(2) { height: 5px; margin: 11px 0 8px; overflow: hidden; border-radius: 99px; background: color-mix(in srgb, var(--text) 7%, transparent); }
-.capacity-meter i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--olive), var(--warning)); transition: width 300ms ease; }
+.capacity-meter i { display: block; width: 100%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--olive), var(--warning)); transform-origin: left center; transition: transform 300ms ease; }
 .capacity-meter small { color: var(--muted); font-size: 0.57rem; line-height: 1.4; }
 .demo-sequence { display: grid; gap: 8px; }
 .demo-step { display: grid; grid-template-columns: 36px minmax(115px, 1fr) auto; gap: 12px; align-items: center; min-width: 0; padding: 15px; border: 1px solid var(--border); border-radius: 15px; background: color-mix(in srgb, var(--text) 2.2%, transparent); }
@@ -2632,12 +2825,108 @@ footer {
   .fallback-card > h3 { font-size: 2rem; }
 }
 
-/* Phase 6 · learned Style Aura and judge-ready finish */
 body {
   overflow-x: hidden;
   background: var(--canvas);
 }
 
+/* WearCast operating surface */
+.wearcast-hero,
+.autonomy-console,
+.forecast-panel,
+.simulation-panel,
+.workflow-receipt,
+.notification-center {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.wearcast-hero {
+  min-height: 0;
+  padding: var(--space-8) 0 var(--space-7);
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+.wearcast-hero::before { display: none; }
+.forecast-panel,
+.simulation-panel { padding: 0; border: 0; }
+.forecast-heading,
+.simulation-heading { padding-bottom: var(--space-5); border-bottom: 1px solid var(--border); }
+.intervention-grid,
+.operations-grid { gap: var(--space-6); }
+.weather-controls,
+.receipt-metrics span,
+.forecast-day,
+.scenario-card,
+.window-card,
+.fallback-card { border-radius: 0; box-shadow: none; }
+.weather-controls,
+.forecast-day,
+.scenario-card,
+.window-card,
+.fallback-card { background: transparent; }
+.weather-controls,
+.scenario-card,
+.window-card,
+.fallback-card { border-color: var(--border); }
+.workflow-receipt,
+.notification-center,
+.test-controls { overflow: clip; }
+.workflow-receipt > summary,
+.notification-center > summary,
+.test-controls > summary {
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  color: var(--cream);
+  cursor: pointer;
+  list-style-position: inside;
+}
+.workflow-receipt-body,
+.notification-center-body { padding: var(--space-5) 0; }
+.test-controls { margin-top: var(--space-3); }
+.test-controls .resilience-link { width: 100%; padding: var(--space-3) 0; text-align: left; }
+.intervention-topline em,
+.workflow-status { border-radius: 2px; }
+.forecast-rail { gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.forecast-day { border-width: 0 1px 0 0; }
+.forecast-day:last-child { border-right: 0; }
+.scenario-grid { gap: 0; }
+.scenario-card { border-width: 0 0 1px; }
+.scenario-card + .scenario-card { padding-left: var(--space-6); border-left: 1px solid var(--border); }
+.wearcast-clear { border-radius: 0; background: transparent; }
+.operations-pulse { justify-items: end; }
+.pulse-core {
+  width: auto;
+  height: auto;
+  padding: var(--space-4) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.pulse-core i,
+.pulse-core::before,
+.pulse-core::after { display: none; }
+
+@media (max-width: 720px) {
+  .wearcast-shell { gap: var(--space-6); }
+  .wearcast-hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    padding: var(--space-7) 0 var(--space-6);
+    border-radius: 0;
+  }
+  .forecast-panel,
+  .simulation-panel { padding: 0; border-radius: 0; }
+  .intervention-grid,
+  .operations-grid { gap: var(--space-5); }
+  .scenario-card + .scenario-card { padding-left: 0; border-left: 0; }
+}
+
+/* Phase 6 · learned Style Aura and judge-ready finish */
 .style-aura {
   position: fixed;
   z-index: 0;
@@ -2749,6 +3038,7 @@ body {
 .aura-panel-heading span { margin-bottom: 6px; color: var(--cream); font-size: .54rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
 .aura-panel-heading strong { max-width: 280px; font-family: var(--font-display); font-size: var(--text-title); font-weight: 520; line-height: 1.1; }
 .aura-panel-heading button { display: grid; flex: 0 0 auto; width: 28px; height: 28px; padding: 0; place-items: center; border: 1px solid var(--border); border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; }
+.aura-panel-heading .aura-close { min-width: 44px; min-height: 44px; }
 
 .aura-palette-row { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; margin: 19px 0; }
 .aura-palette-row > span { min-width: 0; }
@@ -2937,428 +3227,40 @@ body {
   .aura-source-list { grid-template-columns: 1fr; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .style-aura canvas,
-  .style-aura-fallback { transition: none; }
-}
-
-/* Operating surfaces: one spatial system, task-specific structures. */
-:root {
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
-}
-
-.wardrobe-studio,
-.atelier-shell,
-.wearcast-shell,
-.judge-shell,
-.cloud-proof {
-  gap: var(--space-7);
-}
-
-.studio-intro,
-.studio-panel,
-.studio-gallery,
-.atelier-intro,
-.intelligence-panel,
-.wearcast-hero,
-.autonomy-console,
-.forecast-panel,
-.simulation-panel,
-.workflow-receipt,
-.notification-center,
+/* Judge Mode operating surface */
+.judge-shell { gap: var(--space-7); }
 .judge-hero,
 .proof-board,
 .demo-runway,
 .fault-theatre,
 .aura-evidence-card,
-.architecture-ending,
-.cloud-proof-hero,
-.cloud-command-deck,
-.architecture-passport,
-.cloud-boundary-card {
+.architecture-ending {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
 }
-
-.studio-intro,
-.atelier-intro,
-.wearcast-hero,
-.judge-hero,
-.cloud-proof-hero {
+.judge-hero {
   min-height: 0;
   padding: var(--space-8) 0 var(--space-7);
   overflow: visible;
   border: 0;
   border-bottom: 1px solid var(--border);
 }
-
-.studio-intro::after,
-.atelier-intro::after,
-.wearcast-hero::before,
-.judge-hero::after,
-.cloud-proof-hero::after {
-  display: none;
-}
-
-.studio-intro,
-.atelier-intro {
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.55fr);
-  gap: var(--space-8);
-}
-
-.studio-proof,
-.atelier-proof {
-  align-self: end;
-  border: 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: transparent;
-  backdrop-filter: none;
-}
-
-.studio-proof span,
-.atelier-proof span {
-  padding: var(--space-4) var(--space-3);
-}
-
-.studio-steps,
-.atelier-tabs {
-  gap: 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.studio-steps button,
-.atelier-tabs button {
-  padding: var(--space-4) 0;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: transparent;
-}
-
-.studio-steps button + button,
-.atelier-tabs button + button {
-  margin-left: var(--space-6);
-}
-
-.studio-steps button:hover,
-.atelier-tabs button:hover {
-  transform: none;
-  background: transparent;
-}
-
-.studio-steps button.active,
-.atelier-tabs button.active {
-  border-bottom-color: var(--cream);
-  background: transparent;
-}
-
-.studio-panel,
-.studio-gallery,
-.intelligence-panel,
-.forecast-panel,
-.simulation-panel,
+.judge-hero::after { display: none; }
 .proof-board,
 .demo-runway,
 .fault-theatre,
-.aura-evidence-card {
-  padding: 0;
-  border: 0;
-}
-
-.cloud-proof-hero {
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.35fr);
-  gap: var(--space-8);
-}
-
-.cloud-command-deck {
-  gap: var(--space-7);
-  padding: 0 0 var(--space-7);
-  border: 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.architecture-passport,
-.cloud-boundary-card {
-  padding: 0;
-  border: 0;
-}
-
-.proof-heading {
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--border);
-}
-
-.cloud-proof-grid {
-  gap: var(--space-7);
-}
-
-.cloud-checkpoints {
-  gap: 0;
-  border-top: 1px solid var(--border);
-}
-
-.cloud-checkpoints > div {
-  padding: var(--space-4) 0;
-  border-width: 0 0 1px;
-  border-radius: 0;
-  background: transparent;
-}
-
-.boundary-flow > div,
-.cloud-receipt-strip {
-  border-radius: 0;
-  background: transparent;
-}
-
-.boundary-flow > div {
-  min-height: 0;
-}
-
-.cloud-receipt-strip {
-  border-width: 1px 0;
-}
-
-.cloud-receipt-strip > div {
-  background: transparent;
-}
-
-.studio-panel-heading,
-.intelligence-heading,
-.studio-gallery-heading,
-.forecast-heading,
-.simulation-heading,
-.judge-section-heading {
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--border);
-}
-
-.capture-grid,
-.look-workbench,
-.planning-workbench,
-.judge-lower-grid,
-.intervention-grid,
-.operations-grid {
-  gap: var(--space-6);
-}
-
-.capture-slot,
-.review-card,
-.dna-section,
-.studio-look-card,
-.context-console,
-.decision-receipt,
-.laundry-queue-card,
-.candidate-card,
-.intelligence-garment,
-.factor-row,
-.weather-controls,
-.receipt-metrics span,
-.laundry-status-rail,
-.laundry-cluster,
-.load-instruction,
-.drying-routes div,
-.care-holdouts,
-.conflict-trace,
-.forecast-day,
-.demo-step,
-.scenario-card,
-.window-card,
-.fallback-card,
+.aura-evidence-card { padding: 0; border: 0; }
+.judge-section-heading { padding-bottom: var(--space-5); border-bottom: 1px solid var(--border); }
+.judge-lower-grid { gap: var(--space-6); }
 .proof-signal,
 .fault-node,
-.aura-source-list {
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.capture-slot,
-.review-card,
-.dna-section,
-.context-console,
-.decision-receipt,
-.laundry-queue-card,
-.candidate-card,
-.weather-controls,
-.laundry-status-rail,
-.laundry-cluster,
-.care-holdouts,
-.conflict-trace,
-.forecast-day,
-.demo-step,
-.scenario-card,
-.window-card,
-.fallback-card,
+.aura-source-list { border-radius: 0; box-shadow: none; }
 .proof-signal,
-.fault-node {
-  background: transparent;
-}
-
-.capture-slot,
-.context-console,
-.decision-receipt,
-.laundry-queue-card,
-.candidate-card,
-.laundry-cluster,
-.scenario-card,
-.window-card,
-.fallback-card,
-.fault-node {
-  border-color: var(--border);
-}
-
-.review-card,
-.candidate-results,
-.laundry-plan {
-  margin-top: var(--space-7);
-}
-
-.decision-receipt,
-.workflow-receipt,
-.notification-center,
-.conflict-trace,
-.decision-details,
-.test-controls {
-  overflow: clip;
-}
-
-.decision-receipt > summary,
-.workflow-receipt > summary,
-.notification-center > summary,
-.conflict-trace > summary,
-.decision-details > summary,
-.test-controls > summary {
-  padding: var(--space-4) 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  color: var(--cream);
-  cursor: pointer;
-  list-style-position: inside;
-}
-
-.decision-receipt-body,
-.workflow-receipt-body,
-.notification-center-body,
-.conflict-trace-body {
-  padding: var(--space-5) 0;
-}
-
-.decision-details {
-  margin-top: var(--space-5);
-}
-
-.decision-details .factor-list {
-  margin-top: var(--space-4);
-}
-
-.test-controls {
-  margin-top: var(--space-3);
-}
-
-.test-controls .resilience-link {
-  width: 100%;
-  padding: var(--space-3) 0;
-  text-align: left;
-}
-
-.candidate-list,
-.laundry-clusters {
-  gap: 0;
-}
-
-.candidate-card,
-.laundry-cluster {
-  padding: var(--space-6) 0;
-  border-width: 0 0 1px;
-}
-
-.candidate-leading {
-  background: transparent;
-}
-
-.candidate-garments,
-.load-garments {
-  gap: var(--space-3);
-}
-
-.factor-row {
-  padding: var(--space-3) 0;
-  border-width: 1px 0 0;
-}
-
-.explanation-box {
-  border-width: 1px 0 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.laundry-status-rail {
-  margin-bottom: var(--space-6);
-  padding: var(--space-4) 0;
-  border-width: 1px 0;
-}
-
-.load-number {
-  background: transparent;
-}
-
-.safety-basis span,
-.window-loads span,
-.intervention-topline em,
-.workflow-status,
-.judge-section-heading > em {
-  border-radius: 2px;
-}
-
-.forecast-rail {
-  gap: 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.forecast-day {
-  border-width: 0 1px 0 0;
-  background: transparent;
-}
-
-.forecast-day:last-child {
-  border-right: 0;
-}
-
-.scenario-grid {
-  gap: 0;
-}
-
-.scenario-card {
-  border-width: 0 0 1px;
-  background: transparent;
-}
-
-.scenario-card + .scenario-card {
-  padding-left: var(--space-6);
-  border-left: 1px solid var(--border);
-}
-
-.wearcast-clear {
-  border-radius: 0;
-  background: transparent;
-}
-
-.operations-pulse {
-  justify-items: end;
-}
-
-.pulse-core,
+.fault-node { background: transparent; }
+.fault-node { border-color: var(--border); }
+.judge-section-heading > em { border-radius: 2px; }
 .demo-readiness-orbit > div {
   width: auto;
   height: auto;
@@ -3368,101 +3270,32 @@ body {
   background: transparent;
   box-shadow: none;
 }
-
-.pulse-core i,
-.pulse-core::before,
-.pulse-core::after {
-  display: none;
-}
-
-.demo-runway {
-  padding-top: var(--space-3);
-}
-
-.proof-signal-grid {
-  gap: 0;
-  border-top: 1px solid var(--border);
-}
-
-.proof-signal {
-  padding: var(--space-4) 0;
-  border-width: 0 0 1px;
-}
-
+.demo-runway { padding-top: var(--space-3); }
+.proof-signal-grid { gap: 0; border-top: 1px solid var(--border); }
+.proof-signal { padding: var(--space-4) 0; border-width: 0 0 1px; }
 .proof-signal:nth-child(3n + 2),
-.proof-signal:nth-child(3n + 3) {
-  padding-left: var(--space-4);
-  border-left: 1px solid var(--border);
-}
-
-.architecture-ending {
-  padding: var(--space-7) 0;
-  border-width: 1px 0 0;
-}
+.proof-signal:nth-child(3n + 3) { padding-left: var(--space-4); border-left: 1px solid var(--border); }
+.architecture-ending { padding: var(--space-7) 0; border-width: 1px 0 0; }
 
 @media (max-width: 720px) {
-  .wardrobe-studio,
-  .atelier-shell,
-  .wearcast-shell,
-  .judge-shell,
-  .cloud-proof { gap: var(--space-6); }
-
-  .studio-intro,
-  .atelier-intro,
-  .wearcast-hero,
-  .judge-hero,
-  .cloud-proof-hero {
+  .judge-shell { gap: var(--space-6); }
+  .judge-hero {
     grid-template-columns: 1fr;
     gap: var(--space-6);
     padding: var(--space-7) 0 var(--space-6);
     border-radius: 0;
   }
-
-  .studio-panel,
-  .studio-gallery,
-  .intelligence-panel,
-  .forecast-panel,
-  .simulation-panel,
   .proof-board,
   .demo-runway,
   .fault-theatre,
-  .aura-evidence-card {
-    padding: 0;
-    border-radius: 0;
-  }
-
-  .studio-steps button + button,
-  .atelier-tabs button + button { margin-left: 0; }
-
-  .capture-grid,
-  .look-workbench,
-  .planning-workbench,
-  .intervention-grid,
-  .operations-grid,
+  .aura-evidence-card { padding: 0; border-radius: 0; }
   .judge-lower-grid { gap: var(--space-5); }
-
-  .scenario-card + .scenario-card {
-    padding-left: 0;
-    border-left: 0;
-  }
-
   .proof-signal:nth-child(3n + 2),
-  .proof-signal:nth-child(3n + 3) {
-    padding-left: 0;
-    border-left: 0;
-  }
+  .proof-signal:nth-child(3n + 3) { padding-left: 0; border-left: 0; }
+  .architecture-ending { padding: var(--space-6) 0; border-radius: 0; }
+}
 
-  .architecture-ending {
-    padding: var(--space-6) 0;
-    border-radius: 0;
-  }
-
-  .cloud-command-deck,
-  .cloud-proof-grid {
-    gap: var(--space-6);
-  }
-
-  .cloud-command-deck {
-    padding: 0 0 var(--space-6);
-  }
+@media (prefers-reduced-motion: reduce) {
+  .style-aura canvas,
+  .style-aura-fallback { transition: none; }
 }
