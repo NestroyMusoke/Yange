@@ -294,88 +294,6 @@ body:has(.app-shell.view-today) {
 .view-today .aura-chip strong { color: var(--cream); font-size: 13px; line-height: 1.4; }
 .view-today .aura-chip small { color: var(--cream-dim); font-size: 12px; line-height: 1.4; letter-spacing: 0.03em; }
 
-.view-today .view-tabs {
-  position: relative;
-  z-index: 1;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
-  margin: 0;
-  padding: 4px 12px 8px;
-  border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--cream) 8%, transparent);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
-.view-today .view-tabs button {
-  min-width: 0;
-  min-height: 48px;
-  gap: 8px;
-  padding: 8px;
-  border: 0;
-  border-radius: 2px;
-  color: var(--cream-dim);
-  background: transparent;
-  box-shadow: none;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.02em;
-  transition: color 160ms ease-out, background-color 160ms ease-out;
-}
-
-.view-today .view-tabs button:hover {
-  color: var(--cream);
-  background: color-mix(in srgb, var(--cream) 4%, transparent);
-}
-
-.view-today .view-tabs button.active {
-  color: var(--champagne);
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-}
-
-.view-today .view-tabs button.active::after {
-  right: 24%;
-  bottom: 4px;
-  left: 24%;
-  height: 1px;
-  background: var(--champagne);
-  box-shadow: none;
-}
-
-.view-today .view-tab-icon {
-  width: 20px;
-  height: 20px;
-  flex-basis: 20px;
-  color: var(--olive);
-  filter: none;
-}
-
-.view-today .view-tabs button.active .view-tab-icon { color: var(--champagne); }
-.view-today .view-tab-copy strong { font-size: 13px; font-weight: 500; line-height: 1.4; letter-spacing: 0.02em; }
-
-.view-today .count {
-  top: 4px;
-  right: 4px;
-  min-width: 16px;
-  height: 16px;
-  padding-inline: 4px;
-  border: 0;
-  border-radius: 2px;
-  color: var(--cream-dim);
-  background: var(--chocolate);
-  box-shadow: none;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1;
-}
-
 /* Editorial 8/4 hero with exactly one champagne content emphasis. */
 .view-today main { padding: 0 0 64px; }
 
@@ -863,7 +781,6 @@ body:has(.app-shell.view-today) {
   .view-today .why-row,
   .view-today .outfit-card > :is(.primary-action, .saved-checkin, .confidence-panel) { grid-column: 1 / 8; }
   .view-today .side-stack { grid-column: 8 / 13; }
-  .view-today .view-tab-copy { display: none; }
 }
 
 @media (max-width: 720px) {
@@ -891,15 +808,6 @@ body:has(.app-shell.view-today) {
   .view-today .aura-mini-palette { width: 28px; height: 28px; }
   .view-today .aura-chip > span:last-child { display: none; }
   .view-today .profile-chip { display: none; }
-
-  .view-today .view-tabs {
-    grid-template-columns: repeat(7, minmax(56px, 1fr));
-    overflow-x: auto;
-    padding: 4px 8px 8px;
-  }
-
-  .view-today .view-tabs button { min-width: 56px; min-height: 44px; padding: 4px; }
-  .view-today .view-tab-icon { width: 20px; height: 20px; flex-basis: 20px; }
 
   .view-today .hero {
     display: grid;
@@ -969,7 +877,7 @@ body:has(.app-shell.view-today) {
     animation: none;
   }
 
-  .view-today :is(.view-tabs button, .primary-action, .garment-media img) { transition: none; }
+  .view-today :is(.primary-action, .garment-media img) { transition: none; }
   .view-today [data-liquid-glass]::after { display: none; }
 }
 

@@ -1,0 +1,1095 @@
+/*
+ * Approved Yange language, propagated from Today.
+ * The Aura is the signature. Glass is reserved for elevated navigation and
+ * controls; wardrobe work remains on calm, solid planes.
+ */
+
+body:has(.app-shell:not(.view-today)) {
+  --charcoal: #0c0a09;
+  --charcoal-raised: #141110;
+  --cream: #f4ecdf;
+  --cream-dim: #b8afa0;
+  --champagne: #c9a15f;
+  --olive: #7a7a5c;
+  --chocolate: #2c2018;
+  color: var(--cream);
+  background: var(--charcoal);
+}
+
+.app-shell:not(.view-today) {
+  --canvas: var(--charcoal);
+  --surface-canvas: var(--charcoal);
+  --surface: var(--charcoal-raised);
+  --text: var(--cream);
+  --muted: var(--cream-dim);
+  --text-primary: var(--cream);
+  --text-secondary: var(--cream-dim);
+  --border: color-mix(in srgb, var(--cream) 12%, transparent);
+  --action-primary: var(--champagne);
+  --action-primary-text: var(--charcoal);
+  --focus-ring: var(--champagne);
+  --warning: var(--champagne);
+  width: min(1600px, 100%);
+  padding-inline: 48px;
+  color: var(--cream);
+  font-family: "Inter Variable", Arial, sans-serif;
+  background: transparent;
+}
+
+.app-shell:not(.view-today) :is(*, *::before, *::after) { box-sizing: border-box; }
+
+.app-shell:not(.view-today) :is(h1, h2, h3, h4) {
+  color: var(--cream);
+  background: none !important;
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-style: normal;
+  font-variation-settings: "opsz" 48, "wght" 440;
+  font-weight: 440;
+  text-shadow: none;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.app-shell:not(.view-today) :is(p, small, label, time, dd) {
+  color: var(--cream-dim);
+  font-family: "Inter Variable", Arial, sans-serif;
+}
+
+.app-shell:not(.view-today) :is(
+  .studio-intro,
+  .atelier-intro,
+  .wearcast-hero,
+  .cloud-proof-hero,
+  .judge-hero
+) h2 {
+  max-width: 14ch;
+  margin: 0 0 24px;
+  font-size: clamp(48px, 5.2vw, 72px);
+  font-variation-settings: "opsz" 72, "wght" 440;
+  line-height: 1.03;
+  letter-spacing: -0.01em;
+}
+
+.app-shell:not(.view-today) :is(
+  .studio-intro,
+  .atelier-intro,
+  .wearcast-hero,
+  .cloud-proof-hero,
+  .judge-hero
+) h2 > span { color: var(--champagne); }
+
+.app-shell:not(.view-today) :is(
+  .studio-panel-heading h2,
+  .studio-gallery-heading h2,
+  .intelligence-heading h2,
+  .results-heading h3,
+  .forecast-heading h3,
+  .simulation-heading h3,
+  .judge-section-heading h3,
+  .architecture-ending h3,
+  .cloud-command-copy h3,
+  .proof-heading h3,
+  .section-heading h2
+) {
+  color: var(--cream);
+  font-size: clamp(28px, 3vw, 32px);
+  font-variation-settings: "opsz" 32, "wght" 440;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.app-shell:not(.view-today) :is(
+  .context-date,
+  .eyebrow,
+  .capture-kind,
+  .choice-label,
+  .console-topline,
+  .candidate-topline,
+  .intervention-topline,
+  .metric-label,
+  .judge-section-heading > div > span,
+  .proof-heading > span
+) {
+  color: var(--champagne);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Official wordmark treatment stays identical in every view. */
+.app-shell .yange-wordmark {
+  display: inline-block;
+  color: #007451;
+  background-image: linear-gradient(178deg, #4dbb79 0%, #078957 24%, #005f46 57%, #003c32 86%, #c7a54a 100%);
+  background-size: 100% 140%;
+  background-position: center 42%;
+  font-family: "Righteous", "Arial Rounded MT Bold", sans-serif;
+  font-style: normal;
+  font-variation-settings: normal;
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  text-shadow: none;
+  transform: skewX(-2deg);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(211, 181, 116, 0.24)) drop-shadow(0 3px 7px rgba(0, 17, 12, 0.38));
+}
+
+/* Shared WebGL liquid-glass lens. */
+.app-shell:not(.view-today) [data-liquid-glass] {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  isolation: isolate;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--glass-aura-one) 4%, transparent), transparent 48%),
+    linear-gradient(315deg, color-mix(in srgb, var(--glass-aura-two) 4%, transparent), transparent 52%),
+    color-mix(in srgb, var(--charcoal-raised) 34%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--cream) 35%, transparent),
+    inset 1px 0 0 color-mix(in srgb, var(--cream) 14%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--charcoal) 72%, transparent),
+    0 24px 64px color-mix(in srgb, var(--charcoal) 48%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+}
+
+.app-shell:not(.view-today) [data-liquid-glass]::before,
+.app-shell:not(.view-today) [data-liquid-glass]::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+}
+
+.app-shell:not(.view-today) [data-liquid-glass]::before {
+  padding: 8px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--cream) 22%, transparent), transparent 36%, color-mix(in srgb, var(--charcoal) 18%, transparent) 68%);
+  mask: linear-gradient(var(--cream) 0 0) content-box, linear-gradient(var(--cream) 0 0);
+  mask-composite: exclude;
+  mix-blend-mode: screen;
+}
+
+.app-shell:not(.view-today) [data-liquid-glass]::after {
+  background:
+    radial-gradient(180px at var(--mx) var(--my), color-mix(in srgb, var(--cream) 12%, transparent), transparent 70%),
+    linear-gradient(135deg, color-mix(in srgb, var(--cream) 5%, transparent), transparent 44%);
+  mix-blend-mode: screen;
+}
+
+.app-shell:not(.view-today) [data-liquid-glass] > * { position: relative; z-index: 1; }
+.app-shell:not(.view-today) [data-liquid-glass-root] { isolation: isolate; }
+
+.app-shell:not(.view-today) .liquid-glass-aura-source {
+  position: fixed;
+  z-index: -1000;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-shell:not(.view-today) .liquid-glass-ready > [data-liquid-glass] {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) .liquid-glass-ready > [data-liquid-glass]::before { display: none; }
+.app-shell:not(.view-today) .liquid-glass-ready > [data-liquid-glass]::after {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--glass-aura-one) 4%, transparent), transparent 48%),
+    linear-gradient(315deg, color-mix(in srgb, var(--glass-aura-two) 4%, transparent), transparent 52%);
+}
+
+/* One glass navigation surface. */
+.app-shell:not(.view-today) .header-glass-stage {
+  position: sticky;
+  z-index: 30;
+  top: 12px;
+  margin-top: 12px;
+}
+
+.app-shell:not(.view-today) .site-header {
+  position: relative;
+  z-index: 1;
+  top: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) .topbar {
+  position: relative;
+  z-index: 3;
+  min-height: 72px;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) .brand { gap: 12px; }
+.app-shell:not(.view-today) .brand-mark { width: 44px; height: 44px; }
+.app-shell:not(.view-today) .brand-wordmark strong { font-size: 28px; line-height: 1; }
+.app-shell:not(.view-today) .topbar-actions { gap: 12px; }
+
+.app-shell:not(.view-today) .profile-chip {
+  gap: 8px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--charcoal-raised);
+  box-shadow: none;
+}
+
+.app-shell:not(.view-today) .profile-dot { width: 8px; height: 8px; background: var(--olive); box-shadow: none; }
+.app-shell:not(.view-today) .profile-chip strong { color: var(--cream); font-size: 13px; font-weight: 500; }
+.app-shell:not(.view-today) .profile-chip small { margin: 0; color: var(--cream-dim); font-size: 12px; letter-spacing: 0.03em; }
+
+.app-shell:not(.view-today) .aura-chip {
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: var(--cream);
+}
+
+.app-shell:not(.view-today) .aura-mini-palette { width: 32px; height: 32px; }
+.app-shell:not(.view-today) .aura-chip strong { color: var(--cream); font-size: 13px; }
+.app-shell:not(.view-today) .aura-chip small { color: var(--cream-dim); font-size: 12px; letter-spacing: 0.03em; }
+
+.app-shell:not(.view-today) .aura-panel {
+  position: absolute;
+  max-height: calc(100dvh - 120px);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border-radius: 12px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--champagne) 45%, transparent) transparent;
+}
+
+/* Editorial screen rhythm. */
+.app-shell:not(.view-today) main { padding: 0 0 64px; }
+
+.app-shell:not(.view-today) :is(
+  .wardrobe-studio,
+  .atelier-shell,
+  .wearcast-shell,
+  .cloud-proof,
+  .judge-shell
+) { gap: 64px; }
+
+.app-shell:not(.view-today) :is(
+  .studio-intro,
+  .atelier-intro,
+  .wearcast-hero,
+  .cloud-proof-hero,
+  .judge-hero
+) {
+  min-height: 0;
+  padding: 80px 0 64px;
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(.studio-intro, .atelier-intro) {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.55fr);
+  gap: 48px;
+}
+
+.app-shell:not(.view-today) :is(.studio-proof, .atelier-proof) {
+  align-self: end;
+  border: 1px solid var(--border);
+  border-width: 1px 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(.studio-proof, .atelier-proof) strong {
+  color: var(--cream);
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-size: 24px;
+  font-weight: 440;
+}
+
+/* Calm solid work surfaces. */
+.app-shell:not(.view-today) :is(
+  .studio-panel,
+  .studio-gallery,
+  .intelligence-panel,
+  .autonomy-console,
+  .forecast-panel,
+  .simulation-panel,
+  .workflow-receipt,
+  .notification-center,
+  .cloud-command-deck,
+  .architecture-passport,
+  .cloud-boundary-card,
+  .cloud-receipt-strip,
+  .proof-board,
+  .demo-runway,
+  .fault-theatre,
+  .aura-evidence-card,
+  .architecture-ending,
+  .activity-panel
+) {
+  padding: clamp(24px, 3vw, 32px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--charcoal-raised);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(
+  .capture-slot,
+  .drop-surface,
+  .review-card,
+  .dna-section,
+  .agency-note,
+  .privacy-strip,
+  .studio-look-card,
+  .look-result,
+  .context-console,
+  .laundry-queue-card,
+  .candidate-card,
+  .decision-details,
+  .laundry-status-rail,
+  .laundry-cluster,
+  .weather-controls,
+  .capacity-meter,
+  .demo-step,
+  .forecast-day,
+  .scenario-card,
+  .window-card,
+  .fallback-card,
+  .wearcast-clear,
+  .notification-list article,
+  .cloud-runtime-badge,
+  .cloud-checkpoints > div,
+  .boundary-flow > div,
+  .proof-signal,
+  .fault-node,
+  .aura-source-list
+) {
+  border: 1px solid color-mix(in srgb, var(--cream) 9%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--chocolate) 42%, var(--charcoal-raised));
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(.studio-steps, .atelier-tabs) {
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(.studio-steps, .atelier-tabs) button {
+  margin: 0;
+  padding: 16px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--cream-dim);
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(.studio-steps, .atelier-tabs) button.active {
+  color: var(--cream);
+  border-bottom-color: var(--champagne);
+  background: transparent;
+}
+
+.app-shell:not(.view-today) :is(.studio-steps, .atelier-tabs) button:hover { color: var(--cream); transform: none; }
+
+.app-shell:not(.view-today) :is(
+  .studio-panel-heading,
+  .studio-gallery-heading,
+  .intelligence-heading,
+  .results-heading,
+  .forecast-heading,
+  .simulation-heading,
+  .judge-section-heading,
+  .proof-heading,
+  .section-heading
+) {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Controls look tactile without turning every card into glass. */
+.app-shell:not(.view-today) :is(
+  .primary-action,
+  .cloud-actions button:not(.cloud-secondary)
+) {
+  min-height: 44px;
+  border: 1px solid var(--champagne);
+  border-radius: 8px;
+  color: var(--charcoal);
+  background: var(--champagne);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(
+  .quiet-action,
+  .secondary-action,
+  .text-action,
+  .cloud-secondary,
+  .demo-step button,
+  .demo-act-list li > button,
+  .architecture-ending > button,
+  .relationship-grid button,
+  .colour-choice-grid button,
+  .pill-choices button
+) {
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--cream) 16%, transparent);
+  border-radius: 8px;
+  color: var(--cream);
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(button, summary, [role="button"]):focus-visible {
+  outline: 2px solid var(--champagne);
+  outline-offset: 3px;
+}
+
+.app-shell:not(.view-today) :is(
+  .primary-action,
+  .quiet-action,
+  .secondary-action,
+  .text-action,
+  .cloud-actions button,
+  .demo-step button,
+  .demo-act-list li > button,
+  .architecture-ending > button
+):not(:disabled):hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.app-shell:not(.view-today) :is(.field-group input, .field-group select, .field-group textarea, .height-field input) {
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--cream) 12%, transparent);
+  border-radius: 8px;
+  color: var(--cream);
+  background: var(--charcoal);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) :is(.field-group input, .field-group select, .field-group textarea, .height-field input):focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--champagne) 12%, transparent);
+  outline: 0;
+}
+
+.app-shell:not(.view-today) :is(.state, .adapter-chip, .engine-chip, .evidence-badge, .workflow-status, .manual-source, .count) {
+  border: 1px solid color-mix(in srgb, var(--cream) 12%, transparent);
+  border-radius: 999px;
+  color: var(--cream-dim);
+  background: var(--charcoal);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell:not(.view-today) footer {
+  gap: 13px;
+  justify-content: flex-start;
+  border-top-color: var(--border);
+  color: var(--cream-dim);
+}
+
+@keyframes yange-view-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.app-shell:not(.view-today) main > * {
+  animation: yange-view-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (max-width: 960px) {
+  .app-shell:not(.view-today) { padding-inline: 24px; }
+  .app-shell:not(.view-today) :is(.studio-intro, .atelier-intro) { grid-template-columns: minmax(0, 1fr) minmax(260px, 0.55fr); }
+}
+
+@media (max-width: 720px) {
+  .app-shell:not(.view-today) { padding-inline: 16px; }
+  .app-shell:not(.view-today) .header-glass-stage { top: 8px; margin-top: 8px; }
+  .app-shell:not(.view-today) .topbar { min-height: 64px; padding: 8px 12px; }
+  .app-shell:not(.view-today) .brand-mark { width: 36px; height: 36px; flex-basis: 36px; }
+  .app-shell:not(.view-today) .brand-wordmark strong { font-size: 24px; }
+  .app-shell:not(.view-today) .profile-chip { display: none; }
+  .app-shell:not(.view-today) .aura-chip { min-height: 44px; padding: 4px 8px; }
+  .app-shell:not(.view-today) .aura-chip > span:last-child { display: none; }
+  .app-shell:not(.view-today) :is(.wardrobe-studio, .atelier-shell, .wearcast-shell, .cloud-proof, .judge-shell) { gap: 48px; }
+  .app-shell:not(.view-today) :is(.studio-intro, .atelier-intro, .wearcast-hero, .cloud-proof-hero, .judge-hero) {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 64px 0 48px;
+  }
+  .app-shell:not(.view-today) :is(.studio-intro, .atelier-intro, .wearcast-hero, .cloud-proof-hero, .judge-hero) h2 { font-size: 48px; }
+  .app-shell:not(.view-today) :is(.studio-panel, .studio-gallery, .intelligence-panel, .autonomy-console, .forecast-panel, .simulation-panel, .cloud-command-deck, .proof-board, .demo-runway, .aura-evidence-card, .activity-panel) { padding: 20px 16px; }
+  .app-shell:not(.view-today) .aura-panel { position: fixed; top: 136px; right: 16px; width: calc(100vw - 32px); max-height: calc(100dvh - 152px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell:not(.view-today) main > * { animation: none; }
+  .app-shell:not(.view-today) [data-liquid-glass]::after { display: none; }
+  .app-shell:not(.view-today) :is(button, a) { transition-duration: 0.01ms !important; }
+}
+
+@media (forced-colors: active) {
+  .app-shell:not(.view-today) [data-liquid-glass],
+  .app-shell:not(.view-today) :is(.studio-panel, .intelligence-panel, .autonomy-console, .cloud-command-deck, .activity-panel) {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Studio: editorial garment capture and the tailor's measuring tape.          */
+/* -------------------------------------------------------------------------- */
+
+.view-studio .studio-proof-stage {
+  align-self: end;
+  min-width: 340px;
+}
+
+.view-studio .studio-proof-stage > .studio-proof {
+  width: 100%;
+  border-width: 1px;
+  border-radius: 12px;
+}
+
+.view-studio .studio-panel {
+  padding: clamp(24px, 3vw, 32px);
+}
+
+.view-studio .studio-panel-heading {
+  align-items: flex-end;
+}
+
+.view-studio .adapter-chip {
+  display: inline-flex;
+  min-height: 24px;
+  gap: 8px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--cream-dim);
+  background: transparent;
+  box-shadow: none;
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.view-studio .adapter-chip > span,
+.view-studio .capture-status .status-pulse {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--olive);
+  box-shadow: none;
+}
+
+.view-studio .privacy-strip {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.25fr) minmax(0, 1fr);
+  gap: 24px;
+  margin: 24px 0 32px;
+  padding: 12px 0;
+  border: 1px solid var(--border);
+  border-width: 1px 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.view-studio .privacy-strip strong { color: var(--cream); font-size: 13px; }
+.view-studio .privacy-strip span { color: var(--cream-dim); font-size: 13px; line-height: 1.5; }
+
+/* The garment image leads; the care label is supporting evidence. */
+.view-studio .capture-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.65fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.view-studio .capture-slot {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.view-studio .capture-slot:first-child .drop-surface { height: clamp(460px, 54vw, 680px); }
+.view-studio .capture-slot:nth-child(2) .drop-surface { height: clamp(280px, 31vw, 390px); }
+
+.view-studio .drop-surface {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--cream) 13%, transparent);
+  border-radius: 4px;
+  background: var(--charcoal);
+  box-shadow: none;
+}
+
+.view-studio .drop-surface img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--charcoal);
+}
+
+.view-studio .drop-surface:hover,
+.view-studio .drop-surface.is-dragging {
+  border-color: color-mix(in srgb, var(--champagne) 68%, transparent);
+}
+
+.view-studio .drop-surface:focus-within {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--champagne) 14%, transparent);
+  outline: 2px solid transparent;
+}
+
+.view-studio .capture-heading { min-height: 44px; align-items: center; }
+.view-studio .capture-heading h3 { color: var(--cream); font-size: 22px; }
+.view-studio .capture-kind { border: 0; background: transparent; box-shadow: none; }
+
+.view-studio :is(.capture-heading .text-action, .capture-actions button) {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px 14px;
+}
+
+.view-studio .capture-description { min-height: 42px; margin: 12px 0 10px; font-size: 12px; line-height: 1.5; }
+.view-studio .capture-status { min-height: 44px; gap: 9px; align-items: center; }
+.view-studio .capture-status strong { color: var(--cream); font-size: 13px; font-weight: 500; }
+.view-studio .capture-status small { color: var(--cream-dim); font-size: 12px; line-height: 1.4; }
+.view-studio .analysis-actions { justify-content: flex-start; margin-top: 24px; }
+
+/* Extracted evidence reads like a garment specification sheet, not a form grid. */
+.view-studio .review-card {
+  margin-top: 48px;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.view-studio .review-heading { padding: 32px 0 24px; }
+.view-studio .review-heading h3,
+.view-studio .care-review-heading h3 {
+  color: var(--cream);
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-size: 28px;
+  font-weight: 440;
+  line-height: 1.1;
+}
+
+.view-studio .review-heading > span,
+.view-studio .review-required {
+  color: var(--champagne);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.view-studio :is(.form-grid, .care-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 32px;
+}
+
+.view-studio .field-group {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 0;
+}
+
+.view-studio .field-group > span {
+  display: flex;
+  min-height: 18px;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--cream-dim);
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.view-studio :is(.field-group input, .field-group select, .height-field input) {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--cream) 18%, transparent);
+  border-radius: 0;
+  color: var(--cream);
+  background: transparent;
+  box-shadow: none;
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.view-studio :is(.field-group input, .field-group select, .height-field input):focus {
+  border-bottom-color: var(--champagne);
+  box-shadow: 0 1px 0 var(--champagne);
+  outline: 0;
+}
+
+.view-studio .evidence-badge {
+  min-height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--cream-dim);
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+}
+
+.view-studio .evidence-badge i { box-shadow: none; }
+.view-studio .care-review-heading { margin-top: 32px; padding: 24px 0 12px; border-top: 1px solid var(--border); }
+.view-studio .review-confirmation { min-height: 44px; border-radius: 4px; }
+
+/* Tailor's measuring tape replaces the dashboard completion ring. */
+.view-studio .completion-tape {
+  width: min(320px, 36vw);
+  min-width: 240px;
+}
+
+.view-studio .completion-tape > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.view-studio .completion-tape span {
+  color: var(--cream-dim);
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.view-studio .completion-tape strong {
+  color: var(--cream);
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-size: 22px;
+  font-weight: 440;
+}
+
+.view-studio .completion-tape-track {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--cream) 15%, transparent);
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--cream) 35%, transparent) 0 1px, transparent 1px 10%),
+    var(--charcoal);
+}
+
+.view-studio .completion-tape-track::after {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), color-mix(in srgb, var(--cream) 52%, transparent) calc(10% - 1px) 10%);
+  content: "";
+  pointer-events: none;
+}
+
+.view-studio .completion-tape-track i {
+  display: block;
+  height: 100%;
+  background: color-mix(in srgb, var(--champagne) 78%, transparent);
+  transform-origin: left center;
+  transition: width 160ms ease-out;
+}
+
+/* Preference choices become an editorial text edit. */
+.view-studio .dna-form { gap: 0; }
+
+.view-studio .dna-section {
+  padding: 32px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.view-studio .dna-section legend,
+.view-studio .choice-label {
+  color: var(--champagne);
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.view-studio .dna-section > p { max-width: 68ch; color: var(--cream-dim); font-size: 13px; }
+
+.view-studio :is(.relationship-grid, .colour-choice-grid, .pill-choices) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 4px 20px;
+}
+
+.view-studio :is(.relationship-grid, .colour-choice-grid, .pill-choices) button {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  gap: 9px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 0 8px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--cream) 14%, transparent);
+  border-radius: 0;
+  color: var(--cream-dim);
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.view-studio .relationship-grid button { display: block; }
+.view-studio .relationship-grid button strong { color: inherit; font-size: 14px; font-weight: 500; }
+.view-studio .relationship-grid button span { margin-top: 4px; color: inherit; font-size: 12px; line-height: 1.4; }
+.view-studio .colour-choice-grid button i { width: 14px; height: 14px; flex: 0 0 14px; border-radius: 50%; }
+.view-studio .colour-choice-grid button span { color: inherit; font-size: 14px; text-transform: capitalize; }
+
+.view-studio :is(.relationship-grid, .colour-choice-grid, .pill-choices) button.selected {
+  color: var(--champagne);
+  border-bottom-color: var(--champagne);
+  background: transparent;
+  box-shadow: none;
+}
+
+.view-studio :is(.relationship-grid, .colour-choice-grid, .pill-choices) button:hover {
+  color: var(--cream);
+  border-bottom-color: color-mix(in srgb, var(--champagne) 52%, transparent);
+  filter: none;
+  transform: none;
+}
+
+.view-studio .agency-note {
+  margin: 24px 0 0;
+  padding: 16px 0 16px 16px;
+  border: 0;
+  border-left: 2px solid var(--olive);
+  border-radius: 0;
+  background: transparent;
+}
+
+.view-studio .agency-note > span { color: var(--olive); }
+
+/* The wardrobe shelf is image-led and card-free. */
+.view-studio .studio-gallery { padding: clamp(24px, 3vw, 32px); }
+.view-studio .studio-garment-grid { gap: 24px 16px; }
+.view-studio .studio-garment-card { min-width: 0; border: 0; background: transparent; }
+.view-studio .studio-garment-image { height: 280px; overflow: hidden; border: 0; border-radius: 4px; background: var(--charcoal); box-shadow: none; }
+.view-studio .studio-garment-card > div:last-child { min-height: 96px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.view-studio .studio-garment-card strong { color: var(--cream); font-size: 16px; font-weight: 500; }
+.view-studio .studio-garment-card p { color: var(--cream-dim); font-size: 13px; }
+
+.view-studio .studio-look-grid { gap: 24px 16px; }
+.view-studio .studio-look-card {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.55fr) minmax(0, 1fr);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.view-studio .studio-look-card > div { min-height: 220px; overflow: hidden; border-radius: 4px; background: var(--charcoal); }
+.view-studio .studio-look-card section { padding: 16px; }
+.view-studio .studio-look-card strong { color: var(--cream); font-size: 20px; }
+.view-studio .studio-look-card p { color: var(--cream-dim); font-size: 13px; }
+
+/*
+ * Studio specificity boundary.
+ * Shared product surfaces deliberately carry a stronger selector so each
+ * screen can inherit them safely. These rules keep Studio's approved capture
+ * language authoritative without changing the liquid-glass runtime.
+ */
+.app-shell.view-studio { box-sizing: border-box; }
+
+.app-shell.view-studio .adapter-chip {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell.view-studio .studio-panel .capture-slot,
+.app-shell.view-studio .studio-panel .review-card,
+.app-shell.view-studio .studio-panel .dna-section,
+.app-shell.view-studio .studio-panel .agency-note {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell.view-studio .capture-slot .drop-surface {
+  border-radius: 4px;
+  background: var(--charcoal);
+}
+
+.app-shell.view-studio :is(.capture-heading .text-action, .capture-actions button) {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.app-shell.view-studio :is(.field-group input, .field-group select, .height-field input) {
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--cream) 18%, transparent);
+  border-radius: 0;
+  background: transparent;
+}
+
+.app-shell.view-studio :is(.field-group input, .field-group select, .height-field input):focus {
+  border-bottom-color: var(--champagne);
+  box-shadow: 0 1px 0 var(--champagne);
+}
+
+.app-shell.view-studio .evidence-badge {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app-shell.view-studio .studio-panel :is(.relationship-grid, .colour-choice-grid, .pill-choices) button {
+  min-height: 44px;
+  padding: 10px 0 8px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--cream) 14%, transparent);
+  border-radius: 0;
+  color: var(--cream-dim);
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell.view-studio .studio-panel :is(.relationship-grid, .colour-choice-grid, .pill-choices) button.selected {
+  color: var(--champagne);
+  border-bottom-color: var(--champagne);
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell.view-studio .studio-gallery .studio-garment-card,
+.app-shell.view-studio .studio-gallery .studio-look-card {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell.view-studio .studio-gallery .studio-garment-image,
+.app-shell.view-studio .studio-gallery .studio-look-card > div {
+  border-radius: 4px;
+  background: var(--charcoal);
+  box-shadow: none;
+}
+
+@media (max-width: 960px) {
+  .view-studio .studio-proof-stage { min-width: 260px; }
+  .view-studio .capture-grid { grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr); }
+  .view-studio .capture-slot:first-child .drop-surface { height: 520px; }
+}
+
+@media (max-width: 720px) {
+  .view-studio .studio-proof-stage { width: 100%; min-width: 0; }
+  .app-shell.view-studio .studio-proof span {
+    grid-template-columns: minmax(96px, 0.4fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+  .view-studio .studio-panel { padding: 20px 16px; }
+  .view-studio .studio-panel-heading { align-items: flex-start; }
+  .view-studio .adapter-chip { white-space: normal; }
+  .view-studio .privacy-strip { grid-template-columns: 1fr; gap: 4px; }
+  .view-studio .capture-grid { grid-template-columns: 1fr; }
+  .view-studio .capture-slot:first-child .drop-surface { height: min(122vw, 560px); }
+  .view-studio .capture-slot:nth-child(2) .drop-surface { height: min(82vw, 360px); }
+  .view-studio :is(.form-grid, .care-grid) { grid-template-columns: 1fr; }
+  .view-studio .completion-tape { width: 100%; min-width: 0; }
+  .view-studio :is(.relationship-grid, .colour-choice-grid, .pill-choices) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .view-studio .studio-garment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .view-studio .studio-garment-image { height: 210px; }
+  .view-studio .studio-look-card { grid-template-columns: 112px minmax(0, 1fr); }
+  .view-studio .studio-look-card > div { min-height: 170px; }
+}
+
+@media (max-width: 430px) {
+  .view-studio :is(.relationship-grid, .colour-choice-grid, .pill-choices) { grid-template-columns: 1fr; }
+  .view-studio .studio-garment-grid { grid-template-columns: 1fr; }
+  .view-studio .studio-garment-image { height: 330px; }
+}

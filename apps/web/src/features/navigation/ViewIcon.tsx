@@ -1,14 +1,5 @@
 import type { YangeView } from "../judge/JudgeMode";
 
-const legacyIconAssets: Partial<Record<YangeView, string>> = {
-  today: "/icons/nav-today.png",
-  studio: "/icons/nav-studio.png",
-  atelier: "/icons/nav-atelier.png",
-  wearcast: "/icons/nav-wearcast.png",
-  cloud: "/icons/nav-cloud.png",
-  judge: "/icons/nav-judge.png",
-};
-
 function IconFrame({ children }: { children: React.ReactNode }) {
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -25,12 +16,7 @@ function IconFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ViewIcon({ view, referenceScreen = false }: { view: YangeView; referenceScreen?: boolean }) {
-  const legacyAsset = legacyIconAssets[view];
-  if (!referenceScreen && legacyAsset) {
-    return <img src={legacyAsset} alt="" width="256" height="256" decoding="async" />;
-  }
-
+export function ViewIcon({ view }: { view: YangeView }) {
   switch (view) {
     case "today":
       return (

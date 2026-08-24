@@ -1,0 +1,182 @@
+/*
+ * Canonical Yange navigation contract.
+ * This file is imported last and is the only view-aware authority for tabs.
+ * Screen styles must not redefine any selector below.
+ */
+.app-shell .site-header .topbar {
+  height: 80px;
+  min-height: 80px;
+}
+
+.app-shell .view-tabs {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  overflow: visible;
+  margin: 0;
+  padding: 4px 12px 8px;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--cream) 8%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  scrollbar-width: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell .view-tabs::-webkit-scrollbar { display: none; }
+
+.app-shell .view-tabs button {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  min-height: 48px;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 0;
+  border-radius: 0;
+  color: var(--champagne);
+  background: transparent;
+  box-shadow: none;
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  text-align: center;
+  cursor: pointer;
+  transition: color 160ms ease-out;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell .view-tabs button:hover,
+.app-shell .view-tabs button.active {
+  border: 0;
+  border-color: transparent;
+  border-radius: 0;
+  color: var(--champagne);
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+.app-shell .view-tabs button[aria-current="page"] { text-decoration: none; }
+
+.app-shell .view-tabs button::after {
+  position: absolute;
+  right: 24%;
+  bottom: 4px;
+  left: 24%;
+  height: 1px;
+  background: transparent;
+  box-shadow: none;
+  content: "";
+  pointer-events: none;
+}
+
+.app-shell .view-tabs button.active::after { background: var(--champagne); }
+
+.app-shell .view-tab-icon {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  place-items: center;
+  color: var(--olive);
+  filter: none;
+}
+
+.app-shell .view-tab-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.app-shell .view-tabs button.active .view-tab-icon { color: var(--champagne); }
+
+.app-shell .view-tab-copy,
+.app-shell .view-tab-copy strong { display: block; }
+
+.app-shell .view-tab-copy strong {
+  color: inherit;
+  background: none;
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-shadow: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.app-shell .view-tabs .count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  place-items: center;
+  border: 0;
+  border-radius: 2px;
+  color: var(--cream-dim);
+  background: var(--chocolate);
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-shell .view-tabs .proof-dot {
+  width: 5px;
+  height: 5px;
+  margin-left: 0;
+  border-radius: 50%;
+  background: var(--cream-dim);
+  box-shadow: none;
+}
+
+@media (max-width: 960px) {
+  .app-shell .view-tab-copy { display: none; }
+}
+
+@media (max-width: 720px) {
+  .app-shell .site-header .topbar {
+    height: 64px;
+    min-height: 64px;
+  }
+
+  .app-shell .view-tabs {
+    grid-template-columns: repeat(7, 56px);
+    overflow-x: auto;
+    padding: 4px 8px 8px;
+  }
+
+  .app-shell .view-tabs button {
+    min-width: 56px;
+    min-height: 44px;
+    padding: 4px;
+  }
+
+  .app-shell .view-tab-icon {
+    width: 20px;
+    height: 20px;
+    flex-basis: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .view-tabs button { transition: none; }
+}

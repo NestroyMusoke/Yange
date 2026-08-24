@@ -15,7 +15,7 @@ import { YangeLogo } from "./features/brand/YangeLogo";
 import { YangeText, YangeWordmark } from "./features/brand/YangeWordmark";
 import { LiquidGlassFilters } from "./features/glass/LiquidGlassFilters";
 import { LiquidGlassRuntime } from "./features/glass/LiquidGlassRuntime";
-import { ViewIcon } from "./features/navigation/ViewIcon";
+import { YangeNavigation } from "./features/navigation/YangeNavigation";
 import { TodayGarmentCard } from "./features/today/TodayGarmentCard";
 import { useYange } from "./useYange";
 
@@ -36,20 +36,6 @@ const auraSceneTone: Record<YangeView, { energy: number; warmth: number }> = {
   judge: { energy: 0.96, warmth: 0.48 },
   activity: { energy: 0.72, warmth: 0.4 },
 };
-
-const viewNavigation: ReadonlyArray<{
-  id: YangeView;
-  label: string;
-  description: string;
-}> = [
-  { id: "today", label: "Today", description: "One clear look" },
-  { id: "studio", label: "Studio", description: "Build your wardrobe" },
-  { id: "atelier", label: "Atelier", description: "Plan with evidence" },
-  { id: "wearcast", label: "WearCast", description: "See what is ahead" },
-  { id: "cloud", label: "Cloud", description: "Keep your wardrobe in sync" },
-  { id: "judge", label: "Review", description: "See what Yange has learned" },
-  { id: "activity", label: "Activity", description: "See recent changes" },
-];
 
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -134,6 +120,12 @@ export function App() {
   const sceneTone = auraSceneTone[activeView];
   const renderedAuraEnergy = Math.min(1, auraEnergy * sceneTone.energy);
   const renderedAuraWarmth = Math.min(1, auraWarmth * 0.7 + sceneTone.warmth * 0.3);
+  const navigationIndicators: Partial<Record<YangeView, string | number>> = {
+    studio: Object.keys(state.inspirationLooks).length,
+    atelier: Object.values(state.outfits).filter((outfit) => outfit.source === "agent-planned").length,
+    wearcast: wearCastDecision.risks.length || (autonomyExecution?.status === "failed" ? "!" : 0),
+    activity: ledger.length,
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -149,7 +141,7 @@ export function App() {
         onStatusChange={setAuraStatus}
       />
       <LiquidGlassFilters />
-      <LiquidGlassRuntime enabled={activeView === "today"} />
+      <LiquidGlassRuntime enabled revision={activeView} />
       <div
         className={`app-shell view-${activeView}`}
         style={{
@@ -193,40 +185,11 @@ export function App() {
           </div>
         </div>
         </div>
-        <nav className="view-tabs" aria-label="Yange views">
-          {viewNavigation.map((item) => {
-            const studioCount = Object.keys(state.inspirationLooks).length;
-            const atelierCount = Object.values(state.outfits).filter((outfit) => outfit.source === "agent-planned").length;
-            const wearCastAlert = wearCastDecision.risks.length || (autonomyExecution?.status === "failed" ? "!" : null);
-            const indicator = item.id === "studio"
-              ? studioCount || null
-              : item.id === "atelier"
-                ? atelierCount || null
-                : item.id === "wearcast"
-                  ? wearCastAlert
-                  : item.id === "activity"
-                    ? ledger.length || null
-                    : null;
-            return (
-              <button
-                type="button"
-                key={item.id}
-                className={activeView === item.id ? "active" : ""}
-                aria-current={activeView === item.id ? "page" : undefined}
-                aria-label={`${item.label}: ${item.description}`}
-                title={item.description}
-                onClick={() => setActiveView(item.id)}
-              >
-                <span className="view-tab-icon"><ViewIcon view={item.id} referenceScreen={activeView === "today"} /></span>
-                <span className="view-tab-copy">
-                  <strong>{item.label}</strong>
-                </span>
-                {indicator !== null && <span className="count">{indicator}</span>}
-                {item.id === "cloud" && <span className="proof-dot" aria-hidden="true" />}
-              </button>
-            );
-          })}
-        </nav>
+        <YangeNavigation
+          activeView={activeView}
+          indicators={navigationIndicators}
+          onNavigate={setActiveView}
+        />
         </header>
       </div>
 

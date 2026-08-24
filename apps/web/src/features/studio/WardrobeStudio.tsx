@@ -32,19 +32,36 @@ export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }:
   );
   const looks = useMemo(() => Object.values(state.inspirationLooks).reverse(), [state.inspirationLooks]);
 
+  function trackGlassPointer(event: React.PointerEvent<HTMLDivElement>) {
+    if (window.innerWidth <= 720 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--mx", `${event.clientX - bounds.left}px`);
+    event.currentTarget.style.setProperty("--my", `${event.clientY - bounds.top}px`);
+  }
+
   return (
     <div className="wardrobe-studio">
       <section className="studio-intro">
         <div>
-          <h2>Your wardrobe, remembered beautifully.</h2>
+          <h2>Your wardrobe,<br />remembered <span>beautifully.</span></h2>
           <p>
             Add the pieces you own, the care they need and the looks that inspire you.
           </p>
         </div>
-        <div className="studio-proof">
-          <span><strong>{userGarments.length}</strong> captured pieces</span>
-          <span><strong>{looks.length}</strong> inspiration looks</span>
-          <span><strong>Private</strong> wardrobe</span>
+        <div className="studio-proof-stage" data-liquid-glass-root>
+          <div
+            className="studio-proof"
+            data-liquid-glass
+            onPointerMove={trackGlassPointer}
+            onPointerLeave={(event) => {
+              event.currentTarget.style.setProperty("--mx", "50%");
+              event.currentTarget.style.setProperty("--my", "50%");
+            }}
+          >
+            <span><strong>{userGarments.length}</strong> captured pieces</span>
+            <span><strong>{looks.length}</strong> inspiration looks</span>
+            <span><strong>Private</strong> wardrobe</span>
+          </div>
         </div>
       </section>
 

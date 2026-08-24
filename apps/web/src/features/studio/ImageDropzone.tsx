@@ -118,7 +118,7 @@ export function ImageDropzone({
       <div className="capture-actions">
         {slot.status === "empty" && (
           <button type="button" className="text-action" onClick={onDemo}>
-            Use sample
+            Use demo capture
           </button>
         )}
         {slot.status === "failed" && (

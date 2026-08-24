@@ -104,9 +104,11 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
             Save the colours, shapes and comfort details you enjoy. <YangeWordmark /> keeps learning from every confidence check-in.
           </p>
         </div>
-        <div className="completion-orbit" aria-label={`Style DNA ${completion}% complete`}>
-          <strong>{completion}%</strong>
-          <span>Style DNA</span>
+        <div className="completion-tape" aria-label={`Style DNA ${completion}% complete`}>
+          <div><span>Style DNA</span><strong>{completion}%</strong></div>
+          <div className="completion-tape-track" aria-hidden="true">
+            <i style={{ width: `${completion}%` }} />
+          </div>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import {
 
 interface LiquidGlassRuntimeProps {
   enabled: boolean;
+  revision: string;
 }
 
 const REGULAR_GLASS: Partial<GlassConfig> = {
@@ -81,7 +82,7 @@ function resizeAndCopyAura(
  * its first sibling. The reference engine samples that canvas directly, which
  * avoids repeatedly rasterising the full Yange application with html-to-image.
  */
-export function LiquidGlassRuntime({ enabled }: LiquidGlassRuntimeProps) {
+export function LiquidGlassRuntime({ enabled, revision }: LiquidGlassRuntimeProps) {
   useEffect(() => {
     if (!enabled) return;
 
@@ -101,7 +102,7 @@ export function LiquidGlassRuntime({ enabled }: LiquidGlassRuntimeProps) {
       if (!auraCanvas) return;
 
       const stages = Array.from(
-        document.querySelectorAll<HTMLElement>(".view-today [data-liquid-glass-root]"),
+        document.querySelectorAll<HTMLElement>(".app-shell [data-liquid-glass-root]"),
       );
 
       for (const root of stages) {
@@ -199,7 +200,7 @@ export function LiquidGlassRuntime({ enabled }: LiquidGlassRuntimeProps) {
       });
       mirrors.forEach((mirror) => mirror.remove());
     };
-  }, [enabled]);
+  }, [enabled, revision]);
 
   return null;
 }

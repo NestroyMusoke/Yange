@@ -232,7 +232,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
   }
 
   return (
-    <section className="studio-panel" aria-labelledby="capture-title">
+    <section className="studio-panel studio-capture-panel" aria-labelledby="capture-title">
       <div className="studio-panel-heading">
         <div>
           <h2 id="capture-title">Add something you own.</h2>
