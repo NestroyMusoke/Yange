@@ -6,6 +6,7 @@ import {
 } from "@yange/contracts";
 import type { TestableMultimodalAnalyzer } from "../../aiRuntime";
 import type { LookDna } from "@yange/domain";
+import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 import { ImageDropzone } from "./ImageDropzone";
 import type { CaptureQueue } from "./useCaptureQueue";
 
@@ -80,10 +81,10 @@ export function LookDnaPanel({ queue, analyzer, onSave }: LookDnaPanelProps) {
     <section className="studio-panel" aria-labelledby="look-dna-title">
       <div className="studio-panel-heading">
         <div>
-          <h2 id="look-dna-title">Borrow the idea—not the shopping list.</h2>
+          <h2 id="look-dna-title">Save a look you love.</h2>
           <p>
-            Upload a Pinterest image, screenshot, or saved TikTok frame. Yange extracts the
-            outfit’s visual grammar so a later agent can recreate it from your own wardrobe.
+            Upload a Pinterest image, screenshot or saved TikTok frame. <YangeWordmark /> remembers the
+            palette, proportions and styling cues you want to recreate.
           </p>
         </div>
         <div className="adapter-chip">
@@ -97,7 +98,7 @@ export function LookDnaPanel({ queue, analyzer, onSave }: LookDnaPanelProps) {
           <ImageDropzone
             kind="inspiration"
             title="Inspiration image"
-            description="Use a clear full-outfit image. Yange does not fetch or download social-media links in this phase."
+            description="Use a clear full-outfit image or a saved frame from social media."
             slot={slot}
             onFile={(file) => void queue.process("inspiration", file)}
             onDemo={() => void queue.useDemo("inspiration")}
@@ -145,7 +146,7 @@ export function LookDnaPanel({ queue, analyzer, onSave }: LookDnaPanelProps) {
                 <div><span>Styling cues</span><p>{analysis.look.stylingCues.join(" · ")}</p></div>
                 <div><span>Occasion cues</span><p>{analysis.look.occasionCues.join(" · ")}</p></div>
               </div>
-              {analysis.warnings.map((warning) => <p className="look-warning" key={warning}>{warning}</p>)}
+              {analysis.warnings.map((warning) => <p className="look-warning" key={warning}><YangeText>{warning}</YangeText></p>)}
               <div className="look-save-actions">
                 <button type="button" className="primary-action compact-action" onClick={saveLook} disabled={saved}>
                   {saved ? "Saved to inspiration memory" : "Save this Look DNA"}
@@ -158,7 +159,7 @@ export function LookDnaPanel({ queue, analyzer, onSave }: LookDnaPanelProps) {
               <div aria-hidden="true"><i /><i /><i /></div>
               <span>Look DNA preview</span>
               <h3>Palette. Proportion. Styling logic.</h3>
-              <p>The analysis appears here as editable wardrobe inspiration—not a command to buy anything.</p>
+              <p>Your saved inspiration appears here, ready to shape future outfit ideas.</p>
             </div>
           )}
         </div>

@@ -6,6 +6,7 @@ import type {
 import type { WearCastExecution } from "@yange/orchestrator";
 import type { AuraStatus } from "../aura/StyleAura";
 import type { StyleAuraProfile } from "../aura/palette";
+import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 
 export type YangeView =
   | "today"
@@ -24,75 +25,52 @@ interface JudgeModeProps {
   ledgerLength: number;
   auraProfile: StyleAuraProfile;
   auraStatus: AuraStatus;
-  auraFallbackForced: boolean;
   onNavigate(view: YangeView): void;
-  onReset(): void;
-  onToggleAuraFailure(): void;
 }
 
-interface ProofSignal {
+interface ReadinessSignal {
   id: string;
   label: string;
   detail: string;
-  proven: boolean;
+  ready: boolean;
 }
 
-const demoActs: Array<{
-  time: string;
+const nextSteps: Array<{
+  label: string;
   title: string;
   view: YangeView;
   action: string;
-  narration: string;
-  proves: string;
+  detail: string;
 }> = [
   {
-    time: "0:00–0:50",
-    title: "Teach, don’t assume",
+    label: "Your wardrobe",
+    title: "Add what you actually wear",
     view: "studio",
-    action: "Open Wardrobe Studio",
-    narration: "Capture one garment and its care label, then add an inspiration image. Confirm every uncertain field before it enters the twin.",
-    proves: "Multimodality · consent · provenance",
+    action: "Open Studio",
+    detail: "Photograph a piece, check its care label and save any inspiration you want Yange to remember.",
   },
   {
-    time: "0:50–1:35",
-    title: "Plan from what exists",
+    label: "Your next occasion",
+    title: "Plan from what is available",
     view: "atelier",
-    action: "Open Decision Atelier",
-    narration: "Ask for Friday dinner. Show the Personal Match receipt, live availability constraints, weather, calendar, and inspiration evidence.",
-    proves: "Deterministic planning · explainability",
+    action: "Open Atelier",
+    detail: "Choose an occasion and compare complete looks grounded in your wardrobe, weather and preferences.",
   },
   {
-    time: "1:35–2:20",
-    title: "Learn from a real wear",
+    label: "Your rhythm",
+    title: "Let confidence shape the next look",
     view: "today",
     action: "Open Today",
-    narration: "Mark City Calm worn and record confidence. Watch garments separate into wash, rewear, airing, and available states while Style Aura absorbs preference evidence.",
-    proves: "Memory · state transitions · personalisation",
-  },
-  {
-    time: "2:20–3:25",
-    title: "Let the agent act",
-    view: "wearcast",
-    action: "Open WearCast",
-    narration: "Stage the transparent 50% pressure case, compare Do nothing with Autopilot, inject one notification outage, then resume the same checkpointed run.",
-    proves: "Autonomy · weather timing · recovery",
-  },
-  {
-    time: "3:25–4:00",
-    title: "Prove the boundary",
-    view: "cloud",
-    action: "Open Cloud Proof",
-    narration: "Show the six server checkpoints, trace receipt and Google evidence card. End on the architecture, not a claim slide.",
-    proves: "Failure isolation · Google Cloud · observability",
+    detail: "Mark an outfit as worn and save how it felt. Your Style Aura and recommendations will evolve with you.",
   },
 ];
 
-const statusLabel: Record<AuraStatus, string> = {
-  starting: "starting",
-  live: "WebGL live",
-  adaptive: "adaptive quality",
-  frozen: "reduced-motion still",
-  fallback: "isolated fallback",
+const auraStatusLabel: Record<AuraStatus, string> = {
+  starting: "Warming up",
+  live: "Learning active",
+  adaptive: "Learning active",
+  frozen: "Still mode",
+  fallback: "Still mode",
 };
 
 export function JudgeMode({
@@ -103,10 +81,7 @@ export function JudgeMode({
   ledgerLength,
   auraProfile,
   auraStatus,
-  auraFallbackForced,
   onNavigate,
-  onReset,
-  onToggleAuraFailure,
 }: JudgeModeProps) {
   const userMediaCount = Object.values(state.garments).filter(
     (garment) => garment.imageAssetId || garment.careLabelAssetId,
@@ -115,101 +90,88 @@ export function JudgeMode({
   const plannedCount = Object.values(state.outfits).filter(
     (outfit) => outfit.source === "agent-planned",
   ).length;
-  const notifications = Object.values(state.autonomy.notifications);
-  const deliveredCount = notifications.filter(
-    (notification) => notification.deliveryStatus === "delivered",
-  ).length;
-  const proofs: ProofSignal[] = [
+  const signals: ReadinessSignal[] = [
     {
       id: "capture",
-      label: "Multimodal evidence",
-      detail: userMediaCount > 0 ? `${userMediaCount} item(s) carry private media evidence` : "Capture a garment or care label",
-      proven: userMediaCount > 0,
+      label: "Wardrobe photos",
+      detail: userMediaCount > 0 ? `${userMediaCount} personal ${userMediaCount === 1 ? "piece" : "pieces"} saved` : "Add your first garment photo",
+      ready: userMediaCount > 0,
     },
     {
       id: "inspiration",
-      label: "Inspiration understood",
-      detail: inspirationCount > 0 ? `${inspirationCount} Look DNA record(s) confirmed` : "Save one inspiration image",
-      proven: inspirationCount > 0,
+      label: "Saved inspiration",
+      detail: inspirationCount > 0 ? `${inspirationCount} ${inspirationCount === 1 ? "look" : "looks"} remembered` : "Save a look you love",
+      ready: inspirationCount > 0,
     },
     {
       id: "planning",
-      label: "Personal plan committed",
-      detail: plannedCount > 0 ? `${plannedCount} agent-planned outfit(s)` : "Reserve an Atelier candidate",
-      proven: plannedCount > 0,
+      label: "Planned outfits",
+      detail: plannedCount > 0 ? `${plannedCount} ${plannedCount === 1 ? "outfit" : "outfits"} reserved` : "Plan your next occasion",
+      ready: plannedCount > 0,
     },
     {
       id: "memory",
       label: "Confidence memory",
-      detail: state.styleMemory.feedbackCount > 0 ? `${state.styleMemory.feedbackCount} lived check-in(s)` : "Wear and rate today’s outfit",
-      proven: state.styleMemory.feedbackCount > 0,
+      detail: state.styleMemory.feedbackCount > 0 ? `${state.styleMemory.feedbackCount} lived ${state.styleMemory.feedbackCount === 1 ? "check-in" : "check-ins"}` : "Wear and rate an outfit",
+      ready: state.styleMemory.feedbackCount > 0,
     },
     {
       id: "pressure",
-      label: "Operational risk detected",
-      detail: decision.capacity.triggered ? `${Math.round(decision.capacity.ratio * 100)}% unavailable` : "Stage the disclosed pressure fixture",
-      proven: decision.capacity.triggered,
+      label: "Wardrobe pressure",
+      detail: decision.capacity.triggered ? `${Math.round(decision.capacity.ratio * 100)}% currently unavailable` : "No urgent laundry pressure",
+      ready: !decision.capacity.triggered,
     },
     {
-      id: "autonomy",
-      label: "Autonomy completed",
-      detail: execution?.status === "completed" ? `${execution.checkpointHistory.length} durable checkpoint receipts` : "Run or resume WearCast",
-      proven: execution?.status === "completed",
+      id: "wearcast",
+      label: "WearCast",
+      detail: execution?.status === "completed" ? "Your latest wardrobe check is complete" : "Ready when your plans change",
+      ready: execution?.status === "completed" || !decision.capacity.triggered,
     },
   ];
-  const proofCount = proofs.filter((proof) => proof.proven).length;
+  const readyCount = signals.filter((signal) => signal.ready).length;
 
   return (
     <div className="judge-shell">
       <section className="judge-hero">
         <div>
-          <span className="context-date">Live demo state</span>
-          <h2>Four minutes. One wardrobe. No hand-waving.</h2>
-          <p>
-            This director never fabricates success. Each light turns on only when
-            a real event, projection, checkpoint, or renderer state exists.
-          </p>
+          <span className="context-date">Your wardrobe review</span>
+          <h2>Everything <YangeWordmark /> knows about your style.</h2>
+          <p>See what is ready, what is changing and the simplest way to make your next recommendation more personal.</p>
           <div className="judge-hero-actions">
             <button type="button" className="primary-action" onClick={() => onNavigate("studio")}>
-              Begin the live journey
-            </button>
-            <button type="button" className="quiet-action" onClick={onReset}>
-              Reset deterministic demo
+              Add to your wardrobe
             </button>
           </div>
         </div>
-        <div className="demo-readiness-orbit" aria-label={`${proofCount} of ${proofs.length} demo proofs ready`}>
+        <div className="demo-readiness-orbit" aria-label={`${readyCount} of ${signals.length} wardrobe signals ready`}>
           <div
-            style={{ "--demo-progress": `${(proofCount / proofs.length) * 360}deg` } as React.CSSProperties}
+            style={{ "--demo-progress": `${(readyCount / signals.length) * 360}deg` } as React.CSSProperties}
           >
-            <strong>{proofCount}/{proofs.length}</strong>
-            <span>live proofs</span>
+            <strong>{readyCount}/{signals.length}</strong>
+            <span>ready</span>
           </div>
-          <small>{ledgerLength} committed events · {readiness.score}% ready</small>
+          <small>{ledgerLength} wardrobe changes <span aria-hidden="true">•</span> {readiness.score}% ready</small>
         </div>
       </section>
 
       <section className="demo-runway">
         <div className="judge-section-heading">
-          <div>
-            <h3>One causal story, paced to 4:00.</h3>
-          </div>
-          <em>5 acts · 1 take</em>
+          <div><h3>Keep <YangeWordmark /> learning.</h3></div>
+          <em>Three useful next steps</em>
         </div>
         <ol className="demo-act-list">
-          {demoActs.map((act, index) => (
-            <li key={act.time}>
+          {nextSteps.map((step, index) => (
+            <li key={step.title}>
               <div className="act-index">
                 <span>{String(index + 1).padStart(2, "0")}</span>
-                {index < demoActs.length - 1 && <i />}
+                {index < nextSteps.length - 1 && <i />}
               </div>
               <div className="act-copy">
-                <time>{act.time}</time>
-                <h4>{act.title}</h4>
-                <p>{act.narration}</p>
-                <small>{act.proves}</small>
+                <time>{step.label}</time>
+                <h4>{step.title}</h4>
+                <p><YangeText>{step.detail}</YangeText></p>
               </div>
-              <button type="button" onClick={() => onNavigate(act.view)}>{act.action} <span>↗</span></button>
+              <button type="button" onClick={() => onNavigate(step.view)}>{step.action} <span>↗</span></button>
             </li>
           ))}
         </ol>
@@ -217,90 +179,51 @@ export function JudgeMode({
 
       <section className="proof-board">
         <div className="judge-section-heading">
-          <div>
-            <h3>The demo earns every green light.</h3>
-          </div>
-          <em>{proofCount === proofs.length ? "Demo state complete" : `${proofs.length - proofCount} proof(s) remaining`}</em>
+          <div><h3>Your wardrobe at a glance.</h3></div>
+          <em>{readyCount === signals.length ? "Everything looks good" : `${signals.length - readyCount} ${signals.length - readyCount === 1 ? "item" : "items"} to revisit`}</em>
         </div>
         <div className="proof-signal-grid">
-          {proofs.map((proof, index) => (
-            <article className={proof.proven ? "proof-signal is-proven" : "proof-signal"} key={proof.id}>
-              <span>{proof.proven ? "✓" : String(index + 1).padStart(2, "0")}</span>
+          {signals.map((signal, index) => (
+            <article className={signal.ready ? "proof-signal is-proven" : "proof-signal"} key={signal.id}>
+              <span>{signal.ready ? "✓" : String(index + 1).padStart(2, "0")}</span>
               <div>
-                <strong>{proof.label}</strong>
-                <small>{proof.detail}</small>
+                <strong>{signal.label}</strong>
+                <small>{signal.detail}</small>
               </div>
-              <i>{proof.proven ? "proven" : "waiting"}</i>
+              <i>{signal.ready ? "ready" : "next"}</i>
             </article>
           ))}
         </div>
       </section>
 
-      <div className="judge-lower-grid">
-        <section className="fault-theatre">
-          <div className="judge-section-heading">
-            <div>
-              <h3>Break the beauty. Keep the product.</h3>
+      <section className="aura-evidence-card">
+        <div className="judge-section-heading">
+          <div><h3>Your colour story.</h3></div>
+          <em>{auraStatusLabel[auraStatus]}</em>
+        </div>
+        <div className="judge-palette">
+          {auraProfile.colours.map((colour, index) => (
+            <div key={`${colour}-${index}`} style={{ "--swatch": colour } as React.CSSProperties}>
+              <i />
+                <strong><YangeText>{auraProfile.labels[index]}</YangeText></strong>
+              <small>{colour}</small>
             </div>
-            <em>{statusLabel[auraStatus]}</em>
-          </div>
-          <div className="fault-boundary-diagram">
-            <div className={auraFallbackForced ? "fault-node fault-node-down" : "fault-node"}>
-              <span>A</span>
-              <strong>Style Aura</strong>
-              <small>{auraFallbackForced ? "Renderer unavailable" : statusLabel[auraStatus]}</small>
-            </div>
-            <i aria-hidden="true">isolated</i>
-            <div className="fault-node fault-node-safe">
-              <span>Y</span>
-              <strong>Wardrobe agent</strong>
-              <small>{readiness.score}% readiness · state intact</small>
-            </div>
-          </div>
-          <p>
-            The canvas reads a one-way palette projection. It cannot dispatch a
-            domain command, write an event, or block the interface.
-          </p>
-          <button type="button" className="fault-action" onClick={onToggleAuraFailure}>
-            {auraFallbackForced ? "Restore WebGL renderer" : "Simulate renderer loss"}
-          </button>
-        </section>
-
-        <section className="aura-evidence-card">
-          <div className="judge-section-heading">
-            <div>
-              <h3>Personality you can inspect.</h3>
-            </div>
-            <em>{Math.round(auraProfile.confidence * 100)}% evidence</em>
-          </div>
-          <div className="judge-palette">
-            {auraProfile.colours.map((colour, index) => (
-              <div key={`${colour}-${index}`} style={{ "--swatch": colour } as React.CSSProperties}>
-                <i />
-                <strong>{auraProfile.labels[index]}</strong>
-                <small>{colour}</small>
-              </div>
-            ))}
-          </div>
-          <dl className="aura-source-list">
-            <div><dt>Chosen colours</dt><dd>{auraProfile.sources.explicitPreferences}</dd></div>
-            <div><dt>Inspiration swatches</dt><dd>{auraProfile.sources.inspirationPalettes}</dd></div>
-            <div><dt>Confidence signals</dt><dd>{auraProfile.sources.confidenceSignals}</dd></div>
-            <div><dt>Confirmed garments</dt><dd>{auraProfile.sources.confirmedGarments}</dd></div>
-          </dl>
-        </section>
-      </div>
+          ))}
+        </div>
+        <dl className="aura-source-list">
+          <div><dt>Chosen colours</dt><dd>{auraProfile.sources.explicitPreferences}</dd></div>
+          <div><dt>Saved inspiration</dt><dd>{auraProfile.sources.inspirationPalettes}</dd></div>
+          <div><dt>Confidence check-ins</dt><dd>{auraProfile.sources.confidenceSignals}</dd></div>
+          <div><dt>Wardrobe pieces</dt><dd>{auraProfile.sources.confirmedGarments}</dd></div>
+        </dl>
+      </section>
 
       <section className="architecture-ending">
         <div>
-          <h3>Local rehearsal today. The same contracts on Google tomorrow.</h3>
-          <p>
-            End with a server receipt and architecture boundary: deterministic
-            domain policy, checkpointed orchestration, replaceable adapters, and
-            a private Google execution plane.
-          </p>
+          <h3>Your wardrobe keeps moving with you.</h3>
+          <p><YangeWordmark /> remembers what you wear, watches what is available and adjusts when plans, weather or laundry change.</p>
         </div>
-        <button type="button" onClick={() => onNavigate("cloud")}>Open production proof <span>→</span></button>
+        <button type="button" onClick={() => onNavigate("activity")}>View recent activity <span>→</span></button>
       </section>
     </div>
   );

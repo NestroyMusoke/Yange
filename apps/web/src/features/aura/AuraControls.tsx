@@ -1,5 +1,6 @@
 import type { AuraStatus } from "./StyleAura";
 import type { StyleAuraProfile } from "./palette";
+import { YangeText } from "../brand/YangeWordmark";
 
 interface AuraControlsProps {
   profile: StyleAuraProfile;
@@ -20,6 +21,13 @@ const statusLabels: Record<AuraStatus, string> = {
   fallback: "Still background",
 };
 
+function trackGlassPointer(event: React.PointerEvent<HTMLButtonElement>) {
+  if (window.innerWidth <= 720 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const bounds = event.currentTarget.getBoundingClientRect();
+  event.currentTarget.style.setProperty("--mx", `${event.clientX - bounds.left}px`);
+  event.currentTarget.style.setProperty("--my", `${event.clientY - bounds.top}px`);
+}
+
 export function AuraControls({
   profile,
   status,
@@ -31,14 +39,20 @@ export function AuraControls({
   onWarmthChange,
 }: AuraControlsProps) {
   return (
-    <div className="aura-control-wrap">
+    <div className="aura-control-wrap" data-liquid-glass-root>
       <button
         className="aura-chip"
+        data-liquid-glass
         type="button"
         aria-label={`Style Aura: ${profile.stage === "personal" ? "personal palette" : "learning your style"}`}
         aria-expanded={open}
         aria-controls="aura-control-panel"
         onClick={onToggle}
+        onPointerMove={trackGlassPointer}
+        onPointerLeave={(event) => {
+          event.currentTarget.style.setProperty("--mx", "50%");
+          event.currentTarget.style.setProperty("--my", "50%");
+        }}
       >
         <span className="aura-mini-palette" aria-hidden="true">
           {profile.colours.map((colour) => (
@@ -52,7 +66,16 @@ export function AuraControls({
       </button>
 
       {open && (
-        <aside className="aura-panel" id="aura-control-panel">
+        <aside
+          className="aura-panel"
+          id="aura-control-panel"
+          data-liquid-glass
+          onPointerMove={trackGlassPointer}
+          onPointerLeave={(event) => {
+            event.currentTarget.style.setProperty("--mx", "50%");
+            event.currentTarget.style.setProperty("--my", "50%");
+          }}
+        >
           <div className="aura-panel-heading">
             <div>
               <span>Your Style Aura</span>
@@ -64,7 +87,7 @@ export function AuraControls({
             {profile.colours.map((colour, index) => (
               <span key={`${colour}-${index}`}>
                 <i style={{ backgroundColor: colour }} />
-                <small title={profile.insights[index]}>{profile.labels[index]}</small>
+                <small title={profile.insights[index]}><YangeText>{profile.labels[index]}</YangeText></small>
               </span>
             ))}
           </div>
@@ -82,10 +105,10 @@ export function AuraControls({
             {profile.colours.map((colour, index) => (
               <div key={`reason-${colour}-${index}`}>
                 <i style={{ backgroundColor: colour }} aria-hidden="true" />
-                <span><strong>{profile.labels[index]}</strong><small>{profile.insights[index]}</small></span>
+                <span><strong><YangeText>{profile.labels[index]}</YangeText></strong><small><YangeText>{profile.insights[index]}</YangeText></small></span>
               </div>
             ))}
-            <p>{profile.sources.exactColourEvidence} exact-colour observations · {profile.sources.negativeSignals} negative or suggest-less signals</p>
+            <p>{profile.sources.exactColourEvidence} colour observations <span aria-hidden="true">•</span> {profile.sources.negativeSignals} colours shown less often</p>
           </div>
           <label className="aura-slider">
             <span><strong>Energy</strong><small>movement</small></span>

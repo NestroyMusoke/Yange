@@ -17,9 +17,9 @@ interface WardrobeStudioProps {
 }
 
 const steps: Array<{ id: StudioStep; number: string; label: string; detail: string }> = [
-  { id: "capture", number: "01", label: "Capture a piece", detail: "Photo + care evidence" },
-  { id: "style", number: "02", label: "Shape Style DNA", detail: "Your explicit preferences" },
-  { id: "inspiration", number: "03", label: "Save inspiration", detail: "Extract outfit logic" },
+  { id: "capture", number: "01", label: "Capture a piece", detail: "Photo + care label" },
+  { id: "style", number: "02", label: "Shape Style DNA", detail: "Colours, fit and comfort" },
+  { id: "inspiration", number: "03", label: "Save inspiration", detail: "Palette, shape and styling" },
 ];
 
 export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }: WardrobeStudioProps) {
@@ -36,16 +36,15 @@ export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }:
     <div className="wardrobe-studio">
       <section className="studio-intro">
         <div>
-          <h2>Give the agent eyes—with boundaries.</h2>
+          <h2>Your wardrobe, remembered beautifully.</h2>
           <p>
-            Build a trustworthy wardrobe twin from images, your corrections, and the visual
-            ideas you want to make your own.
+            Add the pieces you own, the care they need and the looks that inspire you.
           </p>
         </div>
         <div className="studio-proof">
           <span><strong>{userGarments.length}</strong> captured pieces</span>
           <span><strong>{looks.length}</strong> inspiration looks</span>
-          <span><strong>Private</strong> media evidence</span>
+          <span><strong>Private</strong> wardrobe</span>
         </div>
       </section>
 

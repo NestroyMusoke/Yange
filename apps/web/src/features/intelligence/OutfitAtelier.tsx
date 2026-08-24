@@ -15,6 +15,7 @@ import {
   type WeatherCondition,
 } from "@yange/domain";
 import { RuntimeOutfitExplainer } from "../../aiRuntime";
+import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 import { GarmentPreview } from "./GarmentPreview";
 
 interface OutfitAtelierProps {
@@ -208,7 +209,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
           startsAt: startsAtIso,
           occasion,
           dressCode,
-          notes: "User-supplied Phase 3 planning context",
+          notes: "User-supplied planning context",
         }),
         inspirationLookId || null,
       );
@@ -236,8 +237,8 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
     <section className="intelligence-panel" aria-labelledby="outfit-atelier-title">
       <div className="intelligence-heading">
         <div>
-          <h2 id="outfit-atelier-title">Set the moment. Audit the match.</h2>
-          <p>Yange ranks only feasible combinations, then shows exactly where every Personal Match point came from.</p>
+          <h2 id="outfit-atelier-title">Choose the moment. Find your look.</h2>
+          <p><YangeWordmark /> starts with what is available, then ranks the complete looks that suit your plans.</p>
         </div>
         <div className="engine-chip"><span /> Available garments only</div>
       </div>
@@ -258,20 +259,16 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
           </div>
           <label className="field-group full-field"><span>Inspiration memory <small>Optional</small></span><select value={inspirationLookId} onChange={(event) => setInspirationLookId(event.target.value)}><option value="">No saved Look DNA</option>{Object.values(state.inspirationLooks).map((look) => <option key={look.id} value={look.id}>{look.name}</option>)}</select></label>
           <button type="submit" className="primary-action" disabled={generating}>{generating ? "Checking your wardrobe…" : "Find outfit options"}</button>
-          <details className="test-controls">
-            <summary>Test explanation recovery</summary>
-            <button type="button" className="resilience-link" disabled={generating} onClick={() => void generate(true)}>Generate without the explanation service</button>
-          </details>
         </form>
 
         <details className="decision-receipt">
-          <summary>How this decision stays accountable</summary>
+          <summary>How Personal Match works</summary>
           <div className="decision-receipt-body">
-            <h3>The model never gets the steering wheel.</h3>
+            <h3>Your wardrobe sets the boundaries.</h3>
             <ol>
               <li><strong>1</strong><span>Availability and care needs rule out unsuitable garments.</span></li>
               <li><strong>2</strong><span>Five weighted factors calculate the score.</span></li>
-              <li><strong>3</strong><span>The explanation is written after the score is final.</span></li>
+              <li><strong>3</strong><span>Your preferences explain why each look fits.</span></li>
               <li><strong>4</strong><span>Planning the outfit reserves every included garment.</span></li>
             </ol>
             <div className="receipt-metrics"><span><strong>{Object.keys(state.garments).length}</strong> pieces considered</span><span><strong>{unavailableCount}</strong> unavailable rejected</span></div>
@@ -279,11 +276,11 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
         </details>
       </div>
 
-      {generationError && <div className="error-banner atelier-error" role="alert"><strong>Planning stopped safely.</strong> {generationError}</div>}
+      {generationError && <div className="error-banner atelier-error" role="alert"><strong>Planning stopped safely.</strong> <YangeText>{generationError}</YangeText></div>}
 
       {candidates.length > 0 ? (
         <div className="candidate-results" aria-live="polite">
-          <div className="results-heading"><div><h3>Three feasible answers—not infinite inspiration.</h3></div><span>{candidates.length} of 120 combinations shown</span></div>
+          <div className="results-heading"><div><h3>Your strongest options.</h3></div><span>{candidates.length} complete looks</span></div>
           <div className="candidate-list">
             {candidates.map((candidate, index) => (
               <CandidateCard
@@ -303,7 +300,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
       ) : (
         <div className="atelier-empty">
           <div aria-hidden="true"><i /><i /><i /></div>
-          <section><span>Waiting for occasion details</span><h3>Every recommendation comes with its reasons.</h3><p>Set the occasion and Kampala weather above. Yange will show what is wearable, how each option scored, and any trade-offs.</p></section>
+          <section><span>Waiting for occasion details</span><h3>Every recommendation comes with its reasons.</h3><p>Set the occasion and Kampala weather above. <YangeWordmark /> will show what is wearable, how each option scored, and any trade-offs.</p></section>
         </div>
       )}
     </section>

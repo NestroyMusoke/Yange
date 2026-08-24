@@ -9,6 +9,7 @@ import type {
   WorkflowCheckpoint,
 } from "@yange/orchestrator";
 import { GarmentPreview } from "../intelligence/GarmentPreview";
+import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 
 interface WearCastProps {
   state: TwinState;
@@ -21,12 +22,12 @@ interface WearCastProps {
 }
 
 const checkpoints: Array<{ id: WorkflowCheckpoint; label: string }> = [
-  { id: "triggered", label: "Trigger accepted" },
-  { id: "forecast-acquired", label: "Forecast acquired" },
-  { id: "decision-simulated", label: "Branches simulated" },
-  { id: "interventions-committed", label: "Interventions committed" },
-  { id: "notifications-delivered", label: "Notifications delivered" },
-  { id: "completed", label: "Run completed" },
+  { id: "triggered", label: "Wardrobe check started" },
+  { id: "forecast-acquired", label: "Forecast checked" },
+  { id: "decision-simulated", label: "Options compared" },
+  { id: "interventions-committed", label: "Plan saved" },
+  { id: "notifications-delivered", label: "Alert sent" },
+  { id: "completed", label: "Check complete" },
 ];
 
 function localTime(value: string): string {
@@ -62,9 +63,9 @@ function ForecastRail({ forecast, decision }: { forecast: SevenDayForecast; deci
     <section className="forecast-panel">
       <div className="forecast-heading">
         <div>
-          <h3>Kampala, read as operational context.</h3>
+          <h3>Kampala this week.</h3>
         </div>
-        <span className="manual-source">Demo forecast</span>
+        <span className="manual-source">Forecast preview</span>
       </div>
       <div className="forecast-rail">
         {[...days.entries()].slice(0, 7).map(([date, periods], index) => {
@@ -93,8 +94,8 @@ function ScenarioCard({ scenario }: { scenario: WearCastScenario }) {
   return (
     <article className={`scenario-card ${autopilot ? "scenario-autopilot" : "scenario-passive"}`}>
       <div className="scenario-topline">
-        <span>{autopilot ? "Autopilot" : "Do nothing"}</span>
-        <em>{autopilot ? "Protected branch" : "Control branch"}</em>
+        <span>{autopilot ? <><YangeWordmark /> adjusts</> : "Keep the original plan"}</span>
+        <em>{autopilot ? "Protected" : "Unchanged"}</em>
       </div>
       <strong className="scenario-number">
         {scenario.unresolvedOutfitIds.length}
@@ -114,10 +115,10 @@ function WorkflowReceipt({ execution }: { execution: WearCastExecution | null })
   const reached = new Map(execution?.checkpointHistory.map((entry) => [entry.checkpoint, entry]) ?? []);
   return (
     <details className="workflow-receipt" open={execution?.status === "failed" || undefined}>
-      <summary>Run history and recovery</summary>
+      <summary>Check details</summary>
       <div className="workflow-receipt-body">
       <div className="workflow-heading">
-        <div><h3>Each action is saved before the next begins.</h3></div>
+        <div><h3>Your latest wardrobe check.</h3></div>
         <span className={`workflow-status workflow-${execution?.status ?? "idle"}`}>
           {execution?.status ?? "Awaiting trigger"}
         </span>
@@ -170,8 +171,8 @@ export function WearCast({
     <div className="wearcast-shell">
       <section className="wearcast-hero">
         <div>
-          <h2>Your wardrobe should notice first.</h2>
-          <p>Forecast pressure, future outfit dependencies, and care-safe action—evaluated before a small problem becomes Friday-night panic.</p>
+          <h2>Your wardrobe notices what is coming.</h2>
+          <p>Weather, laundry and upcoming plans come together before you need to worry about them.</p>
         </div>
         <div className="operations-pulse">
           <div className={decision.risks.length ? "pulse-core pulse-alert" : "pulse-core"}><i /><strong>{decision.risks.length}</strong><span>live risks</span></div>
@@ -182,8 +183,8 @@ export function WearCast({
 
       <section className="autonomy-console">
         <div className="console-copy">
-          <h3>Test Friday's wardrobe plan</h3>
-          <p>Use the Kampala forecast to stage a laundry conflict, check the response, and confirm an interrupted alert can finish safely.</p>
+          <h3>Friday wardrobe check</h3>
+          <p>Preview a laundry-heavy week and see how <YangeWordmark /> protects your Friday look.</p>
           <div className="capacity-meter">
             <div><span>Core wardrobe pressure</span><strong>{Math.round(decision.capacity.ratio * 100)}%</strong></div>
             <div><i style={{ transform: `scaleX(${Math.min(1, decision.capacity.ratio)})` }} /></div>
@@ -192,16 +193,13 @@ export function WearCast({
         </div>
         <div className="demo-sequence">
           <div className={pressureStaged ? "demo-step step-complete" : "demo-step"}>
-            <span>01</span><div><strong>Stage pressure</strong><small>3 pieces enter laundry</small></div>
-            <button type="button" onClick={onStage} disabled={pressureStaged || running}>{pressureStaged ? "Staged" : "Stage 50% risk"}</button>
+            <span>01</span><div><strong>Preview laundry pressure</strong><small>3 pieces enter laundry</small></div>
+            <button type="button" onClick={onStage} disabled={pressureStaged || running}>{pressureStaged ? "Ready" : "Preview"}</button>
           </div>
           <div className={execution ? "demo-step step-complete" : "demo-step"}>
             <span>02</span><div><strong>Check the forecast</strong><small>Find risks and prepare an alert</small></div>
             {!execution ? (
-              <div className="trigger-actions">
-                <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Checking…" : "Run the check"}</button>
-                <button type="button" onClick={() => void onRun(true)} disabled={!triggerReady || running}>Test an interrupted alert</button>
-              </div>
+              <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Checking…" : "Check Friday"}</button>
             ) : <em>{execution.status}</em>}
           </div>
           <div className={complete ? "demo-step step-complete" : failed ? "demo-step step-failed" : "demo-step"}>
@@ -218,7 +216,7 @@ export function WearCast({
           <section className="simulation-panel">
             <div className="simulation-heading">
               <div><h3>Same wardrobe. Two possible Fridays.</h3></div>
-              <span>Compared from the same starting state</span>
+              <span>Your options</span>
             </div>
             <div className="scenario-grid">
               <ScenarioCard scenario={decision.scenarios.doNothing} />
@@ -231,7 +229,7 @@ export function WearCast({
               <div className="intervention-topline"><span>Best safe opportunity</span><em>{decision.laundryProposals[0]?.suitabilityScore ?? 0}% suitability</em></div>
               {decision.laundryProposals[0] ? (
                 <>
-                  <h3>{localTime(decision.laundryProposals[0].dryFrom)}—{localTime(decision.laundryProposals[0].dryUntil)}</h3>
+                  <h3>{localTime(decision.laundryProposals[0].dryFrom)} to {localTime(decision.laundryProposals[0].dryUntil)}</h3>
                   <p>Wash from {localTime(decision.laundryProposals[0].washAt)}. Outdoor drying is forecast-safe inside this window, while each care label keeps control of the drying method.</p>
                   <div className="window-loads">
                     {decision.laundryProposals.map((item) => <span key={item.id}><strong>{item.garmentIds.length}</strong> pieces · {item.clusterId.replace("load-", "load ")}</span>)}
@@ -249,14 +247,14 @@ export function WearCast({
                   <p>Generated from currently usable pieces for {state.outfits[decision.fallbackForOutfitId ?? ""]?.name ?? "the endangered event"}.</p>
                   <div className="fallback-garments">{fallback.garmentIds.map((id) => <GarmentPreview key={id} garment={state.garments[id]} compact />)}</div>
                 </>
-              ) : <div className="no-window"><strong>Yange refused an incomplete look.</strong><p>No complete top, bottom, and shoes combination is currently feasible.</p></div>}
+              ) : <div className="no-window"><strong><YangeWordmark /> refused an incomplete look.</strong><p>No complete top, bottom, and shoes combination is currently feasible.</p></div>}
             </article>
           </section>
         </>
       ) : (
         <section className="wearcast-clear">
           <div className="clear-radar" aria-hidden="true"><i /><i /><i /></div>
-          <div><h3>No intervention is justified yet.</h3><p>Stage the Friday scenario above. WearCast will detect the outfit conflict and 50% capacity threshold without a chat prompt.</p></div>
+          <div><h3>Your Friday look is clear.</h3><p>Preview a laundry-heavy week above to see how WearCast responds when several pieces become unavailable.</p></div>
         </section>
       )}
 
@@ -271,14 +269,14 @@ export function WearCast({
               {notifications.map((notification) => (
                 <article key={notification.id} className={`notice-${notification.severity}`}>
                   <span>{titleCase(notification.kind)}</span><em>{notification.deliveryStatus}</em>
-                  <strong>{notification.title}</strong><p>{notification.body}</p>
+                  <strong><YangeText>{notification.title}</YangeText></strong><p><YangeText>{notification.body}</YangeText></p>
                 </article>
               ))}
             </div>
           ) : (
-            <div className="notification-empty"><span aria-hidden="true">○</span><p>No alerts have been committed. Drafts in simulation are not shown as delivered facts.</p></div>
+            <div className="notification-empty"><span aria-hidden="true">○</span><p>No wardrobe alerts yet.</p></div>
           )}
-          {scheduledWindows.length > 0 && <p className="outbox-footnote">{scheduledWindows.length} laundry intervention{scheduledWindows.length === 1 ? "" : "s"} committed independently of notification delivery.</p>}
+          {scheduledWindows.length > 0 && <p className="outbox-footnote">{scheduledWindows.length} laundry window{scheduledWindows.length === 1 ? "" : "s"} saved.</p>}
           </div>
         </details>
       </div>

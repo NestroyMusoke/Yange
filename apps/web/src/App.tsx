@@ -7,11 +7,14 @@ import { CloudProof } from "./features/cloud/CloudProof";
 import { AuraControls } from "./features/aura/AuraControls";
 import { StyleAura, type AuraStatus } from "./features/aura/StyleAura";
 import { deriveStyleAuraProfile } from "./features/aura/palette";
-import { resetAuraProjection, useGradualAuraProfile } from "./features/aura/projection";
+import { useGradualAuraProfile } from "./features/aura/projection";
 import { JudgeMode, type YangeView } from "./features/judge/JudgeMode";
 import { WardrobeStudio } from "./features/studio/WardrobeStudio";
 import { WearCast } from "./features/wearcast/WearCast";
 import { YangeLogo } from "./features/brand/YangeLogo";
+import { YangeText, YangeWordmark } from "./features/brand/YangeWordmark";
+import { LiquidGlassFilters } from "./features/glass/LiquidGlassFilters";
+import { LiquidGlassRuntime } from "./features/glass/LiquidGlassRuntime";
 import { ViewIcon } from "./features/navigation/ViewIcon";
 import { TodayGarmentCard } from "./features/today/TodayGarmentCard";
 import { useYange } from "./useYange";
@@ -43,9 +46,9 @@ const viewNavigation: ReadonlyArray<{
   { id: "studio", label: "Studio", description: "Build your wardrobe" },
   { id: "atelier", label: "Atelier", description: "Plan with evidence" },
   { id: "wearcast", label: "WearCast", description: "See what is ahead" },
-  { id: "cloud", label: "Cloud", description: "Check the live service" },
-  { id: "judge", label: "Judge", description: "Review the system" },
-  { id: "activity", label: "Activity", description: "Trace every action" },
+  { id: "cloud", label: "Cloud", description: "Keep your wardrobe in sync" },
+  { id: "judge", label: "Review", description: "See what Yange has learned" },
+  { id: "activity", label: "Activity", description: "See recent changes" },
 ];
 
 function formatTime(value: string): string {
@@ -60,6 +63,18 @@ function readableSignal(signal: PreferenceSignal): string {
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function trackGlassPointer(event: React.PointerEvent<HTMLElement>) {
+  if (window.innerWidth <= 720 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const bounds = event.currentTarget.getBoundingClientRect();
+  event.currentTarget.style.setProperty("--mx", `${event.clientX - bounds.left}px`);
+  event.currentTarget.style.setProperty("--my", `${event.clientY - bounds.top}px`);
+}
+
+function resetGlassPointer(event: React.PointerEvent<HTMLElement>) {
+  event.currentTarget.style.setProperty("--mx", "50%");
+  event.currentTarget.style.setProperty("--my", "50%");
 }
 
 export function App() {
@@ -82,7 +97,6 @@ export function App() {
     autonomyRunning,
     stageWearCastPressure,
     runWearCast,
-    reset,
   } = useYange();
   const [activeView, setActiveView] = useState<YangeView>(() =>
     new URLSearchParams(window.location.search).get("mode") === "judge" ? "judge" : "today",
@@ -91,7 +105,6 @@ export function App() {
   const [auraEnergy, setAuraEnergy] = useState(0.82);
   const [auraWarmth, setAuraWarmth] = useState(0.46);
   const [auraStatus, setAuraStatus] = useState<AuraStatus>("starting");
-  const [auraFallbackForced, setAuraFallbackForced] = useState(false);
   const [colourAttribution, setColourAttribution] = useState<"automatic" | "loved-colour" | "colour-missed">("automatic");
   const latestAgentOutfit = Object.values(state.outfits)
     .filter((outfit) => outfit.source === "agent-planned")
@@ -126,30 +139,38 @@ export function App() {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [activeView]);
 
-  const resetExperience = () => {
-    resetAuraProjection();
-    reset();
-  };
-
   return (
     <>
       <StyleAura
         profile={auraProfile}
         energy={renderedAuraEnergy}
         warmth={renderedAuraWarmth}
-        forcedFallback={auraFallbackForced}
+        forcedFallback={false}
         onStatusChange={setAuraStatus}
       />
-      <div className="app-shell">
-      <header className="site-header">
+      <LiquidGlassFilters />
+      <LiquidGlassRuntime enabled={activeView === "today"} />
+      <div
+        className={`app-shell view-${activeView}`}
+        style={{
+          "--glass-aura-one": auraProfile.colours[0],
+          "--glass-aura-two": auraProfile.colours[1],
+        } as React.CSSProperties}
+      >
+      <div className="header-glass-stage" data-liquid-glass-root>
+        <header
+          className="site-header"
+          data-liquid-glass
+          onPointerMove={trackGlassPointer}
+          onPointerLeave={resetGlassPointer}
+        >
         <div className="topbar">
           <a className="brand" href="#top" aria-label="Yange home" onClick={() => setActiveView("today")}>
             <span className="brand-mark" aria-hidden="true">
               <YangeLogo />
             </span>
           <span className="brand-wordmark">
-            <strong>Yange</strong>
-            <small>Fashion app · Your style. Discovered.</small>
+            <strong><YangeWordmark /></strong>
           </span>
         </a>
         <div className="topbar-actions">
@@ -196,7 +217,7 @@ export function App() {
                 title={item.description}
                 onClick={() => setActiveView(item.id)}
               >
-                <span className="view-tab-icon"><ViewIcon view={item.id} /></span>
+                <span className="view-tab-icon"><ViewIcon view={item.id} referenceScreen={activeView === "today"} /></span>
                 <span className="view-tab-copy">
                   <strong>{item.label}</strong>
                 </span>
@@ -206,19 +227,26 @@ export function App() {
             );
           })}
         </nav>
-      </header>
+        </header>
+      </div>
 
       <main id="top" data-view={activeView}>
         {activeView === "today" && <section className="hero">
           <div>
-            <time className="context-date" dateTime="2026-08-14">Friday, 14 August · Kampala</time>
-            <h1>Your wardrobe, thinking ahead.</h1>
+            <time className="context-date" dateTime="2026-08-14">Friday, 14 August <span aria-hidden="true">&middot;</span> Kampala</time>
+            <h1>Your wardrobe,<br />thinking <span>ahead.</span></h1>
             <p className="hero-copy">
               One recommendation. Real availability. A memory that learns what
               confidence feels like on you.
             </p>
           </div>
-          <div className={`readiness-card readiness-${readiness.level}`}>
+          <div className="readiness-glass-stage" data-liquid-glass-root>
+            <div
+              className={`readiness-card readiness-${readiness.level}`}
+              data-liquid-glass
+              onPointerMove={trackGlassPointer}
+              onPointerLeave={resetGlassPointer}
+            >
             <div
               className="readiness-ring"
               style={{ "--readiness": `${readiness.score * 3.6}deg` } as React.CSSProperties}
@@ -242,14 +270,15 @@ export function App() {
                 {readiness.availableGarments} of {readiness.totalGarments} core pieces available
               </small>
             </div>
+            </div>
           </div>
         </section>}
 
 
-        {error && <div className="error-banner" role="alert">{error}</div>}
+        {error && <div className="error-banner" role="alert"><YangeText>{error}</YangeText></div>}
 
         {activeView === "today" ? (
-          <div className="content-grid">
+          <div className="content-grid today-content">
             <section className="outfit-card">
               <div className="section-heading">
                 <div>
@@ -262,7 +291,7 @@ export function App() {
                 </div>
               </div>
 
-              <div className="garment-grid">
+              <div className="garment-grid today-wardrobe-bleed">
                 {todayGarments.map((garment) => <TodayGarmentCard garment={garment} key={garment.id} />)}
               </div>
 
@@ -292,7 +321,7 @@ export function App() {
               ) : (
                 <div className="confidence-panel">
                   <h3>How did this outfit make you feel?</h3>
-                  <p className="confidence-prompt">Tell Yange whether colour influenced the feeling. “Whole look” keeps colour credit deliberately weak.</p>
+                  <p className="confidence-prompt">Did the colours shape how you felt? Choose whole look if it was the complete outfit.</p>
                   <div className="colour-attribution" aria-label="Colour attribution">
                     {([
                       ["automatic", "Whole look"],
@@ -414,23 +443,15 @@ export function App() {
             ledgerLength={ledger.length}
             auraProfile={auraProfile}
             auraStatus={auraStatus}
-            auraFallbackForced={auraFallbackForced}
             onNavigate={setActiveView}
-            onReset={resetExperience}
-            onToggleAuraFailure={() => setAuraFallbackForced((current) => !current)}
           />
         ) : (
           <section className="activity-panel">
             <div className="section-heading">
               <div>
-                <h2>Agent Activity</h2>
-                <p>Every visible item comes from the append-only event ledger.</p>
+                <h2>Recent activity</h2>
+                <p>Your wears, check-ins and wardrobe changes.</p>
               </div>
-              {ledger.length > 0 && (
-                <button type="button" className="quiet-action" onClick={resetExperience}>
-                  Reset Yange demo
-                </button>
-              )}
             </div>
             {activity.length ? (
               <ol className="activity-list">
@@ -439,8 +460,8 @@ export function App() {
                     <span className="activity-marker" aria-hidden="true" />
                     <div>
                       <time>{formatTime(item.occurredAt)}</time>
-                      <strong>{item.title}</strong>
-                      <p>{item.detail}</p>
+                      <strong><YangeText>{item.title}</YangeText></strong>
+                      <p><YangeText>{item.detail}</YangeText></p>
                     </div>
                   </li>
                 ))}
@@ -448,8 +469,8 @@ export function App() {
             ) : (
               <div className="empty-activity">
                 <span aria-hidden="true">◎</span>
-                <h3>The twin is ready.</h3>
-                <p>Wear today’s outfit to create the first committed events.</p>
+                <h3>Nothing here yet.</h3>
+                <p>Wear today’s outfit to begin your wardrobe history.</p>
                 <button type="button" onClick={() => setActiveView("today")}>
                   Return to today
                 </button>
@@ -461,15 +482,16 @@ export function App() {
 
       <footer>
         <img
-          className="footer-brand-lockup"
-          src="/brand/yange-official-lockup.png"
-          alt="Yange Fashion App — Your Style. Discovered."
-          width="745"
-          height="746"
+          className="footer-brand-emblem"
+          src="/brand/yange-emblem.png"
+          alt=""
+          width="512"
+          height="512"
           loading="lazy"
           decoding="async"
         />
-        <span>Private evidence · inspectable decisions · care-safe planning</span>
+        <strong className="footer-wordmark"><YangeWordmark /></strong>
+        <span>Your wardrobe. Your rhythm.</span>
       </footer>
       </div>
     </>

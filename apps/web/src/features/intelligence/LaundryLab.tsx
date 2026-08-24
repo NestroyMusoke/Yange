@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createLaundryPlan, type LaundryCluster, type TwinState } from "@yange/domain";
 import { GarmentPreview } from "./GarmentPreview";
+import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 
 interface LaundryLabProps {
   state: TwinState;
@@ -70,7 +71,7 @@ export function LaundryLab({ state, onQueue }: LaundryLabProps) {
       <div className="intelligence-heading">
         <div>
           <h2 id="laundry-lab-title">Let the safest garment set the rules.</h2>
-          <p>Yange automatically creates independent wash groups, then routes each piece to its own labelled drying method.</p>
+          <p><YangeWordmark /> automatically creates independent wash groups, then routes each piece to its own labelled drying method.</p>
         </div>
         <div className="engine-chip care-engine-chip"><span /> Care labels set the rules</div>
       </div>
@@ -86,7 +87,7 @@ export function LaundryLab({ state, onQueue }: LaundryLabProps) {
       </div>
 
       <div className="laundry-queue-card">
-        <div className="queue-heading"><div><h3>Which pieces actually need washing?</h3><p>Yange never assumes every wear means a wash. Add only what you decided is ready.</p></div><button type="button" className="quiet-action" onClick={selectDemoBasket} disabled={!queueable.length}>Select demo basket</button></div>
+        <div className="queue-heading"><div><h3>Which pieces need washing?</h3><p>Add only what is ready for laundry.</p></div><button type="button" className="quiet-action" onClick={selectDemoBasket} disabled={!queueable.length}>Select suggested pieces</button></div>
         {queueable.length ? (
           <div className="laundry-selector">
             {queueable.map((garment) => (
@@ -101,14 +102,14 @@ export function LaundryLab({ state, onQueue }: LaundryLabProps) {
       </div>
 
       {plan.inputGarmentIds.length === 0 ? (
-        <div className="laundry-empty"><span aria-hidden="true">≈</span><div><h3>No laundry conflicts yet.</h3><p>Wear an outfit or add the sample basket to see how care labels separate different materials into safe loads.</p></div></div>
+        <div className="laundry-empty"><span aria-hidden="true">≈</span><div><h3>Your laundry queue is clear.</h3><p>Worn pieces will appear here when they are ready to wash.</p></div></div>
       ) : (
         <div className="laundry-plan">
           <div className="results-heading"><div><h3>{plan.clusters.length} safe {plan.clusters.length === 1 ? "load" : "loads"}, with every separation explained.</h3></div><span>Care plan ready</span></div>
           <div className="laundry-clusters">{plan.clusters.map((cluster, index) => <ClusterCard key={cluster.id} cluster={cluster} state={state} index={index} />)}</div>
 
           {plan.holdouts.length > 0 && (
-            <section className="care-holdouts"><div><h3>These pieces need your review.</h3></div><ul>{plan.holdouts.map((holdout) => <li key={holdout.garmentId}><strong>{garmentName(holdout.garmentId)}</strong><span>{holdout.detail}</span></li>)}</ul></section>
+            <section className="care-holdouts"><div><h3>These pieces need your review.</h3></div><ul>{plan.holdouts.map((holdout) => <li key={holdout.garmentId}><strong>{garmentName(holdout.garmentId)}</strong><span><YangeText>{holdout.detail}</YangeText></span></li>)}</ul></section>
           )}
 
           <details className="conflict-trace">

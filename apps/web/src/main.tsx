@@ -2,10 +2,12 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./fonts.css";
 import "@fontsource-variable/spline-sans";
+import "@fontsource/righteous/400.css";
 import { App } from "./App";
 import "./styles.css";
 import "./typography.css";
 import "./accessibility.css";
+import "./today-system.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

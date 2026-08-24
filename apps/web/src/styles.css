@@ -1937,7 +1937,7 @@ footer {
   .capture-grid { gap: var(--space-5); }
 }
 
-/* Phase 5 — cloud deployment proof */
+/* Connected wardrobe service */
 .proof-dot {
   display: inline-block;
   width: 5px;
@@ -3490,6 +3490,77 @@ body {
   }
 }
 
+/* Yange product identity: bottle green, antique gold and quiet editorial copy. */
+:root {
+  --brand-green: #4a9b78;
+  --brand-gold: #d3b574;
+  --brand-ivory: #f2ede2;
+}
+
+.brand-wordmark strong {
+  color: var(--brand-green);
+  text-shadow: 0 0 22px rgba(40, 126, 94, 0.16);
+}
+
+.context-date,
+.metric-label,
+.future-topline > span,
+.capture-kind,
+.choice-label,
+.console-topline > span,
+.intervention-topline > span {
+  color: var(--brand-gold);
+}
+
+.hero-copy {
+  color: color-mix(in srgb, var(--brand-gold) 68%, var(--brand-ivory));
+}
+
+.view-tabs button.active,
+.view-tabs button:hover {
+  color: var(--brand-gold);
+}
+
+footer {
+  justify-content: flex-start;
+  gap: 13px;
+}
+
+.footer-brand-emblem {
+  display: block;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 16px rgba(0, 0, 0, 0.3));
+}
+
+.footer-wordmark {
+  color: var(--brand-green);
+  font-family: var(--font-display);
+  font-size: 1.32rem;
+  font-weight: 560;
+  letter-spacing: -0.035em;
+}
+
+footer > span {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--brand-gold) 58%, var(--muted));
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 720px) {
+  footer {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  footer > span {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+}
+
 /* Official Yange identity and supplied dimensional navigation iconography. */
 .brand-mark {
   width: 58px;
@@ -4230,5 +4301,199 @@ footer {
     max-height: calc(100dvh - 154px);
     overflow-y: auto;
     background: rgba(7, 11, 11, 0.97);
+  }
+}
+
+.brand-wordmark strong { color: var(--brand-green); }
+.view-tabs button.active,
+.view-tabs button:hover { color: var(--brand-gold); }
+footer { justify-content: flex-start; gap: 13px; }
+
+@media (max-width: 720px) {
+  footer {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+  footer > span { grid-column: 1 / -1; margin-left: 0; }
+}
+
+/* Gold-led typography inspired by polished Ugandan jewellery and metallic thread. */
+:root {
+  --gold-ink: #e2bd62;
+  --gold-body: #d7c18c;
+  --gold-muted: #ad9562;
+  --gold-bright: #fff0a8;
+  --gold-mid: #d9a52e;
+  --gold-deep: #7d4c08;
+  --text: var(--gold-body);
+  --muted: var(--gold-muted);
+  --cream: #efd78e;
+  --text-primary: var(--gold-body);
+  --text-secondary: var(--gold-muted);
+  --action-primary: #efd78e;
+  --focus-ring: #f4d77f;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  color: var(--gold-body);
+}
+
+:is(
+  h1,
+  h2,
+  h3,
+  h4,
+  .metric-status,
+  .match-score strong,
+  .readiness-ring strong,
+  .scenario-number,
+  .completion-orbit strong,
+  .demo-readiness-orbit strong,
+  .candidate-score strong,
+  .operations-pulse strong
+) {
+  color: var(--gold-ink);
+  text-shadow:
+    0 -1px 0 rgba(255, 244, 181, 0.2),
+    0 3px 7px rgba(0, 0, 0, 0.32),
+    0 0 16px rgba(235, 187, 58, 0.14);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  :is(
+    h1,
+    h2,
+    h3,
+    h4
+  ) {
+    color: transparent;
+    background-image: linear-gradient(
+      118deg,
+      #f2bd36 0%,
+      #fff3ad 18%,
+      #d99a16 34%,
+      #ffe889 50%,
+      #c9830e 64%,
+      #f8d65e 82%,
+      #fff0a0 100%
+    );
+    background-size: 115% 100%;
+    background-position: 48% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+:is(
+  .view-tab-copy strong,
+  .profile-chip strong,
+  .aura-chip strong,
+  .section-heading > div > p,
+  .future-topline,
+  .metric-label,
+  .context-date,
+  .capture-kind,
+  .choice-label,
+  .console-topline,
+  .intervention-topline,
+  .judge-section-heading > em,
+  .proof-heading > span,
+  .workflow-status
+) {
+  color: var(--gold-ink);
+}
+
+:is(
+  p,
+  small,
+  label,
+  dt,
+  dd,
+  time,
+  .hero-copy,
+  .empty-memory,
+  .future-detail
+) {
+  text-wrap: pretty;
+}
+
+.brand-wordmark strong,
+.footer-wordmark {
+  color: var(--brand-green);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: 0 0 22px rgba(40, 126, 94, 0.18);
+}
+
+.primary-action,
+.cloud-actions button:not(.cloud-secondary) {
+  color: #241a08;
+  background: linear-gradient(118deg, #f7e7af, #d5a83e 58%, #f1d483);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 249, 213, 0.75),
+    0 11px 28px rgba(91, 56, 5, 0.2);
+}
+
+.view-tabs button.active {
+  color: var(--gold-bright);
+  border-color: rgba(226, 189, 98, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 239, 169, 0.17),
+    0 0 0 1px rgba(135, 83, 10, 0.38),
+    0 8px 22px rgba(0, 0, 0, 0.24);
+}
+
+::placeholder { color: color-mix(in srgb, var(--gold-muted) 58%, transparent); }
+
+/* Every visible Yange mention uses the same emerald signature wordmark. */
+.yange-wordmark {
+  display: inline-block;
+  position: relative;
+  color: #007451;
+  background-image: linear-gradient(
+    178deg,
+    #4dbb79 0%,
+    #078957 24%,
+    #005f46 57%,
+    #003c32 86%,
+    #c7a54a 100%
+  );
+  background-size: 100% 140%;
+  background-position: center 42%;
+  font-family: "Righteous", "Arial Rounded MT Bold", sans-serif;
+  font-size: 0.98em;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  vertical-align: 0.015em;
+  transform: skewX(-2deg);
+  transform-origin: center bottom;
+  text-shadow: none;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0 1px 0 rgba(211, 181, 116, 0.24))
+    drop-shadow(0 3px 7px rgba(0, 17, 12, 0.38));
+}
+
+.brand-wordmark .yange-wordmark {
+  font-size: 1.08em;
+  letter-spacing: -0.07em;
+}
+
+.footer-wordmark .yange-wordmark { font-size: 1.05em; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand:hover .yange-wordmark {
+    background-position: center 70%;
+    transition: background-position 400ms ease;
   }
 }

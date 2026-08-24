@@ -1,5 +1,6 @@
 import { useId, useState, type DragEvent } from "react";
 import type { AnalysisImageKind } from "@yange/contracts";
+import { YangeText } from "../brand/YangeWordmark";
 import type { CaptureSlotState } from "./useCaptureQueue";
 
 interface ImageDropzoneProps {
@@ -98,7 +99,7 @@ export function ImageDropzone({
         )}
       </label>
 
-      <p className="capture-description">{description}</p>
+      <p className="capture-description"><YangeText>{description}</YangeText></p>
       <div className="capture-status" role="status" aria-live="polite">
         <span className="status-pulse" aria-hidden="true" />
         <div>
@@ -110,14 +111,14 @@ export function ImageDropzone({
                 ` · ${Math.round((1 - slot.asset.byteLength / slot.asset.originalBytes) * 100)}% smaller`}
             </small>
           )}
-          {slot.error && <small className="capture-error">{slot.error}</small>}
+          {slot.error && <small className="capture-error"><YangeText>{slot.error}</YangeText></small>}
         </div>
       </div>
 
       <div className="capture-actions">
         {slot.status === "empty" && (
           <button type="button" className="text-action" onClick={onDemo}>
-            Use demo capture
+            Use sample
           </button>
         )}
         {slot.status === "failed" && (

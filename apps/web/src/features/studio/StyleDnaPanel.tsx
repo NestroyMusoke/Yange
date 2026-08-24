@@ -5,6 +5,7 @@ import type {
   FitPreference,
   StyleProfile,
 } from "@yange/domain";
+import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 
 interface StyleDnaPanelProps {
   profile: StyleProfile;
@@ -98,10 +99,9 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
     <section className="studio-panel" aria-labelledby="style-dna-title">
       <div className="studio-panel-heading">
         <div>
-          <h2 id="style-dna-title">Teach Yange your point of view.</h2>
+          <h2 id="style-dna-title">Make it feel like you.</h2>
           <p>
-            These are preferences, not body rules. Yange combines what you choose here with
-            how confident you actually feel after wearing an outfit.
+            Save the colours, shapes and comfort details you enjoy. <YangeWordmark /> keeps learning from every confidence check-in.
           </p>
         </div>
         <div className="completion-orbit" aria-label={`Style DNA ${completion}% complete`}>
@@ -113,15 +113,15 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
       <div className="agency-note">
         <span aria-hidden="true">✦</span>
         <div>
-          <strong>Guidance, never grading.</strong>
-          <p>Height helps with proportion suggestions. Colour relationship is self-selected and can always be changed.</p>
+          <strong>Always your choice.</strong>
+          <p>These preferences guide suggestions and can be changed whenever you like.</p>
         </div>
       </div>
 
       <div className="dna-form">
         <fieldset className="dna-section">
           <legend>Proportion context</legend>
-          <p>Optional. Used for lengths and layering suggestions—not attractiveness scoring.</p>
+          <p>Optional. Helps with lengths and layering.</p>
           <label className="height-field">
             <span>Height</span>
             <div>
@@ -145,7 +145,7 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
 
         <fieldset className="dna-section">
           <legend>Colour relationship</legend>
-          <p>Choose what you already enjoy, or let Yange learn from confidence check-ins.</p>
+          <p>Choose what you already enjoy, or let <YangeWordmark /> learn from confidence check-ins.</p>
           <div className="relationship-grid">
             {colourRelationships.map((option) => (
               <button
@@ -159,7 +159,7 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
                 }}
               >
                 <strong>{option.label}</strong>
-                <span>{option.detail}</span>
+                <span><YangeText>{option.detail}</YangeText></span>
               </button>
             ))}
           </div>
@@ -244,7 +244,7 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
 
         <fieldset className="dna-section">
           <legend>Three words that feel like you</legend>
-          <p>Comma-separated. These become soft recommendation signals, never hard constraints.</p>
+          <p>Separate each word with a comma.</p>
           <label className="field-group full-field">
             <span>Style words</span>
             <input
@@ -262,8 +262,8 @@ export function StyleDnaPanel({ profile, onSave }: StyleDnaPanelProps) {
 
       <div className="studio-save-row">
         <div>
-          <strong>{saved ? "Style DNA saved to the event ledger." : "You remain the source of truth."}</strong>
-          <span>{saved ? "Future recommendations can cite these choices." : "Every field is editable, optional, and reversible."}</span>
+          <strong>{saved ? "Style preferences saved." : "Change these whenever you like."}</strong>
+          <span>{saved ? "Your next recommendations will reflect these choices." : "Every field is optional."}</span>
         </div>
         <button type="button" className="primary-action compact-action" onClick={save} disabled={saved}>
           {saved ? "Saved" : "Save my Style DNA"}

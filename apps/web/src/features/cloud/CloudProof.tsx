@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { WearCastExecution } from "@yange/orchestrator";
+import { YangeText } from "../brand/YangeWordmark";
 import {
   getLatestCloudExecution,
   probeCloudRuntime,
@@ -26,8 +27,8 @@ function RuntimeBadge({ runtime }: { runtime: CloudRuntimeSnapshot }) {
   return (
     <div className={`cloud-runtime-badge ${google ? "is-google" : "is-local"}`}>
       <i aria-hidden="true" />
-      <span>{google ? "Google Cloud connected" : "Local demo connected"}</span>
-      <em>Ready to test</em>
+      <span>{google ? "Cloud wardrobe connected" : "This device"}</span>
+      <em>Up to date</em>
     </div>
   );
 }
@@ -62,7 +63,7 @@ export function CloudProof() {
     } catch {
       setRuntime(null);
       setStatus("offline");
-      setMessage("The connected service is unavailable. Start the local service, then check again.");
+      setMessage("Cloud sync is unavailable. Check your connection, then try again.");
     }
   };
 
@@ -71,7 +72,7 @@ export function CloudProof() {
   const run = async () => {
     setStatus("running");
     setExecution(null);
-    setMessage("Preparing a Friday wardrobe with half its core pieces unavailable…");
+    setMessage("Checking Friday's wardrobe with half its core pieces unavailable…");
     try {
       await stageCloudDemo();
       setMessage("The request was received. The wardrobe check is now working through each step…");
@@ -98,17 +99,17 @@ export function CloudProof() {
       await resetCloudDemo();
       setExecution(null);
       setStatus("ready");
-      setMessage("The saved demo run was cleared. The connected service is ready.");
+      setMessage("The saved check was cleared. Your wardrobe is ready.");
     } catch {
       setStatus("failed");
-      setMessage("The saved demo run could not be cleared. Try again.");
+      setMessage("The saved check could not be cleared. Try again.");
     }
   };
 
   const passedChecks = useMemo(() => runtime ? [
     { label: "Service ready", detail: "The wardrobe check can run now", passed: runtime.readiness.ready },
-    { label: "Private demo space", detail: "This demo stays separate from every other session", passed: runtime.sessionPartition.length > 8 },
-    { label: "Wardrobe rules decide", detail: "AI explains choices but cannot select garments", passed: runtime.architecture.decisionAuthority === "deterministic-domain" },
+    { label: "Private wardrobe", detail: "Your space stays separate from every other wardrobe", passed: runtime.sessionPartition.length > 8 },
+    { label: "Your choices lead", detail: "Recommendations stay within your wardrobe and preferences", passed: runtime.architecture.decisionAuthority === "deterministic-domain" },
     { label: "Progress saved", detail: "An interrupted check can continue safely", passed: Boolean(runtime.architecture.persistence) },
     { label: "Alerts protected", detail: "A notice waits safely until it can be sent", passed: Boolean(runtime.architecture.asyncTransport) },
     { label: "Photos stay private", detail: "Wardrobe images remain outside the connected check", passed: Boolean(runtime.architecture.media) },
@@ -119,27 +120,27 @@ export function CloudProof() {
     <div className="cloud-proof">
       <section className="cloud-proof-hero">
         <div>
-          <span className="context-date">Connected wardrobe check</span>
-          <h2>Prove the plan survives the real world.</h2>
-          <p>Run the Friday scenario on the connected service, watch each step finish, and confirm that wardrobe rules—not generated text—make the decision.</p>
+          <span className="context-date">Wardrobe sync</span>
+          <h2>Your wardrobe stays ready.</h2>
+          <p>Check your Friday plan, saved preferences and alerts in one place.</p>
         </div>
         <div className={`cloud-status-mark cloud-status-${status}`} role="status" aria-live="polite">
           <strong>{status === "complete" ? "Saved" : status === "running" ? "Running" : status === "offline" ? "Offline" : status === "failed" ? "Needs attention" : "Ready"}</strong>
-          <span>Connected check</span>
+          <span>Wardrobe sync</span>
         </div>
       </section>
 
       <section className="cloud-command-deck">
         <div className="cloud-command-copy">
-          {runtime ? <RuntimeBadge runtime={runtime} /> : <div className="cloud-runtime-badge is-offline"><i /><span>Service offline</span><em>Local setup needed</em></div>}
+          {runtime ? <RuntimeBadge runtime={runtime} /> : <div className="cloud-runtime-badge is-offline"><i /><span>Sync offline</span><em>Not connected</em></div>}
           <h3>{status === "complete" ? "Latest check saved." : "Run Friday’s wardrobe check."}</h3>
-          <p aria-live="polite">{message}</p>
+          <p aria-live="polite"><YangeText>{message}</YangeText></p>
           <div className="cloud-actions">
             <button type="button" onClick={() => void run()} disabled={!runtime?.readiness.ready || status === "running"}>
               {status === "running" ? "Checking the wardrobe…" : "Run connected check"}
             </button>
             {status === "offline" && <button type="button" className="cloud-secondary" onClick={() => void probe()}>Check again</button>}
-            {execution && <button type="button" className="cloud-secondary" onClick={() => void reset()}>Clear saved demo</button>}
+            {execution && <button type="button" className="cloud-secondary" onClick={() => void reset()}>Clear saved check</button>}
           </div>
         </div>
         <div className="cloud-checkpoints">
@@ -150,7 +151,7 @@ export function CloudProof() {
               <div key={label} className={reached ? "reached" : status === "running" && index === 0 ? "active" : ""}>
                 <span>{reached ? "✓" : String(index + 1).padStart(2, "0")}</span>
                 <div><strong>{label}</strong><small>{entry ? "Finished safely" : "Waiting for this step"}</small></div>
-                <em>{entry ? new Date(entry.reachedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}</em>
+                <em>{entry ? new Date(entry.reachedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Not yet"}</em>
               </div>
             );
           })}
@@ -159,7 +160,7 @@ export function CloudProof() {
 
       <section className="cloud-proof-grid">
         <article className="architecture-passport">
-          <div className="proof-heading"><div><h3>What this check proves.</h3></div><span>{passedChecks.filter((check) => check.passed).length}/{passedChecks.length || 7} ready</span></div>
+          <div className="proof-heading"><div><h3>Your wardrobe safeguards.</h3></div><span>{passedChecks.filter((check) => check.passed).length}/{passedChecks.length || 7} ready</span></div>
           <div className="passport-list">
             {passedChecks.length ? passedChecks.map((check) => (
               <div key={check.label}><i className={check.passed ? "passed" : "failed"} /><span><strong>{check.label}</strong><small>{check.detail}</small></span><em>{check.passed ? "verified" : "blocked"}</em></div>
@@ -168,23 +169,23 @@ export function CloudProof() {
         </article>
 
         <article className="cloud-boundary-card">
-          <div className="proof-heading"><div><h3>AI explains. Wardrobe rules decide.</h3></div><span>Safe by default</span></div>
+          <div className="proof-heading"><div><h3>Your preferences stay in control.</h3></div><span>Protected</span></div>
           <div className="boundary-flow">
             <div><span>01</span><strong>AI explanation</strong><small>Describes the choice and suggests the next action</small></div><i>→</i>
             <div><span>02</span><strong>Wardrobe rules</strong><small>Check availability, care needs, and Personal Match</small></div><i>→</i>
             <div><span>03</span><strong>Saved result</strong><small>Keep progress and send each alert only once</small></div>
           </div>
-          <p>If the explanation is missing or malformed, it cannot choose clothes, change Personal Match, approve an unreadable care label, or send a duplicate alert.</p>
+          <p>Style guidance can explain a choice, but it cannot override availability, alter your Personal Match or approve an unreadable care label.</p>
         </article>
       </section>
 
       {execution && (
         <section className="cloud-receipt-strip">
-          <div><span>Saved run</span><strong>{execution.runId}</strong></div>
+          <div><span>Latest check</span><strong>{execution.status === "completed" ? "Complete" : "Paused"}</strong></div>
           <div><span>Times started</span><strong>{execution.attempts}</strong></div>
           <div><span>Repeat requests ignored</span><strong>{execution.duplicateTriggerCount}</strong></div>
           <div><span>Alerts sent</span><strong>{execution.deliveredNotificationIds.length}</strong></div>
-          <div><span>Saved plan</span><strong>{execution.decision?.decisionId ?? "—"}</strong></div>
+          <div><span>Wardrobe plan</span><strong>{execution.decision ? "Saved" : "Waiting"}</strong></div>
         </section>
       )}
     </div>

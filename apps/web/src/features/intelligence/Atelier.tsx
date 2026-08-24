@@ -18,13 +18,13 @@ export function Atelier({ state, onPlan, onQueueLaundry }: AtelierProps) {
     <div className="atelier-shell">
       <section className="atelier-intro">
         <div>
-          <h2>Inspect every outfit decision.</h2>
-          <p>One room for dressing decisions. One room for care decisions. Both grounded in the same live wardrobe state.</p>
+          <h2>Dress the moment. Care for what you own.</h2>
+          <p>Plan a complete look or prepare laundry without losing track of either.</p>
         </div>
         <div className="atelier-proof">
-          <span><strong>{planned}</strong> agent plans</span>
+          <span><strong>{planned}</strong> planned looks</span>
           <span><strong>{laundry}</strong> laundry pieces</span>
-          <span><strong>100%</strong> traceable scores</span>
+          <span><strong>Personal</strong> match</span>
         </div>
       </section>
 

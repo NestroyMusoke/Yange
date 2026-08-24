@@ -17,6 +17,7 @@ import type {
   WashMethod,
 } from "@yange/domain";
 import { EvidenceBadge } from "./EvidenceBadge";
+import { YangeText } from "../brand/YangeWordmark";
 import { ImageDropzone } from "./ImageDropzone";
 import type { CaptureQueue } from "./useCaptureQueue";
 
@@ -234,10 +235,9 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
     <section className="studio-panel" aria-labelledby="capture-title">
       <div className="studio-panel-heading">
         <div>
-          <h2 id="capture-title">Photograph once. Keep the evidence.</h2>
+          <h2 id="capture-title">Add something you own.</h2>
           <p>
-            Yange rewrites images privately on your device, then separates what it saw from
-            what you personally confirmed.
+            Photograph the piece and its care label. Check the details before saving.
           </p>
         </div>
         <div className="adapter-chip">
@@ -248,7 +248,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
 
       <div className="privacy-strip">
         <strong>Private by default</strong>
-        <span>Images stay on-device locally; in Cloud mode, prepared copies use short-lived private uploads for analysis. The ledger stores IDs, not pixels.</span>
+        <span>Your wardrobe photos are prepared privately and only the details you confirm are saved.</span>
       </div>
 
       <div className="capture-grid">
@@ -284,19 +284,6 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
         >
           {analyzing ? "Reading garment evidence…" : analysisError ? "Retry garment analysis" : "Analyse garment"}
         </button>
-        {garmentSlot.asset && !analyzing && (
-          <button
-            type="button"
-            className="quiet-action"
-            onClick={() => {
-              analyzer.failNext();
-              void analyzeGarment();
-            }}
-          >
-            Test a failed analysis
-          </button>
-        )}
-        <small>This test pauses once so you can confirm the prepared image remains available to retry.</small>
       </div>
 
       {analysisError && (
@@ -316,7 +303,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
 
           {draft.warnings.length > 0 && (
             <ul className="analysis-warnings">
-              {draft.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+              {draft.warnings.map((warning) => <li key={warning}><YangeText>{warning}</YangeText></li>)}
             </ul>
           )}
 
@@ -388,7 +375,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
               <input type="checkbox" checked={careReviewed} onChange={(event) => setCareReviewed(event.target.checked)} />
               <span>
                 <strong>I checked these care facts against the physical label.</strong>
-                This explicit action—not model confidence—allows Yange to treat them as confirmed.
+                Your review is what confirms these care facts.
               </span>
             </label>
           )}
@@ -410,7 +397,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
 
           {savedName && (
             <div className="success-banner" role="status">
-              <div><strong>{savedName} is now in your wardrobe.</strong><span>The photo stays in this browser, and the confirmed evidence is saved with the garment.</span></div>
+              <div><strong>{savedName} is now in your wardrobe.</strong><span>Your confirmed details are saved with the piece.</span></div>
               <button type="button" className="quiet-action" onClick={() => void addAnother()}>Add another piece</button>
             </div>
           )}

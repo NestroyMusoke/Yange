@@ -20,18 +20,18 @@ const demoPhotography: Record<string, string> = {
 
 function garmentTone(garment: Garment): string {
   const value = garment.colour.toLowerCase();
-  if (value.includes("cream") || value.includes("ivory")) return "#d8c7a7";
-  if (value.includes("chocolate")) return "#6e4937";
-  if (value.includes("olive")) return "#5e6948";
-  if (value.includes("gold")) return "#b99b55";
-  if (value.includes("black")) return "#292a28";
-  return "#77756f";
+  if (value.includes("cream") || value.includes("ivory")) return "var(--cream)";
+  if (value.includes("chocolate")) return "var(--chocolate)";
+  if (value.includes("olive")) return "var(--olive)";
+  if (value.includes("gold")) return "var(--champagne)";
+  if (value.includes("black")) return "var(--charcoal-raised)";
+  return "var(--cream-dim)";
 }
 
 export function TodayGarmentCard({ garment }: { garment: Garment }) {
   const privatePhotoUrl = useMediaUrl(garment.imageAssetId);
   const imageUrl = privatePhotoUrl ?? demoPhotography[garment.id] ?? null;
-  const evidenceLabel = privatePhotoUrl ? "Your photo" : imageUrl ? "Demo piece" : "Photo pending";
+  const evidenceLabel = privatePhotoUrl ? "Your photo" : imageUrl ? "Wardrobe piece" : "Photo pending";
 
   return (
     <article className="garment-tile">

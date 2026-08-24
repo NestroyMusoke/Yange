@@ -157,9 +157,18 @@ export async function createDemoImage(kind: AnalysisImageKind): Promise<File> {
     context.strokeStyle = "#c7c0b4";
     context.lineWidth = 3;
     context.strokeRect(120, 70, 860, 620);
+    await document.fonts?.load('54px "Righteous"');
+    const wordmarkGreen = context.createLinearGradient(190, 100, 190, 165);
+    wordmarkGreen.addColorStop(0, "#4dbb79");
+    wordmarkGreen.addColorStop(0.38, "#008653");
+    wordmarkGreen.addColorStop(1, "#003c32");
+    context.fillStyle = wordmarkGreen;
+    context.font = '54px "Righteous", system-ui';
+    context.fillText("Yange", 190, 155);
+    context.fillStyle = "#8b6720";
+    context.font = "700 20px system-ui";
+    context.fillText("SAMPLE CARE LABEL", 390, 150);
     context.fillStyle = "#242522";
-    context.font = "700 44px system-ui";
-    context.fillText("YANGE SAMPLE CARE LABEL", 190, 155);
     context.font = "32px system-ui";
     context.fillText("55% LINEN · 45% COTTON", 190, 230);
     context.fillText("MACHINE WASH COLD", 190, 305);
@@ -167,7 +176,7 @@ export async function createDemoImage(kind: AnalysisImageKind): Promise<File> {
     context.fillText("LOW IRON · DO NOT BLEACH", 190, 435);
     context.fillStyle = "#6d725f";
     context.font = "26px system-ui";
-    context.fillText("Demo only — replace with a real label photo", 190, 600);
+    context.fillText("Sample label. Replace with your own photo.", 190, 600);
   } else {
     const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
     gradient.addColorStop(0, kind === "inspiration" ? "#e6d8ba" : "#d28a63");
