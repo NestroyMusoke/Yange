@@ -230,7 +230,10 @@ export function App() {
                     : "Laundry is building"}
               </strong>
               <small>
-                {readiness.availableGarments} of {readiness.totalGarments} core pieces available
+                <span className="readiness-count">
+                  {readiness.availableGarments}/{readiness.totalGarments}
+                </span>{" "}
+                core pieces available
               </small>
             </div>
             </div>
@@ -453,7 +456,7 @@ export function App() {
           loading="lazy"
           decoding="async"
         />
-        <strong className="footer-wordmark"><YangeWordmark /></strong>
+        <YangeWordmark className="footer-wordmark" />
         <span>Your wardrobe. Your rhythm.</span>
       </footer>
       </div>

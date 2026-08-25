@@ -1,0 +1,229 @@
+/*
+ * Yange brand authority.
+ * Imported last so one wordmark, one type system, and one disciplined foil
+ * vocabulary govern every product view without disturbing shared navigation.
+ */
+:root {
+  --charcoal: #0c0a09;
+  --charcoal-raised: #141110;
+  --cream: #f4ecdf;
+  --cream-dim: #b8afa0;
+  --champagne: #c9a15f;
+  --olive: #7a7a5c;
+  --wordmark-green: #007a5b;
+  --foil-highlight: #f0d99a;
+  --foil-mid: #c9a15f;
+  --foil-shadow: #8a6a35;
+  --foil-brushed: linear-gradient(
+    90deg,
+    #8a6a35 0%,
+    #c9a15f 15%,
+    #f0d99a 30%,
+    #a47b42 45%,
+    #e6cb88 60%,
+    #8a6a35 75%,
+    #c9a15f 90%,
+    #f0d99a 100%
+  );
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-body: "General Sans", Arial, sans-serif;
+  --font-utility: var(--font-body);
+  --text: var(--cream);
+  --muted: var(--cream-dim);
+  --text-primary: var(--cream);
+  --text-secondary: var(--cream-dim);
+  --action-primary: var(--champagne);
+  --focus-ring: var(--champagne);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+}
+
+/* Display copy is flat champagne ink. Foil is never used on running words. */
+.app-shell :is(h1, h2, h3, h4) {
+  color: var(--champagne) !important;
+  background: none !important;
+  font-family: var(--font-display);
+  font-style: normal;
+  text-shadow: none;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.app-shell :is(
+  h1,
+  .studio-intro h2,
+  .atelier-intro h2,
+  .wearcast-hero h2,
+  .judge-hero h2,
+  .cloud-proof-hero h2
+) {
+  font-variation-settings: "opsz" 40, "wght" 420;
+  font-weight: 420;
+}
+
+.app-shell :is(
+  .studio-panel-heading h2,
+  .studio-gallery-heading h2,
+  .intelligence-heading h2,
+  .results-heading h3,
+  .forecast-heading h3,
+  .simulation-heading h3,
+  .judge-section-heading h3,
+  .architecture-ending h3,
+  .cloud-command-copy h3,
+  .proof-heading h3
+) {
+  font-variation-settings: "opsz" 36, "wght" 400;
+  font-weight: 400;
+}
+
+.app-shell :is(
+  .candidate-heading h3,
+  .decision-receipt h3,
+  .queue-heading h3,
+  .load-heading h3,
+  .window-card > h3,
+  .fallback-card > h3,
+  .workflow-heading h3,
+  .act-copy h4,
+  .studio-look-card strong
+) {
+  font-variation-settings: "opsz" 28, "wght" 440;
+  font-weight: 440;
+}
+
+/* The sole typographic logo treatment. Size may inherit from its placement. */
+.app-shell .yange-wordmark {
+  display: inline-block;
+  color: var(--wordmark-green) !important;
+  background: none !important;
+  font-family: "Righteous", "Arial Rounded MT Bold", sans-serif !important;
+  font-size: 0.98em;
+  font-style: normal;
+  font-variation-settings: normal;
+  font-weight: 400 !important;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  text-transform: lowercase !important;
+  text-shadow: none;
+  vertical-align: 0.015em;
+  transform: skewX(-2deg);
+  transform-origin: center bottom;
+  -webkit-text-fill-color: currentColor !important;
+  filter: none;
+}
+
+/* Foil is reserved for individual numerals and proof marks. */
+.app-shell :is(
+  .match-score strong,
+  .readiness-count,
+  .demo-readiness-orbit strong,
+  .proof-light-icon,
+  .drop-empty > span,
+  .agency-note > span,
+  .studio-look-card > div > span
+) {
+  color: var(--foil-mid);
+  background: var(--foil-brushed);
+  background-size: 180% 100%;
+  background-position: center;
+  text-shadow: none;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-shell :is(.match-score strong, .readiness-count, .demo-readiness-orbit strong) {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 28, "wght" 440;
+  font-weight: 440;
+}
+
+.app-shell .proof-light-icon {
+  font: inherit;
+}
+
+/* Brushed foil lives on hairlines and micro-borders, never on button copy. */
+.app-shell .view-tabs button.active::after,
+.app-shell hr {
+  background: var(--foil-brushed);
+}
+
+.app-shell :is(.primary-action, .cloud-actions button:not(.cloud-secondary)) {
+  position: relative;
+  border-color: transparent;
+  isolation: isolate;
+}
+
+.app-shell :is(.primary-action, .cloud-actions button:not(.cloud-secondary))::after {
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--foil-brushed);
+  content: "";
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Hero copy remains directly on the living Aura canvas, without a backdrop. */
+.app-shell :is(
+  .hero,
+  .studio-intro,
+  .atelier-intro,
+  .wearcast-hero,
+  .cloud-proof-hero,
+  .judge-hero
+) {
+  background: transparent !important;
+}
+
+.app-shell :is(
+  .hero > div:first-child,
+  .studio-intro > div:first-child,
+  .atelier-intro > div:first-child,
+  .wearcast-hero > div:first-child,
+  .cloud-proof-hero > div:first-child,
+  .judge-hero > div:first-child
+) {
+  position: relative;
+  z-index: 1;
+  width: fit-content;
+  max-width: min(100%, 820px);
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell :is(
+  .studio-intro::after,
+  .atelier-intro::after,
+  .wearcast-hero::before,
+  .cloud-proof-hero::after,
+  .judge-hero::after
+) {
+  display: none !important;
+  content: none !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell :is(
+    .hero > div:first-child,
+    .studio-intro > div:first-child,
+    .atelier-intro > div:first-child,
+    .wearcast-hero > div:first-child,
+    .cloud-proof-hero > div:first-child,
+    .judge-hero > div:first-child
+  ) {
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+  }
+}

@@ -185,7 +185,11 @@ export function JudgeMode({
         <div className="proof-signal-grid">
           {signals.map((signal, index) => (
             <article className={signal.ready ? "proof-signal is-proven" : "proof-signal"} key={signal.id}>
-              <span>{signal.ready ? "✓" : String(index + 1).padStart(2, "0")}</span>
+              <span>
+                <b className={signal.ready ? "proof-light-icon" : undefined}>
+                  {signal.ready ? "✓" : String(index + 1).padStart(2, "0")}
+                </b>
+              </span>
               <div>
                 <strong>{signal.label}</strong>
                 <small>{signal.detail}</small>

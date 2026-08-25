@@ -32,7 +32,7 @@ body:has(.app-shell:not(.view-today)) {
   width: min(1600px, 100%);
   padding-inline: 48px;
   color: var(--cream);
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   background: transparent;
 }
 
@@ -43,7 +43,7 @@ body:has(.app-shell:not(.view-today)) {
   background: none !important;
   font-family: "Fraunces Variable", Georgia, serif;
   font-style: normal;
-  font-variation-settings: "opsz" 48, "wght" 440;
+  font-variation-settings: "opsz" 36, "wght" 400;
   font-weight: 440;
   text-shadow: none;
   -webkit-text-fill-color: currentColor !important;
@@ -51,7 +51,7 @@ body:has(.app-shell:not(.view-today)) {
 
 .app-shell:not(.view-today) :is(p, small, label, time, dd) {
   color: var(--cream-dim);
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
 }
 
 .app-shell:not(.view-today) :is(
@@ -64,7 +64,7 @@ body:has(.app-shell:not(.view-today)) {
   max-width: 14ch;
   margin: 0 0 24px;
   font-size: clamp(48px, 5.2vw, 72px);
-  font-variation-settings: "opsz" 72, "wght" 440;
+  font-variation-settings: "opsz" 40, "wght" 420;
   line-height: 1.03;
   letter-spacing: -0.01em;
 }
@@ -115,27 +115,6 @@ body:has(.app-shell:not(.view-today)) {
   line-height: 1.3;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-/* Official wordmark treatment stays identical in every view. */
-.app-shell .yange-wordmark {
-  display: inline-block;
-  color: #007451;
-  background-image: linear-gradient(178deg, #4dbb79 0%, #078957 24%, #005f46 57%, #003c32 86%, #c7a54a 100%);
-  background-size: 100% 140%;
-  background-position: center 42%;
-  font-family: "Righteous", "Arial Rounded MT Bold", sans-serif;
-  font-style: normal;
-  font-variation-settings: normal;
-  font-weight: 400;
-  line-height: 0.92;
-  letter-spacing: -0.055em;
-  text-shadow: none;
-  transform: skewX(-2deg);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(211, 181, 116, 0.24)) drop-shadow(0 3px 7px rgba(0, 17, 12, 0.38));
 }
 
 /* Shared WebGL liquid-glass lens. */
@@ -627,7 +606,7 @@ body:has(.app-shell:not(.view-today)) {
   color: var(--cream-dim);
   background: transparent;
   box-shadow: none;
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
@@ -771,7 +750,7 @@ body:has(.app-shell:not(.view-today)) {
   align-items: center;
   justify-content: space-between;
   color: var(--cream-dim);
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   font-size: 13px;
   font-weight: 500;
 }
@@ -786,7 +765,7 @@ body:has(.app-shell:not(.view-today)) {
   color: var(--cream);
   background: transparent;
   box-shadow: none;
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.4;
   -webkit-backdrop-filter: none;
@@ -829,7 +808,7 @@ body:has(.app-shell:not(.view-today)) {
 
 .view-studio .completion-tape span {
   color: var(--cream-dim);
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -884,7 +863,7 @@ body:has(.app-shell:not(.view-today)) {
 .view-studio .dna-section legend,
 .view-studio .choice-label {
   color: var(--champagne);
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.08em;

@@ -7,7 +7,7 @@ interface YangeWordmarkProps {
 
 export function YangeWordmark({ className = "", children = "Yange" }: YangeWordmarkProps) {
   return (
-    <span className={`yange-wordmark ${className}`.trim()}>{children}</span>
+    <span className={`yange-wordmark ${className}`.trim()}>{children.toLowerCase()}</span>
   );
 }
 
@@ -16,7 +16,7 @@ export function YangeText({ children }: { children: string }) {
     <>
       {children.split(/(Yange)/gi).map((part, index) => (
         /^yange$/i.test(part)
-          ? <YangeWordmark key={`${part}-${index}`}>{part}</YangeWordmark>
+          ? <YangeWordmark key={`${part}-${index}`} />
           : <Fragment key={`${part}-${index}`}>{part}</Fragment>
       ))}
     </>

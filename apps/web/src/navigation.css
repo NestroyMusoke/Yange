@@ -43,7 +43,7 @@
   color: var(--champagne);
   background: transparent;
   box-shadow: none;
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
@@ -108,7 +108,7 @@
 .app-shell .view-tab-copy strong {
   color: inherit;
   background: none;
-  font-family: "Inter Variable", Arial, sans-serif;
+  font-family: "General Sans", Arial, sans-serif;
   font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
