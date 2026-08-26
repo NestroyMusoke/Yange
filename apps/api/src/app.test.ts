@@ -30,6 +30,16 @@ async function start(environment: Record<string, string> = { NODE_ENV: "test" })
 }
 
 describe("Yange production API", () => {
+  it("exposes Cloud Run safe health and readiness endpoints", async () => {
+    const origin = await start();
+    const health = await fetch(`${origin}/health`);
+    const readiness = await fetch(`${origin}/ready`);
+    expect(health.status).toBe(200);
+    expect(await health.json()).toMatchObject({ status: "ok" });
+    expect(readiness.status).toBe(200);
+    expect(await readiness.json()).toEqual({ status: "ready", issues: [] });
+  });
+
   it("reports sanitized local runtime readiness without credentials", async () => {
     const origin = await start();
     const response = await fetch(`${origin}/v1/runtime`);

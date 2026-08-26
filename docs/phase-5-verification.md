@@ -77,7 +77,7 @@ Observed results:
 
 Phase 5 is code-complete only after the following are captured once the funded project is connected:
 
-- public edge `/healthz`, `/readyz`, and `/v1/runtime` responses;
+- public edge `/health`, `/ready`, and `/v1/runtime` responses;
 - Cloud Proof six-checkpoint receipt with **Google Cloud live**;
 - private worker rejected without an identity token and succeeded through Cloud Tasks;
 - Firestore transaction/outbox documents and private Storage access;

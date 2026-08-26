@@ -57,14 +57,14 @@ resource "google_cloud_run_v2_service" "worker" {
         period_seconds        = 5
         timeout_seconds       = 2
         http_get {
-          path = "/healthz"
+          path = "/health"
         }
       }
       liveness_probe {
         period_seconds  = 30
         timeout_seconds = 2
         http_get {
-          path = "/healthz"
+          path = "/health"
         }
       }
     }
@@ -131,14 +131,14 @@ resource "google_cloud_run_v2_service" "edge" {
         period_seconds        = 5
         timeout_seconds       = 2
         http_get {
-          path = "/healthz"
+          path = "/health"
         }
       }
       liveness_probe {
         period_seconds  = 30
         timeout_seconds = 2
         http_get {
-          path = "/healthz"
+          path = "/health"
         }
       }
     }

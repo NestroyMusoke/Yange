@@ -312,12 +312,12 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
         finish(204);
         return;
       }
-      if (url.pathname === "/healthz") {
+      if (url.pathname === "/health" || url.pathname === "/healthz") {
         sendJson(response, 200, { status: "ok", service: configuration.serviceName });
         finish(200);
         return;
       }
-      if (url.pathname === "/readyz") {
+      if (url.pathname === "/ready" || url.pathname === "/readyz") {
         const status = configurationCheck.ready ? 200 : 503;
         sendJson(response, status, {
           status: configurationCheck.ready ? "ready" : "not-ready",

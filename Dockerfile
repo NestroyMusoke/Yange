@@ -4,7 +4,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps ./apps
 COPY packages ./packages
-RUN npm ci
+# The liquid-glass UI dependency publishes a consumer-facing postinstall hook
+# that calls a development-only binary. Production builds do not need package
+# lifecycle scripts, and disabling them also reduces supply-chain exposure.
+RUN npm ci --ignore-scripts
 RUN npm run build
 RUN npm prune --omit=dev
 

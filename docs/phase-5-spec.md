@@ -69,7 +69,7 @@ Cloud Run services use attached service identities rather than downloaded keys. 
 
 ## Observability and judge proof
 
-The API writes single-line structured JSON logs carrying request ID, severity, component, route, latency, opaque user partition, and Cloud Trace correlation when `X-Cloud-Trace-Context` is present. `/healthz` proves process health; `/readyz` fails closed on missing production configuration; `/v1/runtime` exposes only sanitized adapter and architecture metadata.
+The API writes single-line structured JSON logs carrying request ID, severity, component, route, latency, opaque user partition, and Cloud Trace correlation when `X-Cloud-Trace-Context` is present. `/health` proves process health; `/ready` fails closed on missing production configuration; `/v1/runtime` exposes only sanitized adapter and architecture metadata. Local `/healthz` and `/readyz` aliases remain for compatibility, but Cloud Run uses paths that do not end in `z` to avoid reserved-path conflicts.
 
 The **Cloud proof** screen uses those endpoints, stages a server-side 50% wardrobe-risk scenario, fires the real API boundary, polls for a durable terminal receipt, and renders all six checkpoints. In local mode it labels itself **Local cloud rehearsal**. After deployment the identical surface labels itself **Google Cloud live** from server evidence rather than a frontend flag.
 

@@ -49,6 +49,13 @@ resource "google_storage_bucket" "media" {
   public_access_prevention    = "enforced"
   force_destroy               = false
 
+  # The final Cloud Run URL is only known after the edge service exists, while
+  # the edge service also needs this bucket name. The deployer resolves that
+  # cycle by applying origin-specific CORS after Terraform completes.
+  lifecycle {
+    ignore_changes = [cors]
+  }
+
   lifecycle_rule {
     condition {
       age            = 1
@@ -122,6 +129,12 @@ resource "google_project_iam_member" "agent_vertex" {
   project = var.project_id
   role    = "roles/aiplatform.user"
   member  = "serviceAccount:${google_service_account.agent.email}"
+}
+
+resource "google_project_iam_member" "edge_vertex" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.edge.email}"
 }
 
 resource "google_project_iam_member" "worker_service_usage" {

@@ -103,7 +103,7 @@ The trace should show `inspect_wardrobe_twin` before `run_verified_wearcast`. Th
 
 - Stop or deny Pub/Sub temporarily: the decision should complete while outbox rows become `failed`; the recovery scheduler later republishes them.
 - Repeat a WearCast trigger: Cloud Tasks or the worker returns the existing identity/receipt without duplicate events.
-- Remove one required edge variable from a test revision: `/readyz` must return 503 while `/healthz` remains 200.
+- Remove one required edge variable from a test revision: `/ready` must return 503 while `/health` remains 200.
 - Roll back a service with `gcloud run services update-traffic SERVICE --to-revisions REVISION=100 --region africa-south1`.
 
 Never demonstrate failure injection against a personal production calendar or irreplaceable bucket.
