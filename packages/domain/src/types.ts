@@ -99,6 +99,18 @@ export interface Garment {
   state: GarmentState;
   wearsSinceWash: number;
   wearPolicy: WearPolicy;
+  archived?: boolean;
+}
+
+export type WardrobeMode = "demo" | "personal";
+
+export interface UserProfile {
+  version: 1;
+  displayName: string;
+  locationLabel: string;
+  latitude: number;
+  longitude: number;
+  onboardingCompletedAt: string | null;
 }
 
 export type ColourRelationship =
@@ -498,6 +510,8 @@ export interface StyleMemory {
 }
 
 export interface TwinState {
+  wardrobeMode: WardrobeMode;
+  userProfile: UserProfile;
   garments: Record<string, Garment>;
   outfits: Record<string, Outfit>;
   feedback: ConfidenceFeedback[];
@@ -547,6 +561,22 @@ export type DomainEvent =
   | (EventEnvelope & {
       type: "GarmentAdded";
       payload: { garment: Garment };
+    })
+  | (EventEnvelope & {
+      type: "GarmentUpdated";
+      payload: { garment: Garment };
+    })
+  | (EventEnvelope & {
+      type: "GarmentArchived";
+      payload: { garmentId: string };
+    })
+  | (EventEnvelope & {
+      type: "PersonalWardrobeActivated";
+      payload: { retainedGarmentIds: string[] };
+    })
+  | (EventEnvelope & {
+      type: "UserProfileUpdated";
+      payload: { profile: UserProfile };
     })
   | (EventEnvelope & {
       type: "StyleProfileUpdated";

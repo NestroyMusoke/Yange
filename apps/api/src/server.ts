@@ -6,6 +6,8 @@ import {
   createGoogleMediaStore,
   createGoogleTaskScheduler,
   createStructuredLogger,
+  GoogleApplicationDefaultTokenProvider,
+  GoogleCalendarAdapter,
   GoogleVertexStructuredGenerationClient,
   GoogleWeatherForecastAdapter,
   InMemoryUserStateStore,
@@ -54,12 +56,27 @@ const eventPublisher = google && configuration.role !== "edge"
 const mediaStore = google && configuration.role !== "worker" && google.mediaBucket
   ? createGoogleMediaStore(google.projectId, google.mediaBucket)
   : undefined;
-const forecastProvider = google && configuration.role !== "edge"
-  ? new GoogleWeatherForecastAdapter({
-    latitude: configuration.weatherLatitude,
-    longitude: configuration.weatherLongitude,
-    locationLabel: "Kampala",
-  })
+const forecastProviders = new Map<string, GoogleWeatherForecastAdapter>();
+const forecastProviderForLocation = google
+  ? ({ latitude, longitude, label }: { latitude: number; longitude: number; label: string }) => {
+      const key = `${latitude.toFixed(4)}:${longitude.toFixed(4)}:${label}`;
+      const existing = forecastProviders.get(key);
+      if (existing) return existing;
+      const created = new GoogleWeatherForecastAdapter({ latitude, longitude, locationLabel: label });
+      forecastProviders.set(key, created);
+      return created;
+    }
+  : undefined;
+const forecastProvider = forecastProviderForLocation?.({
+  latitude: configuration.weatherLatitude,
+  longitude: configuration.weatherLongitude,
+  label: "Kampala",
+});
+const calendarProvider = google && configuration.calendarId
+  ? new GoogleCalendarAdapter({
+      calendarId: configuration.calendarId,
+      tokenProvider: new GoogleApplicationDefaultTokenProvider(),
+    })
   : undefined;
 const vertexClient = google
   ? new GoogleVertexStructuredGenerationClient(google.projectId, configuration.location)
@@ -92,6 +109,8 @@ const server = createServer(createYangeApi({
   eventPublisher,
   mediaStore,
   forecastProvider,
+  forecastProviderForLocation,
+  calendarProvider,
   multimodalAnalyzerForUser,
   outfitExplainer,
 }));

@@ -18,16 +18,20 @@ import {
 } from "@yange/cloud";
 import {
   createKampalaDemoForecast,
-  FakeNotificationGateway,
+  DurableInboxNotificationGateway,
   ManualForecastAdapter,
   type MultimodalAnalyzer,
   type MultimodalRequestV1,
   type OutfitExplanationPort,
   type OutfitExplanationRequestV1,
   type ForecastProvider,
+  type CalendarContextProvider,
+  type NotificationGateway,
 } from "@yange/contracts";
 import {
   addGarment,
+  activatePersonalWardrobe,
+  archiveGarment,
   captureLookDna,
   DomainError,
   markOutfitWorn,
@@ -35,13 +39,19 @@ import {
   queueGarmentsForLaundry,
   recordConfidence,
   updateStyleProfile,
+  updateGarment,
+  updateUserProfile,
+  type ActivatePersonalWardrobeInput,
   type AddGarmentInput,
+  type ArchiveGarmentInput,
   type CaptureLookDnaInput,
   type MarkOutfitWornInput,
   type PlanOutfitInput,
   type QueueLaundryInput,
   type RecordConfidenceInput,
   type UpdateStyleProfileInput,
+  type UpdateGarmentInput,
+  type UpdateUserProfileInput,
 } from "@yange/domain";
 import { WearCastWorkflow } from "@yange/orchestrator";
 import { resolveSession } from "./session";
@@ -60,6 +70,9 @@ export interface YangeApiDependencies {
   eventPublisher?: EventPublisher;
   mediaStore?: PrivateMediaStore;
   forecastProvider?: ForecastProvider;
+  forecastProviderForLocation?: (location: { latitude: number; longitude: number; label: string }) => ForecastProvider;
+  calendarProvider?: CalendarContextProvider;
+  notificationGateway?: NotificationGateway;
   multimodalAnalyzerForUser?: (userId: string) => MultimodalAnalyzer;
   outfitExplainer?: OutfitExplanationPort;
 }
@@ -68,6 +81,10 @@ type CloudCommand =
   | { type: "wear-outfit"; input: MarkOutfitWornInput }
   | { type: "record-confidence"; input: RecordConfidenceInput }
   | { type: "add-garment"; input: AddGarmentInput }
+  | { type: "update-garment"; input: UpdateGarmentInput }
+  | { type: "archive-garment"; input: ArchiveGarmentInput }
+  | { type: "activate-personal-wardrobe"; input: ActivatePersonalWardrobeInput }
+  | { type: "update-user-profile"; input: UpdateUserProfileInput }
   | { type: "update-style-profile"; input: UpdateStyleProfileInput }
   | { type: "capture-look-dna"; input: CaptureLookDnaInput }
   | { type: "plan-outfit"; input: PlanOutfitInput }
@@ -81,6 +98,10 @@ function parseCloudCommand(body: Record<string, unknown>): CloudCommand {
     "wear-outfit",
     "record-confidence",
     "add-garment",
+    "update-garment",
+    "archive-garment",
+    "activate-personal-wardrobe",
+    "update-user-profile",
     "update-style-profile",
     "capture-look-dna",
     "plan-outfit",
@@ -110,9 +131,12 @@ function parseCloudCommand(body: Record<string, unknown>): CloudCommand {
     !Array.isArray(input.garmentIds) ||
     !input.garmentIds.every((id) => typeof id === "string")
   )) throw new Error("REQUEST_BODY_INVALID");
-  const objectPayload = body.type === "add-garment"
+  if (body.type === "archive-garment" && typeof input.garmentId !== "string") {
+    throw new Error("REQUEST_BODY_INVALID");
+  }
+  const objectPayload = body.type === "add-garment" || body.type === "update-garment"
     ? "garment"
-    : body.type === "update-style-profile"
+    : body.type === "update-style-profile" || body.type === "update-user-profile"
       ? "profile"
       : body.type === "capture-look-dna"
         ? "look"
@@ -272,7 +296,7 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
   const now = dependencies.now ?? (() => new Date().toISOString());
   const logger = dependencies.logger ?? createStructuredLogger(configuration.projectId);
   const configurationCheck = checkRuntimeConfiguration(configuration);
-  const notificationGateway = new FakeNotificationGateway(now);
+  const notificationGateway = dependencies.notificationGateway ?? new DurableInboxNotificationGateway(now);
 
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     secureHeaders(response);
@@ -384,22 +408,70 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
         return;
       }
 
+      if (method === "GET" && url.pathname === "/v1/context") {
+        const twin = await store.readTwin(userId);
+        const profile = twin.state.userProfile;
+        const provider = dependencies.forecastProviderForLocation?.({
+          latitude: profile.latitude,
+          longitude: profile.longitude,
+          label: profile.locationLabel,
+        }) ?? dependencies.forecastProvider;
+        if (!provider) {
+          sendJson(response, 501, { error: "LIVE_WEATHER_NOT_CONFIGURED" });
+          finish(501, userId);
+          return;
+        }
+        const forecast = await provider.sevenDay();
+        const requestedAt = url.searchParams.get("at");
+        const target = requestedAt && Number.isFinite(Date.parse(requestedAt)) ? Date.parse(requestedAt) : Date.now();
+        const period = forecast.periods.find((candidate) => Date.parse(candidate.startsAt) <= target && target < Date.parse(candidate.endsAt))
+          ?? forecast.periods.find((candidate) => Date.parse(candidate.startsAt) >= target)
+          ?? forecast.periods[0];
+        if (!period) throw new Error("LIVE_WEATHER_EMPTY");
+        let calendar = null;
+        let calendarStatus: "connected" | "not-configured" | "unavailable" = dependencies.calendarProvider ? "connected" : "not-configured";
+        if (dependencies.calendarProvider) {
+          try {
+            calendar = await dependencies.calendarProvider.upcoming();
+          } catch {
+            calendarStatus = "unavailable";
+          }
+        }
+        sendJson(response, 200, {
+          weather: {
+            source: forecast.source,
+            location: forecast.location,
+            observedAt: forecast.issuedAt,
+            temperatureC: period.temperatureC,
+            precipitationProbability: period.precipitationProbability,
+            condition: period.condition,
+          },
+          forecast,
+          calendar,
+          calendarStatus,
+        });
+        finish(200, userId);
+        return;
+      }
+
       if (method === "POST" && url.pathname === "/v1/commands") {
         const command = parseCloudCommand(await readJson(request));
         const twin = await store.readTwin(userId);
-        const events = command.type === "wear-outfit"
-          ? markOutfitWorn(twin.state, twin.ledger, command.input)
-          : command.type === "record-confidence"
-            ? recordConfidence(twin.state, twin.ledger, command.input)
-            : command.type === "add-garment"
-              ? addGarment(twin.state, twin.ledger, command.input)
-              : command.type === "update-style-profile"
-                ? updateStyleProfile(twin.ledger, command.input)
-                : command.type === "capture-look-dna"
-                  ? captureLookDna(twin.state, twin.ledger, command.input)
-                  : command.type === "plan-outfit"
-                    ? planOutfit(twin.state, twin.ledger, command.input)
-                    : queueGarmentsForLaundry(twin.state, twin.ledger, command.input);
+        const events = (() => {
+          switch (command.type) {
+            case "wear-outfit": return markOutfitWorn(twin.state, twin.ledger, command.input);
+            case "record-confidence": return recordConfidence(twin.state, twin.ledger, command.input);
+            case "add-garment": return addGarment(twin.state, twin.ledger, command.input);
+            case "update-garment": return updateGarment(twin.state, twin.ledger, command.input);
+            case "archive-garment": return archiveGarment(twin.state, twin.ledger, command.input);
+            case "activate-personal-wardrobe": return activatePersonalWardrobe(twin.state, twin.ledger, command.input);
+            case "update-user-profile": return updateUserProfile(twin.ledger, command.input);
+            case "update-style-profile": return updateStyleProfile(twin.ledger, command.input);
+            case "capture-look-dna": return captureLookDna(twin.state, twin.ledger, command.input);
+            case "plan-outfit": return planOutfit(twin.state, twin.ledger, command.input);
+            case "queue-laundry": return queueGarmentsForLaundry(twin.state, twin.ledger, command.input);
+          }
+        })();
         const receipt = await store.appendEvents(userId, events);
         sendJson(response, 200, { events, receipt });
         finish(200, userId);
@@ -502,8 +574,14 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
           finish(202, userId);
           return;
         }
+        const workflowTwin = await store.readTwin(userId);
+        const profile = workflowTwin.state.userProfile;
         const workflow = new WearCastWorkflow({
-          forecastProvider: dependencies.forecastProvider
+          forecastProvider: dependencies.forecastProviderForLocation?.({
+            latitude: profile.latitude,
+            longitude: profile.longitude,
+            label: profile.locationLabel,
+          }) ?? dependencies.forecastProvider
             ?? new ManualForecastAdapter(createKampalaDemoForecast(), {
               now: () => new Date(triggeredAt),
             }),

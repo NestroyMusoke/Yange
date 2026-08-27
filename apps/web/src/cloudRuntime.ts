@@ -1,5 +1,5 @@
 import type { WearCastExecution } from "@yange/orchestrator";
-import type { DomainEvent, TwinState } from "@yange/domain";
+import type { CalendarSnapshot, DomainEvent, SevenDayForecast, TwinState, WeatherSnapshot } from "@yange/domain";
 import type {
   MultimodalRequestV1,
   MultimodalResponseV1,
@@ -45,6 +45,10 @@ export interface CloudCommand {
     | "wear-outfit"
     | "record-confidence"
     | "add-garment"
+    | "update-garment"
+    | "archive-garment"
+    | "activate-personal-wardrobe"
+    | "update-user-profile"
     | "update-style-profile"
     | "capture-look-dna"
     | "plan-outfit"
@@ -84,6 +88,18 @@ export async function getCloudTwin(): Promise<{ state: TwinState; ledger: Domain
   return request<{ state: TwinState; ledger: DomainEvent[] }>("/v1/twin");
 }
 
+export interface LiveContextSnapshot {
+  weather: WeatherSnapshot;
+  forecast: SevenDayForecast;
+  calendar: CalendarSnapshot | null;
+  calendarStatus: "connected" | "not-configured" | "unavailable";
+}
+
+export function getLiveContext(at?: string): Promise<LiveContextSnapshot> {
+  const query = at ? `?at=${encodeURIComponent(at)}` : "";
+  return request<LiveContextSnapshot>(`/v1/context${query}`);
+}
+
 export function sendCloudCommand(command: CloudCommand): Promise<{
   events: DomainEvent[];
   receipt: { appendedEventIds: string[]; duplicateEventIds: string[] };
@@ -109,6 +125,10 @@ export async function createMediaUploadIntent(asset: {
   return response.intent;
 }
 
+export async function createMediaReadUrl(assetId: string): Promise<{ url: string; expiresAt: string }> {
+  return request<{ url: string; expiresAt: string }>(`/v1/media/${encodeURIComponent(assetId)}`);
+}
+
 export async function analyzeWithCloud(requestBody: MultimodalRequestV1): Promise<MultimodalResponseV1> {
   const response = await request<{ result: MultimodalResponseV1 }>("/v1/ai/analyze", {
     method: "POST",
@@ -129,13 +149,10 @@ export async function stageCloudDemo(): Promise<void> {
   await request("/v1/demo/stage", { method: "POST", body: "{}" });
 }
 
-export function runCloudWearCast(): Promise<RunResponse> {
+export function runCloudWearCast(trigger: { triggerId: string; triggeredAt: string }): Promise<RunResponse> {
   return request<RunResponse>("/v1/wearcast/run", {
     method: "POST",
-    body: JSON.stringify({
-      triggerId: "cloud-proof-friday-2026-08-14",
-      triggeredAt: "2026-08-14T07:30:00.000Z",
-    }),
+    body: JSON.stringify(trigger),
   });
 }
 
@@ -145,12 +162,13 @@ export async function getLatestCloudExecution(): Promise<WearCastExecution | nul
 }
 
 export async function waitForCloudExecution(
+  triggerId?: string,
   attempts = 15,
   delayMs = 1_000,
 ): Promise<WearCastExecution | null> {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const execution = await getLatestCloudExecution();
-    if (execution?.status === "completed" || execution?.status === "failed") {
+    if ((!triggerId || execution?.triggerId === triggerId) && (execution?.status === "completed" || execution?.status === "failed")) {
       return execution;
     }
     await new Promise((resolve) => setTimeout(resolve, delayMs));

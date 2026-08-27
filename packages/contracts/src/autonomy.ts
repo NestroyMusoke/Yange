@@ -113,6 +113,36 @@ export interface NotificationGateway {
   deliver(notification: AgentNotification, idempotencyKey: string): Promise<NotificationDeliveryResult>;
 }
 
+/**
+ * Production gateway for Yange's durable in-app inbox. The workflow writes the
+ * notification to the user's event ledger before this acknowledgement is
+ * recorded. Connected browsers then surface unseen inbox items through the
+ * service worker, so delivery remains useful even when OS notifications are
+ * disabled.
+ */
+export class DurableInboxNotificationGateway implements NotificationGateway {
+  readonly adapterName = "durable-inbox-service-worker-v1";
+  private readonly deliveries = new Map<string, NotificationDeliveryResult>();
+
+  constructor(private readonly now: () => string = () => new Date().toISOString()) {}
+
+  async deliver(
+    notification: AgentNotification,
+    idempotencyKey: string,
+  ): Promise<NotificationDeliveryResult> {
+    const existing = this.deliveries.get(idempotencyKey);
+    if (existing) return { ...existing, deduplicated: true };
+    const result = {
+      notificationId: notification.id,
+      deliveredAt: this.now(),
+      deduplicated: false,
+      adapter: this.adapterName,
+    };
+    this.deliveries.set(idempotencyKey, result);
+    return result;
+  }
+}
+
 export class FakeNotificationGateway implements NotificationGateway {
   readonly adapterName = "fake-in-app-notification-v1";
   private readonly deliveries = new Map<string, NotificationDeliveryResult>();

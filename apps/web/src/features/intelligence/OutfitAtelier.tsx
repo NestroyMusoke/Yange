@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ManualCalendarAdapter,
   ManualWeatherAdapter,
@@ -15,6 +15,7 @@ import {
   type WeatherCondition,
 } from "@yange/domain";
 import { RuntimeOutfitExplainer } from "../../aiRuntime";
+import { getLiveContext, isCloudSyncConfigured, type LiveContextSnapshot } from "../../cloudRuntime";
 import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 import { GarmentPreview } from "./GarmentPreview";
 
@@ -51,6 +52,13 @@ const conditions: Array<{ value: WeatherCondition; label: string }> = [
   { value: "rain", label: "Rain" },
   { value: "windy", label: "Windy" },
 ];
+
+function initialStartTime(): string {
+  const next = new Date(Date.now() + 24 * 60 * 60_000);
+  next.setHours(19, 0, 0, 0);
+  const local = new Date(next.getTime() - next.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
 
 function CandidateCard({
   candidate,
@@ -139,8 +147,8 @@ function CandidateCard({
 }
 
 export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
-  const [eventTitle, setEventTitle] = useState("Saturday rooftop dinner");
-  const [startsAt, setStartsAt] = useState("2026-08-15T19:00");
+  const [eventTitle, setEventTitle] = useState("Dinner out");
+  const [startsAt, setStartsAt] = useState(initialStartTime);
   const [occasion, setOccasion] = useState<PlanningOccasion>("dinner");
   const [dressCode, setDressCode] = useState<DressCode>("polished");
   const [temperatureC, setTemperatureC] = useState(24);
@@ -152,10 +160,29 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [plannedCandidateId, setPlannedCandidateId] = useState<string | null>(null);
+  const [contextMode, setContextMode] = useState<"live" | "manual">(() => isCloudSyncConfigured() ? "live" : "manual");
+  const [liveContext, setLiveContext] = useState<LiveContextSnapshot | null>(null);
+  const [liveStatus, setLiveStatus] = useState<"loading" | "ready" | "unavailable">("loading");
+  const [useCalendar, setUseCalendar] = useState(false);
   const explainer = useMemo(() => new RuntimeOutfitExplainer(), []);
   const unavailableCount = Object.values(state.garments).filter((garment) =>
-    ["laundry", "drying", "airing", "reserved"].includes(garment.state),
+    !garment.archived && ["laundry", "drying", "airing", "reserved"].includes(garment.state),
   ).length;
+
+  useEffect(() => {
+    if (contextMode !== "live") return;
+    let active = true;
+    setLiveStatus("loading");
+    void getLiveContext(new Date(startsAt).toISOString()).then((snapshot) => {
+      if (!active) return;
+      setLiveContext(snapshot);
+      setTemperatureC(Math.round(snapshot.weather.temperatureC));
+      setRain(Math.round(snapshot.weather.precipitationProbability));
+      setCondition(snapshot.weather.condition);
+      setLiveStatus("ready");
+    }).catch(() => { if (active) setLiveStatus("unavailable"); });
+    return () => { active = false; };
+  }, [contextMode, startsAt]);
 
   async function explain(generated: OutfitCandidate[]): Promise<void> {
     const initial = Object.fromEntries(
@@ -193,16 +220,14 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
       if (!eventTitle.trim()) throw new Error("Give the occasion a name.");
       const startsAtIso = new Date(startsAt).toISOString();
       const now = new Date();
-      const context = await planningContextFrom(
-        new ManualWeatherAdapter({
-          source: "manual-weather-v1",
-          location: "Kampala",
-          observedAt: now.toISOString(),
-          temperatureC,
-          precipitationProbability: rain,
-          condition,
-        }),
-        new ManualCalendarAdapter({
+      let context;
+      if (contextMode === "live") {
+        const snapshot = await getLiveContext(startsAtIso);
+        setLiveContext(snapshot);
+        setTemperatureC(Math.round(snapshot.weather.temperatureC));
+        setRain(Math.round(snapshot.weather.precipitationProbability));
+        setCondition(snapshot.weather.condition);
+        const manualCalendar = await new ManualCalendarAdapter({
           source: "manual-calendar-v1",
           eventId: `manual-${startsAtIso.replace(/\W/g, "")}`,
           title: eventTitle.trim(),
@@ -210,9 +235,35 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
           occasion,
           dressCode,
           notes: "User-supplied planning context",
-        }),
-        inspirationLookId || null,
-      );
+        }).upcoming();
+        context = {
+          version: 1 as const,
+          weather: snapshot.weather,
+          calendar: useCalendar && snapshot.calendar ? snapshot.calendar : manualCalendar,
+          inspirationLookId: inspirationLookId || null,
+        };
+      } else {
+        context = await planningContextFrom(
+          new ManualWeatherAdapter({
+            source: "manual-weather-v1",
+            location: state.userProfile.locationLabel,
+            observedAt: now.toISOString(),
+            temperatureC,
+            precipitationProbability: rain,
+            condition,
+          }),
+          new ManualCalendarAdapter({
+            source: "manual-calendar-v1",
+            eventId: `manual-${startsAtIso.replace(/\W/g, "")}`,
+            title: eventTitle.trim(),
+            startsAt: startsAtIso,
+            occasion,
+            dressCode,
+            notes: "User-supplied planning context",
+          }),
+          inspirationLookId || null,
+        );
+      }
       const generated = generateOutfitCandidates(state, context, 3);
       if (!generated.length) {
         throw new Error("No complete look is feasible. Yange needs an available top, bottom, and pair of shoes.");
@@ -245,18 +296,24 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
 
       <div className="planning-workbench">
         <form className="context-console" onSubmit={(event) => { event.preventDefault(); void generate(); }}>
-          <div className="console-topline"><span>Occasion details</span><em>Kampala context</em></div>
+          <div className="console-topline"><span>Occasion details</span><em>{state.userProfile.locationLabel} context</em></div>
+          <div className="context-source-control" role="group" aria-label="Weather source">
+            <button type="button" className={contextMode === "live" ? "active" : ""} onClick={() => setContextMode("live")}>Live weather</button>
+            <button type="button" className={contextMode === "manual" ? "active" : ""} onClick={() => setContextMode("manual")}>Adjust manually</button>
+            <span className={`context-source-status status-${liveStatus}`}>{contextMode === "manual" ? "Your values" : liveStatus === "ready" ? `${liveContext?.weather.temperatureC.toFixed(0)}°C · ${liveContext?.weather.precipitationProbability.toFixed(0)}% rain` : liveStatus === "loading" ? "Reading forecast…" : "Forecast unavailable"}</span>
+          </div>
           <label className="field-group full-field"><span>What are you dressing for?</span><input value={eventTitle} maxLength={80} onChange={(event) => setEventTitle(event.target.value)} /></label>
           <div className="context-grid">
             <label className="field-group"><span>Starts</span><input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
             <label className="field-group"><span>Occasion</span><select value={occasion} onChange={(event) => setOccasion(event.target.value as PlanningOccasion)}>{occasionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
             <label className="field-group"><span>Dress code</span><select value={dressCode} onChange={(event) => setDressCode(event.target.value as DressCode)}>{dressOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-            <label className="field-group"><span>Conditions</span><select value={condition} onChange={(event) => setCondition(event.target.value as WeatherCondition)}>{conditions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            <label className="field-group"><span>Conditions</span><select value={condition} disabled={contextMode === "live"} onChange={(event) => setCondition(event.target.value as WeatherCondition)}>{conditions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
           </div>
           <div className="weather-controls">
-            <label><span>Temperature <strong>{temperatureC}°C</strong></span><input type="range" min="12" max="36" value={temperatureC} onChange={(event) => setTemperatureC(Number(event.target.value))} /></label>
-            <label><span>Rain chance <strong>{rain}%</strong></span><input type="range" min="0" max="100" value={rain} onChange={(event) => setRain(Number(event.target.value))} /></label>
+            <label><span>Temperature <strong>{temperatureC}°C</strong></span><input type="range" min="12" max="36" value={temperatureC} disabled={contextMode === "live"} onChange={(event) => setTemperatureC(Number(event.target.value))} /></label>
+            <label><span>Rain chance <strong>{rain}%</strong></span><input type="range" min="0" max="100" value={rain} disabled={contextMode === "live"} onChange={(event) => setRain(Number(event.target.value))} /></label>
           </div>
+          {liveContext?.calendar && <label className="calendar-context-choice"><input type="checkbox" checked={useCalendar} onChange={(event) => setUseCalendar(event.target.checked)} /><span><strong>Use {liveContext.calendar.title}</strong><small>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(liveContext.calendar.startsAt))} · Google Calendar</small></span></label>}
           <label className="field-group full-field"><span>Inspiration memory <small>Optional</small></span><select value={inspirationLookId} onChange={(event) => setInspirationLookId(event.target.value)}><option value="">No saved Look DNA</option>{Object.values(state.inspirationLooks).map((look) => <option key={look.id} value={look.id}>{look.name}</option>)}</select></label>
           <button type="submit" className="primary-action" disabled={generating}>{generating ? "Checking your wardrobe…" : "Find outfit options"}</button>
         </form>
@@ -300,7 +357,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
       ) : (
         <div className="atelier-empty">
           <div aria-hidden="true"><i /><i /><i /></div>
-          <section><span>Waiting for occasion details</span><h3>Every recommendation comes with its reasons.</h3><p>Set the occasion and Kampala weather above. <YangeWordmark /> will show what is wearable, how each option scored, and any trade-offs.</p></section>
+          <section><span>Waiting for occasion details</span><h3>Every recommendation comes with its reasons.</h3><p>Set the occasion and {state.userProfile.locationLabel} weather above. <YangeWordmark /> will show what is wearable, how each option scored, and any trade-offs.</p></section>
         </div>
       )}
     </section>

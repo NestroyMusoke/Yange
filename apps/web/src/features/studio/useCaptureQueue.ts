@@ -7,6 +7,7 @@ import {
   type StoredMediaAsset,
 } from "../../media/imagePipeline";
 import { indexedDbMediaRepository } from "../../media/mediaRepository";
+import { createMediaReadUrl, isCloudSyncConfigured } from "../../cloudRuntime";
 
 export type CaptureStatus =
   | "empty"
@@ -202,10 +203,17 @@ export function useMediaUrl(assetId: string | null): string | null {
     }
     void indexedDbMediaRepository
       .get(assetId)
-      .then((asset) => {
-        if (!active || !asset) return;
-        createdUrl = URL.createObjectURL(asset.blob);
-        setUrl(createdUrl);
+      .then(async (asset) => {
+        if (!active) return;
+        if (asset) {
+          createdUrl = URL.createObjectURL(asset.blob);
+          setUrl(createdUrl);
+          return;
+        }
+        if (isCloudSyncConfigured()) {
+          const remote = await createMediaReadUrl(assetId);
+          if (active) setUrl(remote.url);
+        }
       })
       .catch(() => {
         if (active) setUrl(null);

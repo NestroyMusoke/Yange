@@ -10,6 +10,7 @@ import type {
 } from "@yange/orchestrator";
 import { GarmentPreview } from "../intelligence/GarmentPreview";
 import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
+import type { BrowserNotificationState } from "../../notificationRuntime";
 
 interface WearCastProps {
   state: TwinState;
@@ -19,6 +20,8 @@ interface WearCastProps {
   running: boolean;
   onStage(): boolean;
   onRun(injectNotificationFailure?: boolean): Promise<WearCastExecution>;
+  browserNotifications: BrowserNotificationState;
+  onEnableBrowserNotifications(): Promise<BrowserNotificationState>;
 }
 
 const checkpoints: Array<{ id: WorkflowCheckpoint; label: string }> = [
@@ -30,17 +33,17 @@ const checkpoints: Array<{ id: WorkflowCheckpoint; label: string }> = [
   { id: "completed", label: "Check complete" },
 ];
 
-function localTime(value: string): string {
+function localTime(value: string, timeZone = "Africa/Kampala"): string {
   return new Intl.DateTimeFormat("en-UG", {
-    timeZone: "Africa/Kampala",
+    timeZone,
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
 }
 
-function localDate(value: string): string {
+function localDate(value: string, timeZone = "Africa/Kampala"): string {
   return new Intl.DateTimeFormat("en-UG", {
-    timeZone: "Africa/Kampala",
+    timeZone,
     weekday: "short",
     day: "numeric",
   }).format(new Date(value));
@@ -63,9 +66,9 @@ function ForecastRail({ forecast, decision }: { forecast: SevenDayForecast; deci
     <section className="forecast-panel">
       <div className="forecast-heading">
         <div>
-          <h3>Kampala this week.</h3>
+          <h3>{forecast.location} this week.</h3>
         </div>
-        <span className="manual-source">Forecast preview</span>
+        <span className="manual-source">{forecast.source.includes("google") ? "Live Google forecast" : "Forecast preview"}</span>
       </div>
       <div className="forecast-rail">
         {[...days.entries()].slice(0, 7).map(([date, periods], index) => {
@@ -76,7 +79,7 @@ function ForecastRail({ forecast, decision }: { forecast: SevenDayForecast; deci
             .sort((left, right) => right.score - left.score)[0];
           return (
             <article key={date} className={best?.outdoorSafe ? "forecast-day is-open" : "forecast-day"}>
-              <span>{index === 0 ? "Today" : localDate(periods[0].startsAt)}</span>
+              <span>{index === 0 ? "Today" : localDate(periods[0].startsAt, forecast.timeZone)}</span>
               <strong>{temperature}°</strong>
               <i className={`weather-symbol weather-${periods[0].condition}`} aria-hidden="true" />
               <small>{rain}% rain</small>
@@ -156,6 +159,8 @@ export function WearCast({
   running,
   onStage,
   onRun,
+  browserNotifications,
+  onEnableBrowserNotifications,
 }: WearCastProps) {
   const pressureStaged = decision.capacity.triggered;
   const triggerReady = pressureStaged || decision.risks.length > 0;
@@ -176,15 +181,15 @@ export function WearCast({
         </div>
         <div className="operations-pulse">
           <div className={decision.risks.length ? "pulse-core pulse-alert" : "pulse-core"}><i /><strong>{decision.risks.length}</strong><span>live risks</span></div>
-          <span>Friday check</span>
-          <small>14 Aug · 10:30 EAT</small>
+          <span>Wardrobe watch</span>
+          <small>{forecast.source.includes("google") ? "Live forecast" : "Preview forecast"}</small>
         </div>
       </section>
 
       <section className="autonomy-console">
         <div className="console-copy">
-          <h3>Friday wardrobe check</h3>
-          <p>Preview a laundry-heavy week and see how <YangeWordmark /> protects your Friday look.</p>
+          <h3>Check the week ahead</h3>
+          <p>See how <YangeWordmark /> protects upcoming outfits when laundry and weather compete.</p>
           <div className="capacity-meter">
             <div><span>Core wardrobe pressure</span><strong>{Math.round(decision.capacity.ratio * 100)}%</strong></div>
             <div><i style={{ transform: `scaleX(${Math.min(1, decision.capacity.ratio)})` }} /></div>
@@ -199,12 +204,12 @@ export function WearCast({
           <div className={execution ? "demo-step step-complete" : "demo-step"}>
             <span>02</span><div><strong>Check the forecast</strong><small>Find risks and prepare an alert</small></div>
             {!execution ? (
-              <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Checking…" : "Check Friday"}</button>
+              <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Checking…" : "Run check"}</button>
             ) : <em>{execution.status}</em>}
           </div>
           <div className={complete ? "demo-step step-complete" : failed ? "demo-step step-failed" : "demo-step"}>
-            <span>03</span><div><strong>{failed ? "Finish the alert" : "Confirm no duplicate alert"}</strong><small>{failed ? "Continue from the safe stopping point" : "Repeat the same Friday check"}</small></div>
-            <button type="button" onClick={() => void onRun(false)} disabled={!execution || running}>{running ? "Finishing…" : failed ? "Finish paused alert" : complete ? "Repeat Friday check" : "Waiting"}</button>
+            <span>03</span><div><strong>{failed ? "Finish the alert" : "Confirm no duplicate alert"}</strong><small>{failed ? "Continue from the safe stopping point" : "Repeat the same wardrobe check"}</small></div>
+            <button type="button" onClick={() => void onRun(false)} disabled={!execution || running}>{running ? "Finishing…" : failed ? "Finish paused alert" : complete ? "Run again" : "Waiting"}</button>
           </div>
         </div>
       </section>
@@ -215,7 +220,7 @@ export function WearCast({
         <>
           <section className="simulation-panel">
             <div className="simulation-heading">
-              <div><h3>Same wardrobe. Two possible Fridays.</h3></div>
+              <div><h3>Same wardrobe. Two possible outcomes.</h3></div>
               <span>Your options</span>
             </div>
             <div className="scenario-grid">
@@ -254,7 +259,7 @@ export function WearCast({
       ) : (
         <section className="wearcast-clear">
           <div className="clear-radar" aria-hidden="true"><i /><i /><i /></div>
-          <div><h3>Your Friday look is clear.</h3><p>Preview a laundry-heavy week above to see how WearCast responds when several pieces become unavailable.</p></div>
+          <div><h3>Your upcoming looks are clear.</h3><p>Move several pieces into laundry above to see how WearCast responds when wardrobe capacity becomes tight.</p></div>
         </section>
       )}
 
@@ -263,7 +268,7 @@ export function WearCast({
         <details className="notification-center" open={notifications.length > 0 || undefined}>
           <summary>Notifications</summary>
           <div className="notification-center-body">
-          <div className="workflow-heading"><div><h3>Sent notices stay visible.</h3></div><span>{notifications.length} queued</span></div>
+          <div className="workflow-heading"><div><h3>Sent notices stay visible.</h3><small>In-app history always remains available.</small></div><div className="notification-permission"><span>{notifications.length} queued</span>{browserNotifications === "prompt" && <button type="button" onClick={() => void onEnableBrowserNotifications()}>Enable device alerts</button>}{browserNotifications === "granted" && <em>Device alerts on</em>}{browserNotifications === "denied" && <em>Device alerts blocked</em>}{browserNotifications === "unsupported" && <em>In-app only</em>}</div></div>
           {notifications.length ? (
             <div className="notification-list">
               {notifications.map((notification) => (

@@ -16,7 +16,7 @@ export function isGarmentUsable(state: GarmentState): boolean {
 }
 
 export function calculateReadiness(state: TwinState): ReadinessResult {
-  const garments = Object.values(state.garments);
+  const garments = Object.values(state.garments).filter((garment) => !garment.archived);
   const wardrobeGarments = garments.filter(
     (garment) => garment.category !== "accessory",
   );
@@ -45,7 +45,7 @@ export function calculateReadiness(state: TwinState): ReadinessResult {
   const atRiskOutfitIds = plannedOutfits
     .filter((outfit) =>
       outfit.garmentIds.some(
-        (id) => !state.garments[id] || !isGarmentUsable(state.garments[id].state),
+        (id) => !state.garments[id] || state.garments[id].archived || !isGarmentUsable(state.garments[id].state),
       ),
     )
     .map((outfit) => outfit.id);
@@ -77,4 +77,3 @@ export function calculateReadiness(state: TwinState): ReadinessResult {
     missingEssentialCategories,
   };
 }
-

@@ -39,6 +39,15 @@ function seedCare(
 
 export function createSeedState(): TwinState {
   return {
+    wardrobeMode: "demo",
+    userProfile: {
+      version: 1,
+      displayName: "Amina",
+      locationLabel: "Kampala",
+      latitude: 0.3476,
+      longitude: 32.5825,
+      onboardingCompletedAt: null,
+    },
     garments: {
       "cream-blouse": {
         id: "cream-blouse",

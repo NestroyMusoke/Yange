@@ -1072,3 +1072,240 @@ body:has(.app-shell:not(.view-today)) {
   .view-studio .studio-garment-grid { grid-template-columns: 1fr; }
   .view-studio .studio-garment-image { height: 330px; }
 }
+
+/* Product completion surfaces: quiet liquid-glass controls around the living Aura. */
+.profile-chip { appearance: none; font: inherit; text-align: left; cursor: pointer; }
+.profile-initial { display: none; }
+.profile-chip .sync-state { color: var(--cream-dim); font-style: normal; }
+.profile-chip .sync-syncing { color: var(--champagne); }
+.profile-chip .sync-waiting { color: #e8ae9d; }
+.profile-chip:focus-visible,
+.studio-card-edit:focus-visible,
+.quiet-action:focus-visible,
+.danger-action:focus-visible { outline: 2px solid var(--champagne); outline-offset: 3px; }
+
+.profile-setup-backdrop,
+.garment-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--ink) 38%, transparent);
+  backdrop-filter: blur(18px) saturate(1.08);
+}
+
+.profile-setup,
+.garment-editor {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: clamp(24px, 4vw, 44px);
+  border: 1px solid color-mix(in srgb, var(--cream) 18%, transparent);
+  border-radius: 30px;
+  color: var(--cream);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--cream) 9%, transparent), transparent 38%),
+    color-mix(in srgb, var(--ink) 78%, transparent);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.profile-setup-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 28px;
+  border: 1px solid color-mix(in srgb, var(--champagne) 45%, transparent);
+  border-radius: 50%;
+  color: var(--champagne);
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.profile-setup-copy > span,
+.garment-editor-heading span,
+.wardrobe-mode-card > div > span,
+.today-empty-wardrobe > span {
+  color: var(--champagne);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.profile-setup-copy h2,
+.garment-editor-heading h2,
+.today-empty-wardrobe h2 {
+  margin: 8px 0 10px;
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  font-variation-settings: "opsz" 28, "wght" 390;
+  line-height: 0.98;
+}
+
+.profile-setup-copy p,
+.today-empty-wardrobe p { max-width: 58ch; color: var(--cream-dim); line-height: 1.65; }
+.profile-setup-fields { display: grid; gap: 18px; margin-top: 30px; }
+.profile-setup-fields label,
+.garment-editor-grid label { display: grid; gap: 8px; }
+.profile-setup-fields label > span,
+.garment-editor-grid label > span { color: var(--cream-dim); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; }
+.profile-setup-fields input,
+.garment-editor-grid :is(input, select) {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--cream) 22%, transparent);
+  border-radius: 0;
+  color: var(--cream);
+  background: transparent;
+  font: inherit;
+}
+.profile-setup-fields input:focus,
+.garment-editor-grid :is(input, select):focus { outline: 0; border-bottom-color: var(--champagne); }
+.garment-editor-grid select option { color: #101412; background: #f2eadb; }
+.profile-coordinates,
+.garment-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.garment-editor-grid .wide { grid-column: 1 / -1; }
+.profile-location-action,
+.studio-card-edit,
+.quiet-action,
+.danger-action {
+  width: fit-content;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  padding: 6px 0;
+  color: var(--champagne);
+  background: transparent;
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.danger-action { color: #e49a87; }
+.profile-location-error { margin: 0; color: #e8ae9d; font-size: 0.78rem; }
+.profile-setup-actions,
+.garment-editor-actions { display: flex; align-items: center; justify-content: flex-end; gap: 18px; margin-top: 32px; }
+.profile-setup-note { display: block; margin-top: 16px; color: var(--cream-dim); line-height: 1.5; }
+
+.wardrobe-mode-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: -20px 0 34px;
+  padding: 18px 22px;
+  border: 1px solid color-mix(in srgb, var(--cream) 12%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ink) 50%, transparent);
+}
+.wardrobe-mode-card > div:first-child { display: grid; gap: 5px; }
+.wardrobe-mode-card strong { color: var(--cream); font-size: 0.88rem; font-weight: 520; }
+.wardrobe-mode-confirm { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.wardrobe-mode-confirm small { max-width: 34ch; color: var(--cream-dim); }
+.wardrobe-mode-confirm .primary-action { width: auto; margin: 0; padding: 10px 16px; }
+
+.studio-card-edit { margin-top: 12px; color: var(--cream-dim); }
+.garment-editor { width: min(820px, 100%); }
+.garment-editor-heading { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
+.garment-editor-heading > button { width: 42px; height: 42px; border: 1px solid color-mix(in srgb, var(--cream) 15%, transparent); border-radius: 50%; color: var(--cream); background: transparent; font-size: 24px; cursor: pointer; }
+.garment-editor-heading h2 { font-size: clamp(1.8rem, 4vw, 3rem); }
+.garment-editor-actions { justify-content: space-between; }
+.garment-editor-actions > div { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.garment-editor-actions > div > span { width: 100%; color: var(--cream-dim); font-size: 0.76rem; }
+
+.today-empty-wardrobe {
+  width: min(760px, calc(100% - 32px));
+  margin: 0 auto 80px;
+  padding: clamp(28px, 6vw, 64px);
+  border: 1px solid color-mix(in srgb, var(--cream) 14%, transparent);
+  border-radius: 30px;
+  background: color-mix(in srgb, var(--ink) 44%, transparent);
+}
+.today-empty-wardrobe .primary-action { width: fit-content; margin-top: 20px; }
+
+.context-source-control {
+  display: grid;
+  grid-template-columns: auto auto minmax(120px, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--cream) 10%, transparent);
+}
+.context-source-control button {
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 7px 0;
+  color: var(--cream-dim);
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.context-source-control button.active { color: var(--champagne); border-bottom-color: var(--champagne); }
+.context-source-status { justify-self: end; color: var(--cream-dim); font-size: 0.68rem; }
+.context-source-status.status-ready { color: #9dc7ae; }
+.context-source-status.status-unavailable { color: #e8ae9d; }
+.context-console :is(select, input):disabled { opacity: 0.55; cursor: not-allowed; }
+.calendar-context-choice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 4px 0 18px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--cream) 11%, transparent);
+  border-radius: 14px;
+  color: var(--cream);
+  background: color-mix(in srgb, var(--cream) 3%, transparent);
+}
+.calendar-context-choice input { margin-top: 4px; accent-color: var(--champagne); }
+.calendar-context-choice span { display: grid; gap: 3px; }
+.calendar-context-choice strong { font-size: 0.78rem; font-weight: 560; }
+.calendar-context-choice small { color: var(--cream-dim); font-size: 0.68rem; }
+.notification-permission { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.notification-permission :is(span, em) { color: var(--cream-dim); font-size: 0.68rem; font-style: normal; }
+.notification-permission button { border: 0; border-bottom: 1px solid var(--champagne); padding: 5px 0; color: var(--champagne); background: transparent; font: inherit; font-size: 0.7rem; cursor: pointer; }
+
+@media (max-width: 720px) {
+  .app-shell .profile-chip,
+  .app-shell:not(.view-today) .profile-chip,
+  .app-shell.view-today .profile-chip {
+    display: grid !important;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    flex: 0 0 40px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--champagne) 28%, transparent);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--charcoal) 52%, transparent);
+  }
+  .app-shell .profile-chip > :not(.profile-initial) { display: none; }
+  .app-shell .profile-chip .profile-initial {
+    display: block;
+    color: var(--champagne);
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1rem;
+    font-weight: 420;
+  }
+  .profile-setup-backdrop,
+  .garment-editor-backdrop { align-items: end; padding: 10px; }
+  .profile-setup,
+  .garment-editor { max-height: calc(100vh - 20px); padding: 24px 18px; border-radius: 24px; }
+  .profile-coordinates,
+  .garment-editor-grid { grid-template-columns: 1fr; }
+  .garment-editor-grid .wide { grid-column: auto; }
+  .profile-setup-actions,
+  .garment-editor-actions,
+  .wardrobe-mode-card { align-items: stretch; flex-direction: column; }
+  .profile-setup-actions .primary-action,
+  .garment-editor-actions .primary-action { width: 100%; }
+  .context-source-control { grid-template-columns: 1fr 1fr; }
+  .context-source-status { grid-column: 1 / -1; justify-self: start; }
+}

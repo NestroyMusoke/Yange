@@ -2,9 +2,9 @@
 
 Yange is the wardrobe agent that learns what confidence looks like on you. Its name draws from the Luganda possessive *yange*—“my”—because the experience is built around my wardrobe, my preferences, and my confidence. Yange maintains a live Wardrobe Digital Twin, plans with real garment availability, and turns wear history into safer laundry and more personal outfit decisions.
 
-## Current build — Phase 6
+## Current build — release candidate
 
-All six vertical slices are complete. The full product and a production-shaped two-process cloud rehearsal run without credentials; Google adapters activate only at deployment. The build now includes:
+The complete product runs locally without credentials and activates its deployed Google adapters when served by the Cloud Run edge. The build now includes:
 
 - A responsive mobile-first product shell
 - An event-driven Wardrobe Digital Twin
@@ -13,8 +13,12 @@ All six vertical slices are complete. The full product and a production-shaped t
 - Confidence Check-ins and preference-memory updates
 - A user-visible Agent Activity audit trail
 - Local persistence through a replaceable repository adapter
+- First-run profile and location setup with optional browser geolocation
+- A reversible sample experience and a clean personal-wardrobe mode
+- Garment editing and two-step archive safeguards
 - Garment and optional care-label image capture
 - On-device signature validation, resize, WebP rewrite, and private IndexedDB storage
+- Private Cloud Storage restoration through short-lived signed read URLs
 - Field-level evidence provenance and explicit care review
 - User-controlled height, colour, fit, comfort, and Style DNA preferences
 - Inspiration-image Look DNA for Pinterest images or saved social-video frames
@@ -23,6 +27,8 @@ All six vertical slices are complete. The full product and a production-shaped t
 - An Outfit Atelier that generates only feasible looks from live garment state
 - A deterministic, five-factor Personal Match receipt with stable tie-breaking
 - Replaceable weather and calendar context adapters
+- Saved-location Google Weather context with a manual fallback for local development
+- Optional read-only Calendar context that degrades independently when unavailable
 - An explanation-only model contract that cannot choose garments, score, or mutate state
 - Atomic outfit planning and dependency reservation events
 - A conservative Laundry Lab with incompatibility-graph clustering
@@ -34,6 +40,8 @@ All six vertical slices are complete. The full product and a production-shaped t
 - Autonomous fallback planning through the existing deterministic outfit engine
 - A dedicated `@yange/orchestrator` package with six durable checkpoints
 - Notification outbox delivery that resumes after failure
+- A durable browser sync outbox that preserves command order and retries after reconnecting
+- A service-worker notification surface with permission-safe in-app fallback
 - Stable trigger and notification idempotency keys with visible duplicate suppression
 - A public edge and private deterministic worker built from one role-separated Cloud Run image
 - Firestore event, projection, checkpoint, and transactional-outbox persistence
@@ -56,6 +64,8 @@ All six vertical slices are complete. The full product and a production-shaped t
 - A four-minute in-product demo runway plus deliberate renderer and notification failure demonstrations
 - A polished production architecture asset, deployment evidence slots, submission checklist, and one-command verification script
 - Contract, domain, and browser image-pipeline tests
+- Stable per-screen URLs, notification deep links, and responsive profile access
+- 83 automated TypeScript tests across the API, web, cloud, contracts, domain, and orchestration packages
 
 The local model simulations are intentional. They make the complete workflow reproducible for contributors and judges; future Vertex AI adapters implement the same `@yange/contracts` interfaces.
 
@@ -82,7 +92,7 @@ Open `http://127.0.0.1:4173/?mode=judge` for the four-minute director. Select **
 .\scripts\verify-phase6.ps1
 ```
 
-Phase 6 passes 60 automated tests (58 TypeScript and 2 ADK policy tests), strict TypeScript checks, production builds, and the high-severity dependency gate. GitHub CI owns the Terraform 1.9.8 gate when the CLI is unavailable locally. The exact verification receipt is recorded in [docs/phase-6-verification.md](docs/phase-6-verification.md).
+The release candidate passes 83 automated TypeScript tests, strict TypeScript checks, production web/API builds, and the high-severity dependency gate. GitHub CI owns the Terraform 1.9.8 gate when the CLI is unavailable locally. The original Phase 6 receipt is recorded in [docs/phase-6-verification.md](docs/phase-6-verification.md); current visual evidence is in [docs/evidence/visual-qa](docs/evidence/visual-qa).
 
 ## Deploy to Google Cloud
 

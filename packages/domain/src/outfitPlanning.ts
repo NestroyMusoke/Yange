@@ -151,9 +151,28 @@ function styleFactor(state: TwinState, garments: Garment[], signals: string[]): 
     if (matched) explicitSignals.add(`word:${word}`);
   }
 
+  const proportionEvidence: string[] = [];
+  let proportionAdjustment = 0;
+  if (profile.heightCm !== null) {
+    const heightBand = profile.heightCm < 160 ? "shorter" : profile.heightCm > 175 ? "taller" : "middle";
+    proportionEvidence.push(`proportion:height:${profile.heightCm}`, `proportion:band:${heightBand}`);
+    if (heightBand === "shorter" && includesAny(value, ["cropped", "high-waist", "defined waist", "column"])) {
+      proportionAdjustment += 7;
+      proportionEvidence.push("proportion:compact-length-relationship");
+    }
+    if (heightBand === "taller" && includesAny(value, ["wide-leg", "longline", "maxi", "column"])) {
+      proportionAdjustment += 7;
+      proportionEvidence.push("proportion:extended-line-relationship");
+    }
+    if (heightBand === "middle" && includesAny(value, ["straight", "cropped", "wide-leg", "column"])) {
+      proportionAdjustment += 4;
+      proportionEvidence.push("proportion:balanced-length-relationship");
+    }
+  }
+
   const explicitTotal =
     profile.fitPreferences.length + profile.comfortPriorities.length + profile.styleWords.length;
-  const explicitScore = 48 + (explicitSignals.size / Math.max(1, explicitTotal)) * 52;
+  const explicitScore = clamp(48 + (explicitSignals.size / Math.max(1, explicitTotal)) * 52 + proportionAdjustment);
   const observed = signals
     .map((signal) => state.styleMemory.signals[signal])
     .filter((signal) => signal && signal.observations > 0);
@@ -169,10 +188,12 @@ function styleFactor(state: TwinState, garments: Garment[], signals: string[]): 
     "Style & confidence memory",
     score,
     20,
-    [...explicitSignals, ...observed.map((signal) => `confidence:${signal.key}`)].sort(),
+    [...explicitSignals, ...proportionEvidence, ...observed.map((signal) => `confidence:${signal.key}`)].sort(),
     observed.length
-      ? `${explicitSignals.size} explicit preferences and ${observed.length} lived-confidence signal shape this score.`
-      : `${explicitSignals.size} explicit preferences match; confidence evidence will refine the score after wear.`,
+      ? `${explicitSignals.size} explicit preferences, proportion context and ${observed.length} lived-confidence signal shape this score.`
+      : profile.heightCm !== null
+        ? `${explicitSignals.size} explicit preferences match. Height only tunes length and layering relationships; confidence evidence will refine them after wear.`
+        : `${explicitSignals.size} explicit preferences match; confidence evidence will refine the score after wear.`,
   );
 }
 
@@ -266,7 +287,7 @@ export function generateOutfitCandidates(
   limit = 6,
 ): OutfitCandidate[] {
   const usable = Object.values(state.garments)
-    .filter((garment) => garment.state === "available" || garment.state === "rewearable")
+    .filter((garment) => !garment.archived && (garment.state === "available" || garment.state === "rewearable"))
     .sort((left, right) => left.id.localeCompare(right.id));
   const byCategory = (category: Garment["category"]) =>
     usable.filter((garment) => garment.category === category);

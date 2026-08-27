@@ -85,6 +85,38 @@ export function deriveActivity(
             tone: "positive",
           };
         }
+        case "GarmentUpdated":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: `${event.payload.garment.name} updated`,
+            detail: "The confirmed garment facts and care preferences were saved.",
+            tone: "neutral",
+          };
+        case "GarmentArchived":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Wardrobe piece archived",
+            detail: "The piece was removed from future outfit and laundry decisions.",
+            tone: "neutral",
+          };
+        case "PersonalWardrobeActivated":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Personal wardrobe started",
+            detail: `${event.payload.retainedGarmentIds.length} captured piece${event.payload.retainedGarmentIds.length === 1 ? "" : "s"} retained.`,
+            tone: "positive",
+          };
+        case "UserProfileUpdated":
+          return {
+            id: event.id,
+            occurredAt: event.occurredAt,
+            title: "Wardrobe context updated",
+            detail: `${event.payload.profile.displayName}'s wardrobe is set to ${event.payload.profile.locationLabel}.`,
+            tone: "neutral",
+          };
         case "StyleProfileUpdated": {
           return {
             id: event.id,

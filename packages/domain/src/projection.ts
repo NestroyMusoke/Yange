@@ -150,6 +150,39 @@ export function applyEvent(state: TwinState, event: DomainEvent): TwinState {
           [event.payload.garment.id]: structuredClone(event.payload.garment),
         },
       };
+    case "GarmentUpdated":
+      return {
+        ...state,
+        garments: {
+          ...state.garments,
+          [event.payload.garment.id]: structuredClone(event.payload.garment),
+        },
+      };
+    case "GarmentArchived": {
+      const garment = state.garments[event.payload.garmentId];
+      if (!garment) return state;
+      return {
+        ...state,
+        garments: {
+          ...state.garments,
+          [garment.id]: { ...garment, archived: true },
+        },
+      };
+    }
+    case "PersonalWardrobeActivated": {
+      const garments = Object.fromEntries(
+        Object.entries(state.garments).filter(([, garment]) => garment.source === "user-added"),
+      );
+      const garmentIds = new Set(Object.keys(garments));
+      const outfits = Object.fromEntries(
+        Object.entries(state.outfits).filter(([, outfit]) =>
+          outfit.garmentIds.length > 0 && outfit.garmentIds.every((id) => garmentIds.has(id)),
+        ),
+      );
+      return { ...state, wardrobeMode: "personal", garments, outfits };
+    }
+    case "UserProfileUpdated":
+      return { ...state, userProfile: structuredClone(event.payload.profile) };
     case "StyleProfileUpdated":
       return {
         ...state,

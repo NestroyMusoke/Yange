@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   addGarment,
+  activatePersonalWardrobe,
+  archiveGarment,
   calculateReadiness,
   captureLookDna,
   createSeedState,
@@ -8,6 +10,8 @@ import {
   recordConfidence,
   replayEvents,
   updateStyleProfile,
+  updateGarment,
+  updateUserProfile,
 } from "./index";
 
 const now = "2026-08-14T09:00:00.000Z";
@@ -199,6 +203,47 @@ describe("Wardrobe Digital Twin", () => {
         occurredAt: now,
       }),
     ).toEqual([]);
+  });
+
+  it("switches from sample data to a real personal wardrobe without losing captured pieces", () => {
+    const seed = createSeedState();
+    const garment = structuredClone(seed.garments["cream-blouse"]);
+    garment.id = "my-shirt";
+    garment.name = "My shirt";
+    garment.source = "user-added";
+    const added = addGarment(seed, [], { garment, operationId: "add-real", occurredAt: now });
+    const withCapture = replayEvents(seed, added);
+    const activated = activatePersonalWardrobe(withCapture, added, { operationId: "personal", occurredAt: now });
+    const personal = replayEvents(withCapture, activated);
+
+    expect(personal.wardrobeMode).toBe("personal");
+    expect(Object.keys(personal.garments)).toEqual(["my-shirt"]);
+    expect(personal.outfits).toEqual({});
+  });
+
+  it("edits and archives user garments as replayable events", () => {
+    const seed = createSeedState();
+    const garment = structuredClone(seed.garments["cream-blouse"]);
+    garment.id = "my-top";
+    garment.source = "user-added";
+    const added = addGarment(seed, [], { garment, operationId: "add", occurredAt: now });
+    const withGarment = replayEvents(seed, added);
+    const changed = { ...withGarment.garments[garment.id], colour: "Emerald" };
+    const updated = updateGarment(withGarment, added, { garment: changed, operationId: "edit", occurredAt: now });
+    const afterEdit = replayEvents(withGarment, updated);
+    const archived = archiveGarment(afterEdit, [...added, ...updated], { garmentId: garment.id, operationId: "archive", occurredAt: now });
+    const afterArchive = replayEvents(afterEdit, archived);
+
+    expect(afterEdit.garments[garment.id].colour).toBe("Emerald");
+    expect(afterArchive.garments[garment.id].archived).toBe(true);
+    expect(calculateReadiness(afterArchive).totalGarments).toBe(calculateReadiness(seed).totalGarments);
+  });
+
+  it("persists the owner and location used by live context", () => {
+    const seed = createSeedState();
+    const profile = { ...seed.userProfile, displayName: "Nestroy", locationLabel: "Entebbe", latitude: 0.0512, longitude: 32.4637, onboardingCompletedAt: now };
+    const events = updateUserProfile([], { profile, operationId: "owner", occurredAt: now });
+    expect(replayEvents(seed, events).userProfile).toEqual(profile);
   });
 
   it("rejects extracted care data disguised as user-confirmed", () => {

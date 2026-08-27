@@ -40,7 +40,7 @@ function timestamp(value: string): number {
 function unavailableForCommitment(state: TwinState, outfit: Outfit): string[] {
   return outfit.dependencies.filter((id) => {
     const garment = state.garments[id];
-    return !garment || ["laundry", "drying", "airing"].includes(garment.state);
+    return !garment || garment.archived || ["laundry", "drying", "airing"].includes(garment.state);
   });
 }
 
@@ -52,7 +52,7 @@ function riskSeverity(hoursRemaining: number, blocked: number): WearCastRiskSeve
 
 function assessCapacity(state: TwinState): WardrobeCapacityRisk {
   const core = Object.values(state.garments).filter((garment) =>
-    ["top", "bottom", "outerwear"].includes(garment.category),
+    !garment.archived && ["top", "bottom", "outerwear"].includes(garment.category),
   );
   const affected = core
     .filter((garment) => ["laundry", "drying", "airing"].includes(garment.state))

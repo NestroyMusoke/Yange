@@ -12,6 +12,7 @@ import type {
   PostWearMode,
   StyleProfile,
   TwinState,
+  UserProfile,
 } from "./types";
 import { evaluateWearCast } from "./wearcast";
 import { colourEvidenceForConfidence } from "./colourLearning";
@@ -61,6 +62,9 @@ function validateGarment(garment: Garment): void {
   }
   if (!garment.colour.trim()) throw new DomainError("Garment colour is required.");
   if (!garment.material.trim()) throw new DomainError("Garment material is required.");
+  if (garment.archived && garment.state === "reserved") {
+    throw new DomainError("A reserved garment cannot be archived.");
+  }
 
   for (const [field, meta] of Object.entries(garment.provenance)) {
     validateEvidence(meta, field);
@@ -102,6 +106,7 @@ export function markOutfitWorn(
   outfit.garmentIds.forEach((garmentId, index) => {
     const garment = state.garments[garmentId];
     if (!garment) throw new DomainError(`Garment ${garmentId} not found.`);
+    if (garment.archived) throw new DomainError(`${garment.name} is archived.`);
     if (!isGarmentUsable(garment.state)) {
       throw new DomainError(`${garment.name} is not currently wearable.`);
     }
@@ -222,6 +227,119 @@ export function addGarment(
       payload: { garment: structuredClone(input.garment) },
     },
   ];
+}
+
+export interface UpdateGarmentInput {
+  garment: Garment;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function updateGarment(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: UpdateGarmentInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const existing = state.garments[input.garment.id];
+  if (!existing || existing.archived) throw new DomainError("Garment not found.");
+  if (existing.source !== "user-added") {
+    throw new DomainError("Demo garments cannot be edited. Start a personal wardrobe first.");
+  }
+  if (input.garment.source !== existing.source || input.garment.state !== existing.state) {
+    throw new DomainError("Garment identity and availability cannot be changed through editing.");
+  }
+  validateGarment(input.garment);
+  return [{
+    id: eventId(input.operationId, "garment-updated"),
+    operationId: input.operationId,
+    occurredAt: input.occurredAt,
+    type: "GarmentUpdated",
+    payload: { garment: structuredClone(input.garment) },
+  }];
+}
+
+export interface ArchiveGarmentInput {
+  garmentId: string;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function archiveGarment(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: ArchiveGarmentInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const garment = state.garments[input.garmentId];
+  if (!garment || garment.archived) return [];
+  if (garment.source !== "user-added") throw new DomainError("Demo garments cannot be archived.");
+  if (garment.state === "reserved") throw new DomainError("Remove this garment from its planned outfit first.");
+  return [{
+    id: eventId(input.operationId, "garment-archived"),
+    operationId: input.operationId,
+    occurredAt: input.occurredAt,
+    type: "GarmentArchived",
+    payload: { garmentId: garment.id },
+  }];
+}
+
+export interface ActivatePersonalWardrobeInput {
+  operationId: string;
+  occurredAt: string;
+}
+
+export function activatePersonalWardrobe(
+  state: TwinState,
+  ledger: DomainEvent[],
+  input: ActivatePersonalWardrobeInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId) || state.wardrobeMode === "personal") return [];
+  return [{
+    id: eventId(input.operationId, "personal-wardrobe"),
+    operationId: input.operationId,
+    occurredAt: input.occurredAt,
+    type: "PersonalWardrobeActivated",
+    payload: {
+      retainedGarmentIds: Object.values(state.garments)
+        .filter((garment) => garment.source === "user-added" && !garment.archived)
+        .map((garment) => garment.id)
+        .sort(),
+    },
+  }];
+}
+
+export interface UpdateUserProfileInput {
+  profile: UserProfile;
+  operationId: string;
+  occurredAt: string;
+}
+
+export function updateUserProfile(
+  ledger: DomainEvent[],
+  input: UpdateUserProfileInput,
+): DomainEvent[] {
+  if (hasOperation(ledger, input.operationId)) return [];
+  const profile = input.profile;
+  if (!profile.displayName.trim() || profile.displayName.trim().length > 50) {
+    throw new DomainError("Your name must be between 1 and 50 characters.");
+  }
+  if (!profile.locationLabel.trim() || profile.locationLabel.trim().length > 80) {
+    throw new DomainError("Location must be between 1 and 80 characters.");
+  }
+  if (!Number.isFinite(profile.latitude) || profile.latitude < -90 || profile.latitude > 90) {
+    throw new DomainError("Latitude must be between -90 and 90.");
+  }
+  if (!Number.isFinite(profile.longitude) || profile.longitude < -180 || profile.longitude > 180) {
+    throw new DomainError("Longitude must be between -180 and 180.");
+  }
+  return [{
+    id: eventId(input.operationId, "user-profile"),
+    operationId: input.operationId,
+    occurredAt: input.occurredAt,
+    type: "UserProfileUpdated",
+    payload: { profile: structuredClone(profile) },
+  }];
 }
 
 export interface UpdateStyleProfileInput {
@@ -396,6 +514,7 @@ export function queueGarmentsForLaundry(
   garmentIds.sort().forEach((garmentId, index) => {
     const garment = state.garments[garmentId];
     if (!garment) throw new DomainError(`Garment ${garmentId} not found.`);
+    if (garment.archived) throw new DomainError(`${garment.name} is archived.`);
     if (garment.state === "laundry") return;
     if (!["available", "rewearable", "airing"].includes(garment.state)) {
       throw new DomainError(`${garment.name} cannot move to laundry from ${garment.state}.`);

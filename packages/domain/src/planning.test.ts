@@ -56,6 +56,17 @@ describe("deterministic outfit intelligence", () => {
     expect(candidates).toEqual([]);
   });
 
+  it("excludes archived pieces and records non-judgmental proportion evidence", () => {
+    const state = createSeedState();
+    state.garments["cream-blouse"].archived = true;
+    state.styleProfile.heightCm = 154;
+    const candidates = generateOutfitCandidates(state, context, 6);
+    expect(candidates.every((candidate) => !candidate.garmentIds.includes("cream-blouse"))).toBe(true);
+    const style = candidates[0].scoreBreakdown.find((factor) => factor.key === "style-memory");
+    expect(style?.evidence).toContain("proportion:height:154");
+    expect(style?.detail).toContain("Height only tunes length and layering relationships");
+  });
+
   it("commits one planned outfit and reserves every dependency idempotently", () => {
     const state = createSeedState();
     const candidate = generateOutfitCandidates(state, context, 1)[0];

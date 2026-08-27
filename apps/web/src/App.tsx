@@ -17,6 +17,7 @@ import { LiquidGlassFilters } from "./features/glass/LiquidGlassFilters";
 import { LiquidGlassRuntime } from "./features/glass/LiquidGlassRuntime";
 import { YangeNavigation } from "./features/navigation/YangeNavigation";
 import { TodayGarmentCard } from "./features/today/TodayGarmentCard";
+import { ProfileSetup } from "./features/profile/ProfileSetup";
 import { useYange } from "./useYange";
 
 const confidenceLabels = [
@@ -36,6 +37,22 @@ const auraSceneTone: Record<YangeView, { energy: number; warmth: number }> = {
   judge: { energy: 0.96, warmth: 0.48 },
   activity: { energy: 0.72, warmth: 0.4 },
 };
+
+const yangeViews = new Set<YangeView>([
+  "today",
+  "studio",
+  "atelier",
+  "wearcast",
+  "cloud",
+  "judge",
+  "activity",
+]);
+
+function initialViewFromLocation(): YangeView {
+  const parameters = new URLSearchParams(window.location.search);
+  const requested = parameters.get("view") ?? parameters.get("mode");
+  return requested && yangeViews.has(requested as YangeView) ? requested as YangeView : "today";
+}
 
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -70,9 +87,16 @@ export function App() {
     readiness,
     activity,
     error,
+    syncState,
+    browserNotifications,
+    enableBrowserNotifications,
     wearOutfit,
     checkIn,
     addWardrobeItem,
+    updateWardrobeItem,
+    archiveWardrobeItem,
+    startPersonalWardrobe,
+    saveUserProfile,
     saveStyleProfile,
     saveLookDna,
     planCandidate,
@@ -84,23 +108,26 @@ export function App() {
     stageWearCastPressure,
     runWearCast,
   } = useYange();
-  const [activeView, setActiveView] = useState<YangeView>(() =>
-    new URLSearchParams(window.location.search).get("mode") === "judge" ? "judge" : "today",
-  );
+  const [activeView, setActiveView] = useState<YangeView>(initialViewFromLocation);
   const [auraOpen, setAuraOpen] = useState(false);
   const [auraEnergy, setAuraEnergy] = useState(0.82);
   const [auraWarmth, setAuraWarmth] = useState(0.46);
   const [auraStatus, setAuraStatus] = useState<AuraStatus>("starting");
+  const [profileOpen, setProfileOpen] = useState(() => !state.userProfile.onboardingCompletedAt);
   const [colourAttribution, setColourAttribution] = useState<"automatic" | "loved-colour" | "colour-missed">("automatic");
   const latestAgentOutfit = Object.values(state.outfits)
     .filter((outfit) => outfit.source === "agent-planned")
     .sort((left, right) => (right.scheduledAt ?? "").localeCompare(left.scheduledAt ?? ""))[0];
-  const todayOutfit = latestAgentOutfit ?? state.outfits["today-city-calm"];
-  const fridayOutfit = state.outfits["friday-rooftop"];
-  const todayGarments = todayOutfit.garmentIds.map((id) => state.garments[id]);
-  const todayFeedback = state.feedback.find(
-    (feedback) => feedback.outfitId === todayOutfit.id,
-  );
+  const todayOutfit = latestAgentOutfit ?? state.outfits["today-city-calm"] ?? null;
+  const fridayOutfit = state.outfits["friday-rooftop"]
+    ?? Object.values(state.outfits).find((outfit) => outfit.status === "planned" && outfit.id !== todayOutfit?.id)
+    ?? todayOutfit;
+  const todayGarments = todayOutfit
+    ? todayOutfit.garmentIds.map((id) => state.garments[id]).filter(Boolean)
+    : [];
+  const todayFeedback = todayOutfit
+    ? state.feedback.find((feedback) => feedback.outfitId === todayOutfit.id)
+    : undefined;
   const learnedSignals = useMemo(
     () =>
       Object.values(state.styleMemory.signals).sort(
@@ -108,9 +135,9 @@ export function App() {
       ),
     [state.styleMemory.signals],
   );
-  const fridayAtRisk = readiness.atRiskOutfitIds.includes(fridayOutfit.id);
+  const fridayAtRisk = fridayOutfit ? readiness.atRiskOutfitIds.includes(fridayOutfit.id) : false;
   const fridayRecovery = Object.values(state.autonomy.recoveries).find(
-    (recovery) => recovery.atRiskOutfitId === fridayOutfit.id,
+    (recovery) => recovery.atRiskOutfitId === fridayOutfit?.id,
   );
   const fridayFallback = fridayRecovery
     ? state.outfits[fridayRecovery.fallbackOutfitId]
@@ -126,9 +153,25 @@ export function App() {
     wearcast: wearCastDecision.risks.length || (autonomyExecution?.status === "failed" ? "!" : 0),
     activity: ledger.length,
   };
+  const now = new Date();
+  const todayLabel = new Intl.DateTimeFormat("en-UG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(now);
+
+  function saveProfile(profile: typeof state.userProfile, startPersonal: boolean): boolean {
+    if (!saveUserProfile(profile)) return false;
+    return startPersonal ? startPersonalWardrobe() : true;
+  }
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    const url = new URL(window.location.href);
+    url.searchParams.delete("mode");
+    if (activeView === "today") url.searchParams.delete("view");
+    else url.searchParams.set("view", activeView);
+    window.history.replaceState(null, "", url);
   }, [activeView]);
 
   return (
@@ -176,13 +219,14 @@ export function App() {
             onEnergyChange={setAuraEnergy}
             onWarmthChange={setAuraWarmth}
           />
-          <div className="profile-chip">
+          <button type="button" className="profile-chip" onClick={() => setProfileOpen(true)} aria-label="Edit wardrobe profile">
             <span className="profile-dot" aria-hidden="true" />
+            <span className="profile-initial" aria-hidden="true">{(state.userProfile.displayName || "Y").charAt(0).toUpperCase()}</span>
             <span>
-              <strong>Amina</strong>
-              <small>Kampala wardrobe</small>
+              <strong>{state.userProfile.displayName || "Set up Yange"}</strong>
+              <small>{state.userProfile.locationLabel} <span aria-hidden="true">&middot;</span> <em className={`sync-state sync-${syncState.status}`}>{syncState.status === "syncing" ? "Syncing" : syncState.status === "waiting" ? `${syncState.pending} waiting` : syncState.status === "synced" ? "Synced" : "On device"}</em></small>
             </span>
-          </div>
+          </button>
         </div>
         </div>
         <YangeNavigation
@@ -193,10 +237,18 @@ export function App() {
         </header>
       </div>
 
+      <ProfileSetup
+        open={profileOpen}
+        profile={state.userProfile}
+        wardrobeMode={state.wardrobeMode}
+        onClose={() => setProfileOpen(false)}
+        onSave={saveProfile}
+      />
+
       <main id="top" data-view={activeView}>
         {activeView === "today" && <section className="hero">
           <div>
-            <time className="context-date" dateTime="2026-08-14">Friday, 14 August <span aria-hidden="true">&middot;</span> Kampala</time>
+            <time className="context-date" dateTime={now.toISOString().slice(0, 10)}>{todayLabel} <span aria-hidden="true">&middot;</span> {state.userProfile.locationLabel}</time>
             <h1>Your wardrobe,<br />thinking <span>ahead.</span></h1>
             <p className="hero-copy">
               One recommendation. Real availability. A memory that learns what
@@ -243,7 +295,7 @@ export function App() {
 
         {error && <div className="error-banner" role="alert"><YangeText>{error}</YangeText></div>}
 
-        {activeView === "today" ? (
+        {activeView === "today" ? todayOutfit && fridayOutfit ? (
           <div className="content-grid today-content">
             <section className="outfit-card">
               <div className="section-heading">
@@ -375,10 +427,20 @@ export function App() {
               </section>
             </aside>
           </div>
+        ) : (
+          <section className="today-empty-wardrobe" data-liquid-glass>
+            <span>Your wardrobe is ready for its first real piece</span>
+            <h2>Begin with what you already own.</h2>
+            <p>Capture a top, a bottom and shoes. Once those essentials are available, Yange can build and explain complete outfits from your wardrobe.</p>
+            <button type="button" className="primary-action" onClick={() => setActiveView("studio")}>Add my first piece</button>
+          </section>
         ) : activeView === "studio" ? (
           <WardrobeStudio
             state={state}
             onAddGarment={addWardrobeItem}
+            onUpdateGarment={updateWardrobeItem}
+            onArchiveGarment={archiveWardrobeItem}
+            onStartPersonalWardrobe={startPersonalWardrobe}
             onSaveStyle={saveStyleProfile}
             onSaveLook={saveLookDna}
           />
@@ -397,6 +459,8 @@ export function App() {
             running={autonomyRunning}
             onStage={stageWearCastPressure}
             onRun={runWearCast}
+            browserNotifications={browserNotifications}
+            onEnableBrowserNotifications={enableBrowserNotifications}
           />
         ) : activeView === "cloud" ? (
           <CloudProof />

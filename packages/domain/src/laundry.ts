@@ -208,7 +208,7 @@ function buildCluster(garments: Garment[]): LaundryCluster {
 
 export function createLaundryPlan(state: TwinState): LaundryPlan {
   const laundry = Object.values(state.garments)
-    .filter((garment) => garment.state === "laundry")
+    .filter((garment) => !garment.archived && garment.state === "laundry")
     .sort((left, right) => left.id.localeCompare(right.id));
   const holdouts: LaundryHoldout[] = [];
   const eligible: Garment[] = [];

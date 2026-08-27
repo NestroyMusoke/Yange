@@ -143,6 +143,12 @@ resource "google_project_iam_member" "worker_service_usage" {
   member  = "serviceAccount:${google_service_account.worker.email}"
 }
 
+resource "google_project_iam_member" "edge_service_usage" {
+  project = var.project_id
+  role    = "roles/serviceusage.serviceUsageConsumer"
+  member  = "serviceAccount:${google_service_account.edge.email}"
+}
+
 resource "google_project_iam_member" "task_enqueuers" {
   for_each = toset([google_service_account.edge.email, google_service_account.worker.email])
   project  = var.project_id

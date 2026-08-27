@@ -12,6 +12,9 @@ type StudioStep = "capture" | "style" | "inspiration";
 interface WardrobeStudioProps {
   state: TwinState;
   onAddGarment(garment: Garment): boolean;
+  onUpdateGarment(garment: Garment): boolean;
+  onArchiveGarment(garmentId: string): boolean;
+  onStartPersonalWardrobe(): boolean;
   onSaveStyle(profile: StyleProfile): boolean;
   onSaveLook(look: LookDna): boolean;
 }
@@ -22,12 +25,13 @@ const steps: Array<{ id: StudioStep; number: string; label: string; detail: stri
   { id: "inspiration", number: "03", label: "Save inspiration", detail: "Palette, shape and styling" },
 ];
 
-export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }: WardrobeStudioProps) {
+export function WardrobeStudio({ state, onAddGarment, onUpdateGarment, onArchiveGarment, onStartPersonalWardrobe, onSaveStyle, onSaveLook }: WardrobeStudioProps) {
   const [activeStep, setActiveStep] = useState<StudioStep>("capture");
+  const [confirmPersonal, setConfirmPersonal] = useState(false);
   const queue = useCaptureQueue();
   const analyzer = useMemo(() => new RuntimeMultimodalAnalyzer(), []);
   const userGarments = useMemo(
-    () => Object.values(state.garments).filter((garment) => garment.source === "user-added").reverse(),
+    () => Object.values(state.garments).filter((garment) => garment.source === "user-added" && !garment.archived).reverse(),
     [state.garments],
   );
   const looks = useMemo(() => Object.values(state.inspirationLooks).reverse(), [state.inspirationLooks]);
@@ -65,6 +69,16 @@ export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }:
         </div>
       </section>
 
+      <section className={`wardrobe-mode-card mode-${state.wardrobeMode}`} data-liquid-glass>
+        <div>
+          <span>{state.wardrobeMode === "personal" ? "Personal wardrobe" : "Sample wardrobe active"}</span>
+          <strong>{state.wardrobeMode === "personal" ? "Only your confirmed pieces shape recommendations." : "Explore first, then switch when your real wardrobe is ready."}</strong>
+        </div>
+        {state.wardrobeMode === "demo" && (confirmPersonal ? (
+          <div className="wardrobe-mode-confirm"><small>Sample garments and outfits will leave your wardrobe. Captured pieces stay.</small><button type="button" className="primary-action" onClick={() => { if (onStartPersonalWardrobe()) setConfirmPersonal(false); }}>Use only my clothes</button><button type="button" className="quiet-action" onClick={() => setConfirmPersonal(false)}>Not yet</button></div>
+        ) : <button type="button" className="quiet-action" onClick={() => setConfirmPersonal(true)}>Start my wardrobe</button>)}
+      </section>
+
       <nav className="studio-steps" aria-label="Wardrobe Studio steps">
         {steps.map((step) => (
           <button
@@ -90,7 +104,7 @@ export function WardrobeStudio({ state, onAddGarment, onSaveStyle, onSaveLook }:
         <LookDnaPanel queue={queue} analyzer={analyzer} onSave={onSaveLook} />
       </div>
 
-      <WardrobeGallery garments={userGarments} looks={looks} />
+      <WardrobeGallery garments={userGarments} looks={looks} onUpdate={onUpdateGarment} onArchive={onArchiveGarment} />
     </div>
   );
 }

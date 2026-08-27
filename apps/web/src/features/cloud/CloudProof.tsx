@@ -76,8 +76,9 @@ export function CloudProof() {
     try {
       await stageCloudDemo();
       setMessage("The request was received. The wardrobe check is now working through each step…");
-      const response = await runCloudWearCast();
-      const completed = response.execution ?? await waitForCloudExecution();
+      const triggerId = "cloud-proof-friday-2026-08-14";
+      const response = await runCloudWearCast({ triggerId, triggeredAt: "2026-08-14T07:30:00.000Z" });
+      const completed = response.execution ?? await waitForCloudExecution(triggerId);
       if (!completed) {
         setStatus("failed");
         setMessage("The check did not finish in time. Its saved progress is safe, so you can try again.");

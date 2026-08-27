@@ -5,7 +5,8 @@ import {
   readRuntimeConfiguration,
   type StructuredLogger,
 } from "@yange/cloud";
-import { createYangeApi } from "./app";
+import { createKampalaDemoForecast, ManualForecastAdapter } from "@yange/contracts";
+import { createYangeApi, type YangeApiDependencies } from "./app";
 
 const silentLogger: StructuredLogger = { write() {} };
 let server: Server | null = null;
@@ -16,12 +17,16 @@ afterEach(async () => {
   server = null;
 });
 
-async function start(environment: Record<string, string> = { NODE_ENV: "test" }) {
+async function start(
+  environment: Record<string, string> = { NODE_ENV: "test" },
+  overrides: Partial<Omit<YangeApiDependencies, "configuration" | "store">> = {},
+) {
   server = createServer(createYangeApi({
     configuration: readRuntimeConfiguration(environment),
     store: new InMemoryUserStateStore(),
     logger: silentLogger,
     now: () => "2026-08-14T07:30:00.000Z",
+    ...overrides,
   }));
   await new Promise<void>((resolve) => server?.listen(0, "127.0.0.1", resolve));
   const address = server.address();
@@ -133,6 +138,57 @@ describe("Yange production API", () => {
     expect(twinBody.ledger.some((event: { type: string }) => event.type === "ColourEvidenceRecorded")).toBe(true);
     const invalid = await command("record-confidence", { ...confidenceInput, operationId: "bad-rating", value: 99 });
     expect(invalid.status).toBe(400);
+  });
+
+  it("uses the saved wardrobe location for live weather and degrades Calendar independently", async () => {
+    let requestedLocation: { latitude: number; longitude: number; label: string } | null = null;
+    const origin = await start({ NODE_ENV: "test" }, {
+      forecastProviderForLocation: (location) => {
+        requestedLocation = location;
+        return new ManualForecastAdapter(createKampalaDemoForecast(), {
+          now: () => new Date("2026-08-14T07:30:00.000Z"),
+        });
+      },
+      calendarProvider: {
+        async upcoming() {
+          throw new Error("Calendar has not been shared yet.");
+        },
+      },
+    });
+    const firstTwin = await fetch(`${origin}/v1/twin`);
+    const cookie = firstTwin.headers.get("set-cookie")?.split(";")[0];
+    if (!cookie) throw new Error("Session cookie missing.");
+    const profile = {
+      version: 1,
+      displayName: "Amina",
+      locationLabel: "Jinja",
+      latitude: 0.4479,
+      longitude: 33.2026,
+      onboardingCompletedAt: "2026-08-14T07:30:00.000Z",
+    };
+    const saved = await fetch(`${origin}/v1/commands`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookie },
+      body: JSON.stringify({
+        type: "update-user-profile",
+        input: {
+          profile,
+          operationId: "api-test-profile",
+          occurredAt: "2026-08-14T07:30:00.000Z",
+        },
+      }),
+    });
+    expect(saved.status).toBe(200);
+
+    const context = await fetch(`${origin}/v1/context?at=2026-08-15T08:30:00.000Z`, {
+      headers: { Cookie: cookie },
+    });
+    const body = await context.json();
+    expect(context.status).toBe(200);
+    expect(requestedLocation).toEqual({ latitude: 0.4479, longitude: 33.2026, label: "Jinja" });
+    expect(body.weather).toMatchObject({ temperatureC: 27, precipitationProbability: 20 });
+    expect(body.calendar).toBeNull();
+    expect(body.calendarStatus).toBe("unavailable");
   });
 
   it("keeps public routes off a private worker role", async () => {

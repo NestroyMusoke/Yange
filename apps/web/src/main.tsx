@@ -11,6 +11,12 @@ import "./unified-system.css";
 import "./navigation.css";
 import "./brand-system.css";
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/yange-sw.js", { scope: "/" });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

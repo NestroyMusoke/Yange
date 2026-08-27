@@ -83,6 +83,18 @@
 
 .app-shell .view-tabs button.active::after { background: var(--champagne); }
 
+/* Keyboard focus stays inside the same underline language as active state. */
+.app-shell .view-tabs button:focus-visible {
+  outline: 0 !important;
+  outline-offset: 0 !important;
+  color: var(--champagne);
+}
+
+.app-shell .view-tabs button:focus-visible::after {
+  height: 2px;
+  background: var(--champagne);
+}
+
 .app-shell .view-tab-icon {
   display: grid;
   width: 20px;
