@@ -13,8 +13,21 @@ describe("runtime configuration", () => {
     });
     expect(configuration.mode).toBe("local");
     expect(configuration.role).toBe("all");
+    expect(configuration.geminiModel).toBe("gemini-3.5-flash");
+    expect(configuration.geminiMultimodalModel).toBe("gemini-3.5-flash-lite");
     expect(checkRuntimeConfiguration(configuration)).toEqual({ ready: true, issues: [] });
     expect(publicRuntimeConfiguration(configuration)).not.toHaveProperty("sessionSecret");
+  });
+
+  it("routes bounded image extraction independently from richer explanations", () => {
+    const configuration = readRuntimeConfiguration({
+      GEMINI_MODEL: "gemini-3.5-flash",
+      GEMINI_MULTIMODAL_MODEL: "gemini-3.5-flash-lite",
+    });
+    expect(publicRuntimeConfiguration(configuration)).toMatchObject({
+      geminiModel: "gemini-3.5-flash",
+      geminiMultimodalModel: "gemini-3.5-flash-lite",
+    });
   });
 
   it("fails readiness with an explicit issue per missing google-mode dependency", () => {

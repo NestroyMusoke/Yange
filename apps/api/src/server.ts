@@ -86,7 +86,7 @@ const multimodalAnalyzerForUser = vertexClient && mediaStore
     client: vertexClient,
     mediaStore,
     userId,
-    model: configuration.geminiModel,
+    model: configuration.geminiMultimodalModel,
   })
   : configuration.mode === "local"
     ? () => new FakeGeminiMultimodalAdapter()

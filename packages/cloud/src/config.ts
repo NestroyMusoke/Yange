@@ -10,6 +10,7 @@ export interface RuntimeConfiguration {
   location: string;
   taskLocation: string;
   geminiModel: string;
+  geminiMultimodalModel: string;
   firestoreDatabase: string;
   mediaBucket: string | null;
   wearCastQueue: string;
@@ -63,6 +64,7 @@ export function readRuntimeConfiguration(
     location: value(environment, "GOOGLE_CLOUD_LOCATION") ?? "global",
     taskLocation: value(environment, "YANGE_TASK_LOCATION") ?? "me-central1",
     geminiModel: value(environment, "GEMINI_MODEL") ?? "gemini-3.5-flash",
+    geminiMultimodalModel: value(environment, "GEMINI_MULTIMODAL_MODEL") ?? "gemini-3.5-flash-lite",
     firestoreDatabase: value(environment, "FIRESTORE_DATABASE") ?? "(default)",
     mediaBucket: value(environment, "YANGE_MEDIA_BUCKET"),
     wearCastQueue: value(environment, "YANGE_WEARCAST_QUEUE") ?? "wearcast-runs",
@@ -112,6 +114,7 @@ export function publicRuntimeConfiguration(configuration: RuntimeConfiguration) 
     location: configuration.location,
     taskLocation: configuration.taskLocation,
     geminiModel: configuration.geminiModel,
+    geminiMultimodalModel: configuration.geminiMultimodalModel,
     firestoreDatabase: configuration.firestoreDatabase,
     mediaBucketConfigured: Boolean(configuration.mediaBucket),
     workerConfigured: Boolean(configuration.workerUrl),

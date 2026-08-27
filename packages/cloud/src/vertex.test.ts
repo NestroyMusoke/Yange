@@ -8,6 +8,7 @@ import type { PrivateMediaStore } from "./media";
 import {
   VertexMultimodalAdapter,
   VertexOutfitExplanationAdapter,
+  parseStructuredJson,
   type StructuredGenerationClient,
 } from "./vertex";
 
@@ -19,6 +20,23 @@ const mediaStore: PrivateMediaStore = {
 };
 
 describe("Vertex supervised adapters", () => {
+  it("repairs harmless model JSON fences and trailing commas without changing string content", () => {
+    expect(parseStructuredJson(`\`\`\`json
+      {
+        "note": "Keep the literal sequence ,} inside this string",
+        "warnings": ["One", "Two",],
+      }
+    \`\`\``)).toEqual({
+      note: "Keep the literal sequence ,} inside this string",
+      warnings: ["One", "Two"],
+    });
+  });
+
+  it("rejects model text that cannot be safely repaired", () => {
+    expect(() => parseStructuredJson('{"name": definitely-not-json}'))
+      .toThrow("Vertex AI returned invalid structured JSON");
+  });
+
   it("wraps model content in trusted envelope fields and validates evidence", async () => {
     const client: StructuredGenerationClient = {
       async generate() {

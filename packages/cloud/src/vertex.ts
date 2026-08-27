@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, MediaResolution, ThinkingLevel } from "@google/genai";
 import {
   MULTIMODAL_CONTRACT_VERSION,
   OUTFIT_EXPLANATION_CONTRACT_VERSION,
@@ -26,6 +26,52 @@ export interface StructuredGenerationClient {
   generate(request: StructuredGenerationRequest): Promise<unknown>;
 }
 
+function removeTrailingJsonCommas(value: string): string {
+  let result = "";
+  let inString = false;
+  let escaped = false;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index] ?? "";
+    if (inString) {
+      result += character;
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') inString = false;
+      continue;
+    }
+    if (character === '"') {
+      inString = true;
+      result += character;
+      continue;
+    }
+    if (character === ",") {
+      let lookahead = index + 1;
+      while (/\s/.test(value[lookahead] ?? "")) lookahead += 1;
+      if (value[lookahead] === "}" || value[lookahead] === "]") continue;
+    }
+    result += character;
+  }
+  return result;
+}
+
+export function parseStructuredJson(value: string): unknown {
+  const trimmed = value.trim();
+  const withoutFence = trimmed.startsWith("```")
+    ? trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")
+    : trimmed;
+  try {
+    return JSON.parse(withoutFence) as unknown;
+  } catch (firstError) {
+    try {
+      return JSON.parse(removeTrailingJsonCommas(withoutFence)) as unknown;
+    } catch {
+      const reason = firstError instanceof Error ? firstError.message : "Invalid JSON.";
+      throw new Error(`Vertex AI returned invalid structured JSON: ${reason}`);
+    }
+  }
+}
+
 export class GoogleVertexStructuredGenerationClient implements StructuredGenerationClient {
   private readonly client: GoogleGenAI;
 
@@ -47,14 +93,17 @@ export class GoogleVertexStructuredGenerationClient implements StructuredGenerat
       }],
       config: {
         systemInstruction: request.systemInstruction,
-        temperature: 0.1,
         maxOutputTokens: 2_048,
+        // Garment extraction is a bounded visual classification task. Minimal
+        // thinking removes avoidable latency while the schema keeps it safe.
+        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+        mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
         responseMimeType: "application/json",
         responseJsonSchema: request.responseJsonSchema,
       },
     });
     if (!response.text) throw new Error("Vertex AI returned no structured text response.");
-    return JSON.parse(response.text) as unknown;
+    return parseStructuredJson(response.text);
   }
 }
 

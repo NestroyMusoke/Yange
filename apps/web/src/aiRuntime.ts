@@ -27,6 +27,7 @@ export interface TestableOutfitExplainer extends OutfitExplanationPort {
 
 export class RuntimeMultimodalAnalyzer implements TestableMultimodalAnalyzer {
   private readonly local = new FakeGeminiMultimodalAdapter({ latencyMs: 720 });
+  private readonly uploadedAssets = new Set<string>();
   private failNextRequest = false;
 
   failNext(): void {
@@ -42,9 +43,11 @@ export class RuntimeMultimodalAnalyzer implements TestableMultimodalAnalyzer {
     const runtime = await probeCloudRuntime();
     if (runtime.configuration.mode === "local") return analyzeWithCloud(request);
 
-    for (const image of request.images) {
+    await Promise.all(request.images.map(async (image) => {
       const stored = await indexedDbMediaRepository.get(image.assetId);
       if (!stored) throw new Error(`Prepared image ${image.fileName} is no longer available.`);
+      const uploadKey = `${image.assetId}:${stored.blob.size}:${image.mimeType}`;
+      if (this.uploadedAssets.has(uploadKey)) return;
       const intent = await createMediaUploadIntent({
         assetId: image.assetId,
         mimeType: image.mimeType,
@@ -56,8 +59,21 @@ export class RuntimeMultimodalAnalyzer implements TestableMultimodalAnalyzer {
         headers: intent.requiredHeaders,
       });
       if (!uploaded.ok) throw new Error(`Private upload failed with status ${uploaded.status}.`);
+      this.uploadedAssets.add(uploadKey);
+    }));
+    try {
+      return await analyzeWithCloud(request);
+    } catch (cause) {
+      if (cause instanceof Error && cause.message === "MEDIA_UPLOAD_INVALID") {
+        request.images.forEach((image) => {
+          for (const key of this.uploadedAssets) {
+            if (key.startsWith(`${image.assetId}:`)) this.uploadedAssets.delete(key);
+          }
+        });
+        throw new Error("One image arrived in an incompatible format. Replace it and try again.");
+      }
+      throw cause;
     }
-    return analyzeWithCloud(request);
   }
 }
 

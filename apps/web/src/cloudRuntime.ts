@@ -18,6 +18,7 @@ export interface CloudRuntimeSnapshot {
     location: string;
     taskLocation: string;
     geminiModel: string;
+    geminiMultimodalModel: string;
     mediaBucketConfigured: boolean;
     workerConfigured: boolean;
     taskInvokerConfigured: boolean;

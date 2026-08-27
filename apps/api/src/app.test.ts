@@ -103,6 +103,36 @@ describe("Yange production API", () => {
     expect(await response.json()).toEqual({ error: "REQUEST_BODY_INVALID" });
   });
 
+  it("turns incompatible stored image bytes into an actionable client error", async () => {
+    const origin = await start({ NODE_ENV: "test" }, {
+      multimodalAnalyzerForUser: () => ({
+        async analyze() {
+          throw new Error("Stored media failed binary signature validation.");
+        },
+      }),
+    });
+    const response = await fetch(`${origin}/v1/ai/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contractVersion: "1.0",
+        requestId: "safari-fallback-test",
+        mode: "garment",
+        images: [{
+          assetId: "asset-safari",
+          kind: "garment",
+          fileName: "shirt.webp",
+          mimeType: "image/webp",
+          byteLength: 1200,
+          width: 800,
+          height: 1200,
+        }],
+      }),
+    });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({ error: "MEDIA_UPLOAD_INVALID" });
+  });
+
   it("revalidates wardrobe commands, persists exact colour evidence, and deduplicates retries", async () => {
     const origin = await start();
     const firstTwin = await fetch(`${origin}/v1/twin`);

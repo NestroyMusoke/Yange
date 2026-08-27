@@ -699,14 +699,19 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
       finish(404, userId);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "UNKNOWN_ERROR";
+      const invalidMedia = message === "Stored media failed binary signature validation."
+        || message === "Stored media exceeds Yange's 8 MiB safety limit."
+        || message === "Stored media has an unsupported content type.";
       const status = message === "REQUEST_TOO_LARGE"
         ? 413
         : message === "REQUEST_BODY_INVALID"
           ? 400
+          : invalidMedia
+            ? 422
           : cause instanceof DomainError
             ? 422
             : 500;
-      sendJson(response, status, { error: status === 500 ? "INTERNAL_ERROR" : message });
+      sendJson(response, status, { error: status === 500 ? "INTERNAL_ERROR" : invalidMedia ? "MEDIA_UPLOAD_INVALID" : message });
       logger.write("ERROR", "request.failed", {
         requestId: id,
         traceId,

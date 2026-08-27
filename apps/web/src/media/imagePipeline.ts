@@ -2,6 +2,7 @@ import type { AnalysisImageKind, AnalysisImageRef } from "@yange/contracts";
 
 export const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
 export const MAX_IMAGE_EDGE = 1600;
+export const MAX_GARMENT_EDGE = 1280;
 
 const allowedExtensions = new Set(["jpg", "jpeg", "png", "webp"]);
 const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -38,7 +39,7 @@ function extensionOf(fileName: string): string {
   return fileName.toLowerCase().split(".").pop() ?? "";
 }
 
-function detectedMime(bytes: Uint8Array): string | null {
+export function detectedMime(bytes: Uint8Array): AnalysisImageRef["mimeType"] | null {
   const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   const isPng =
     bytes[0] === 0x89 &&
@@ -62,6 +63,24 @@ function detectedMime(bytes: Uint8Array): string | null {
   if (isPng) return "image/png";
   if (isWebp) return "image/webp";
   return null;
+}
+
+const extensionsByMime: Record<AnalysisImageRef["mimeType"], string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+export async function inspectPreparedBlob(blob: Blob): Promise<{
+  mimeType: AnalysisImageRef["mimeType"];
+  extension: string;
+}> {
+  const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+  const mimeType = detectedMime(header);
+  if (!mimeType) {
+    throw new ImagePipelineError("The browser produced an unsupported image copy.");
+  }
+  return { mimeType, extension: extensionsByMime[mimeType] };
 }
 
 export async function validateImageFile(file: File): Promise<void> {
@@ -113,7 +132,11 @@ export async function prepareImage(
   }
 
   try {
-    const dimensions = scaledDimensions(bitmap.width, bitmap.height);
+    const dimensions = scaledDimensions(
+      bitmap.width,
+      bitmap.height,
+      kind === "care-label" ? MAX_IMAGE_EDGE : MAX_GARMENT_EDGE,
+    );
     const canvas = document.createElement("canvas");
     canvas.width = dimensions.width;
     canvas.height = dimensions.height;
@@ -124,12 +147,16 @@ export async function prepareImage(
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     const quality = kind === "care-label" ? 0.9 : 0.84;
     const blob = await canvasToBlob(canvas, quality);
+    // Safari may silently return PNG when WebP canvas export is unavailable.
+    // Trust the rewritten bytes, not the requested encoder, so Cloud Storage
+    // metadata and the server-side signature check can never disagree.
+    const output = await inspectPreparedBlob(blob);
     const id = `asset-${crypto.randomUUID()}`;
     return {
       assetId: id,
       kind,
-      fileName: safeDisplayName(file.name.replace(/\.[^.]+$/, "")) + ".webp",
-      mimeType: "image/webp",
+      fileName: safeDisplayName(file.name.replace(/\.[^.]+$/, "")) + `.${output.extension}`,
+      mimeType: output.mimeType,
       byteLength: blob.size,
       originalBytes: file.size,
       width: dimensions.width,
