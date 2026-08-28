@@ -233,6 +233,8 @@ function secureHeaders(response: ServerResponse): void {
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   response.setHeader("Permissions-Policy", "camera=(self), microphone=(), geolocation=()");
   response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  response.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+  response.setHeader("Origin-Agent-Cluster", "?1");
   response.setHeader(
     "Content-Security-Policy",
     "default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://*.googleapis.com",

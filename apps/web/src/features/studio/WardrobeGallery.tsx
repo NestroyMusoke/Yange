@@ -3,14 +3,27 @@ import type { Garment, LookDna } from "@yange/domain";
 import { EvidenceBadge } from "./EvidenceBadge";
 import { GarmentEditor } from "./GarmentEditor";
 import { useMediaUrl } from "./useCaptureQueue";
+import { useGarmentPhoto } from "./useGarmentPhoto";
 
 function GarmentThumbnail({ garment, onEdit }: { garment: Garment; onEdit(): void }) {
-  const url = useMediaUrl(garment.imageAssetId);
+  const photo = useGarmentPhoto(garment.imageAssetId);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const url = showOriginal ? photo.originalUrl : photo.url;
   return (
     <article className="studio-garment-card">
-      <div className="studio-garment-image">
+      <div className={`studio-garment-image ${photo.isCutout && !showOriginal ? "is-cutout" : ""}`}>
         {url ? <img src={url} alt={`${garment.name} wardrobe photo`} loading="lazy" decoding="async" /> : <span>{garment.category}</span>}
         <em>{garment.state}</em>
+        {photo.isCutout && (
+          <button
+            type="button"
+            className="studio-photo-mode"
+            aria-pressed={showOriginal}
+            onClick={() => setShowOriginal((current) => !current)}
+          >
+            {showOriginal ? "Clean view" : "Original"}
+          </button>
+        )}
       </div>
       <div>
         <strong>{garment.name}</strong>

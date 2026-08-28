@@ -1,4 +1,7 @@
 node_modules/
+.npm-cache/
+.tmp-u2net-model/
+onnxruntime-web-*.tgz
 .pnpm-store/
 pnpm-lock.yaml
 dist/

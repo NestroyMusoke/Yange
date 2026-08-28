@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MULTIMODAL_CONTRACT_VERSION,
   type AnalysisImageRef,
@@ -20,6 +20,10 @@ import { EvidenceBadge } from "./EvidenceBadge";
 import { YangeText } from "../brand/YangeWordmark";
 import { ImageDropzone } from "./ImageDropzone";
 import type { CaptureQueue } from "./useCaptureQueue";
+import {
+  scheduleGarmentCutout,
+  type GarmentCutoutStatus,
+} from "../../media/garmentCutout";
 
 interface CapturePanelProps {
   queue: CaptureQueue;
@@ -102,6 +106,13 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [careReviewed, setCareReviewed] = useState(false);
   const [savedName, setSavedName] = useState<string | null>(null);
+  const [cutoutStatus, setCutoutStatus] = useState<GarmentCutoutStatus>("idle");
+  const activeCutoutAssetId = useRef<string | null>(null);
+
+  useEffect(() => {
+    activeCutoutAssetId.current = garmentSlot.asset?.assetId ?? null;
+    setCutoutStatus("idle");
+  }, [garmentSlot.asset?.assetId]);
 
   const analyzing = garmentSlot.status === "analyzing";
   const canAnalyze = Boolean(garmentSlot.asset) && !analyzing;
@@ -114,6 +125,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
     queue.setAnalysisStatus([...kinds], "analyzing");
     setAnalysisError(null);
     setSavedName(null);
+    const sourceAsset = garmentSlot.asset;
     try {
       const result = await analyzer.analyze({
         contractVersion: MULTIMODAL_CONTRACT_VERSION,
@@ -128,6 +140,16 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
       setDraft(structuredClone(result));
       setCareReviewed(false);
       queue.setAnalysisStatus([...kinds], "ready");
+      activeCutoutAssetId.current = sourceAsset.assetId;
+      setCutoutStatus("processing");
+      void scheduleGarmentCutout(sourceAsset).then(
+        () => {
+          if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("ready");
+        },
+        () => {
+          if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("fallback");
+        },
+      );
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Garment analysis failed.";
       setAnalysisError(message);
@@ -220,7 +242,12 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
         source: careReviewed ? "user-confirmed" : "care-profile",
       },
     };
-    if (onAddGarment(garment)) setSavedName(garment.name);
+    if (onAddGarment(garment)) {
+      setSavedName(garment.name);
+      // Cloud sync starts only after the user has confirmed this piece belongs
+      // in their wardrobe. A cancelled capture never leaves an orphan cutout.
+      void scheduleGarmentCutout(garmentSlot.asset, { syncCloud: true }).catch(() => undefined);
+    }
   }
 
   async function addAnother(): Promise<void> {
@@ -284,6 +311,16 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
         >
           {analyzing ? "Reading garment evidence…" : analysisError ? "Retry garment analysis" : "Analyse garment"}
         </button>
+        {cutoutStatus !== "idle" && (
+          <span className={`cutout-status is-${cutoutStatus}`} role="status">
+            <i aria-hidden="true" />
+            {cutoutStatus === "processing"
+              ? "Preparing a clean wardrobe view"
+              : cutoutStatus === "ready"
+                ? "Clean wardrobe view ready"
+                : "Original photo kept"}
+          </span>
+        )}
       </div>
 
       {analysisError && (

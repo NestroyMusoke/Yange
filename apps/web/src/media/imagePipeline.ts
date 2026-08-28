@@ -18,6 +18,8 @@ export interface StoredMediaAsset extends AnalysisImageRef {
   blob: Blob;
   originalBytes: number;
   createdAt: string;
+  derivativeOf?: string;
+  derivativeKind?: string;
 }
 
 export function scaledDimensions(

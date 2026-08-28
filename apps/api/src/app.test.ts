@@ -43,6 +43,9 @@ describe("Yange production API", () => {
     expect(await health.json()).toMatchObject({ status: "ok" });
     expect(readiness.status).toBe(200);
     expect(await readiness.json()).toEqual({ status: "ready", issues: [] });
+    expect(health.headers.get("cross-origin-opener-policy")).toBe("same-origin");
+    expect(health.headers.get("cross-origin-embedder-policy")).toBe("credentialless");
+    expect(health.headers.get("origin-agent-cluster")).toBe("?1");
   });
 
   it("reports sanitized local runtime readiness without credentials", async () => {

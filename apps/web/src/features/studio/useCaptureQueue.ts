@@ -8,6 +8,8 @@ import {
 } from "../../media/imagePipeline";
 import { indexedDbMediaRepository } from "../../media/mediaRepository";
 import { createMediaReadUrl, isCloudSyncConfigured } from "../../cloudRuntime";
+import { cutoutAssetId, MEDIA_ASSET_UPDATED_EVENT } from "../../media/garmentCutoutProtocol";
+import { scheduleGarmentCutout } from "../../media/garmentCutout";
 
 export type CaptureStatus =
   | "empty"
@@ -89,7 +91,12 @@ export function useCaptureQueue() {
     const previous = slots[kind];
 
     try {
-      if (previous.asset) await indexedDbMediaRepository.delete(previous.asset.assetId);
+      if (previous.asset) {
+        await indexedDbMediaRepository.delete(previous.asset.assetId);
+        if (previous.kind === "garment") {
+          await indexedDbMediaRepository.delete(cutoutAssetId(previous.asset.assetId));
+        }
+      }
       revokePreview(previous.previewUrl);
       update(kind, {
         status: "validating",
@@ -112,6 +119,10 @@ export function useCaptureQueue() {
         previewUrl,
         error: null,
       });
+      // Cutout work begins after the private prepared copy is safely stored,
+      // while the user is still reviewing or photographing the care label.
+      // It never replaces or delays the original evidence sent to Gemini.
+      if (kind === "garment") void scheduleGarmentCutout(asset).catch(() => undefined);
     } catch (cause) {
       if (generation.current.get(kind) !== token) return;
       update(kind, {
@@ -144,6 +155,9 @@ export function useCaptureQueue() {
     try {
       if (deleteAsset && previous.asset) {
         await indexedDbMediaRepository.delete(previous.asset.assetId);
+        if (kind === "garment") {
+          await indexedDbMediaRepository.delete(cutoutAssetId(previous.asset.assetId));
+        }
       }
     } catch (cause) {
       update(kind, {
@@ -193,6 +207,16 @@ export type CaptureQueue = ReturnType<typeof useCaptureQueue>;
 
 export function useMediaUrl(assetId: string | null): string | null {
   const [url, setUrl] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => {
+    function onMediaUpdated(event: Event): void {
+      const updatedAssetId = (event as CustomEvent<{ assetId?: string }>).detail?.assetId;
+      if (updatedAssetId === assetId) setRevision((current) => current + 1);
+    }
+    window.addEventListener(MEDIA_ASSET_UPDATED_EVENT, onMediaUpdated);
+    return () => window.removeEventListener(MEDIA_ASSET_UPDATED_EVENT, onMediaUpdated);
+  }, [assetId]);
 
   useEffect(() => {
     let active = true;
@@ -222,7 +246,7 @@ export function useMediaUrl(assetId: string | null): string | null {
       active = false;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [assetId]);
+  }, [assetId, revision]);
 
   return url;
 }

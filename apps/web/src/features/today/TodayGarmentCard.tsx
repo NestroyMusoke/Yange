@@ -1,5 +1,5 @@
 import type { Garment, GarmentState } from "@yange/domain";
-import { useMediaUrl } from "../studio/useCaptureQueue";
+import { useGarmentPhoto } from "../studio/useGarmentPhoto";
 
 const stateLabels: Record<GarmentState, string> = {
   available: "Available",
@@ -29,13 +29,16 @@ function garmentTone(garment: Garment): string {
 }
 
 export function TodayGarmentCard({ garment }: { garment: Garment }) {
-  const privatePhotoUrl = useMediaUrl(garment.imageAssetId);
-  const imageUrl = privatePhotoUrl ?? demoPhotography[garment.id] ?? null;
-  const evidenceLabel = privatePhotoUrl ? "Your photo" : imageUrl ? "Wardrobe piece" : "Photo pending";
+  const photo = useGarmentPhoto(garment.imageAssetId);
+  const imageUrl = photo.url ?? demoPhotography[garment.id] ?? null;
+  const evidenceLabel = photo.url ? "Your photo" : imageUrl ? "Wardrobe piece" : "Photo pending";
 
   return (
     <article className="garment-tile">
-      <div className="garment-media" style={{ backgroundColor: garmentTone(garment) }}>
+      <div
+        className={`garment-media ${photo.isCutout ? "is-cutout" : ""}`}
+        style={photo.isCutout ? undefined : { backgroundColor: garmentTone(garment) }}
+      >
         {imageUrl ? (
           <img
             src={imageUrl}

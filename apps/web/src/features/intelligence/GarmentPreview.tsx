@@ -1,5 +1,5 @@
 import type { Garment } from "@yange/domain";
-import { useMediaUrl } from "../studio/useCaptureQueue";
+import { useGarmentPhoto } from "../studio/useGarmentPhoto";
 
 function garmentTone(garment: Garment): string {
   const value = garment.colour.toLowerCase();
@@ -14,11 +14,11 @@ function garmentTone(garment: Garment): string {
 }
 
 export function GarmentPreview({ garment, compact = false }: { garment: Garment; compact?: boolean }) {
-  const imageUrl = useMediaUrl(garment.imageAssetId);
+  const photo = useGarmentPhoto(garment.imageAssetId);
   return (
-    <div className={`intelligence-garment ${compact ? "is-compact" : ""}`}>
-      <div style={{ backgroundColor: garmentTone(garment) }}>
-        {imageUrl && <img src={imageUrl} alt="" loading="lazy" decoding="async" />}
+    <div className={`intelligence-garment ${compact ? "is-compact" : ""} ${photo.isCutout ? "has-cutout" : ""}`}>
+      <div style={photo.isCutout ? undefined : { backgroundColor: garmentTone(garment) }}>
+        {photo.url && <img src={photo.url} alt="" loading="lazy" decoding="async" />}
         <span>{garment.category}</span>
       </div>
       <section>
