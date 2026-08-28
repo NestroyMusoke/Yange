@@ -18,6 +18,8 @@ import { LiquidGlassRuntime } from "./features/glass/LiquidGlassRuntime";
 import { YangeNavigation } from "./features/navigation/YangeNavigation";
 import { TodayGarmentCard } from "./features/today/TodayGarmentCard";
 import { ProfileSetup } from "./features/profile/ProfileSetup";
+import { YangeThread } from "./features/guidance/YangeThread";
+import { deriveYangeJourney } from "./features/guidance/journey";
 import { useYange } from "./useYange";
 
 const confidenceLabels = [
@@ -147,6 +149,7 @@ export function App() {
   const sceneTone = auraSceneTone[activeView];
   const renderedAuraEnergy = Math.min(1, auraEnergy * sceneTone.energy);
   const renderedAuraWarmth = Math.min(1, auraWarmth * 0.7 + sceneTone.warmth * 0.3);
+  const journey = useMemo(() => deriveYangeJourney(state, readiness), [state, readiness]);
   const navigationIndicators: Partial<Record<YangeView, string | number>> = {
     studio: Object.keys(state.inspirationLooks).length,
     atelier: Object.values(state.outfits).filter((outfit) => outfit.source === "agent-planned").length,
@@ -200,7 +203,7 @@ export function App() {
           onPointerLeave={resetGlassPointer}
         >
         <div className="topbar">
-          <a className="brand" href="#top" aria-label="Yange home" onClick={() => setActiveView("today")}>
+          <a className="brand" href="#view-start" aria-label="Yange home" onClick={() => setActiveView("today")}>
             <span className="brand-mark" aria-hidden="true">
               <YangeLogo />
             </span>
@@ -245,7 +248,9 @@ export function App() {
         onSave={saveProfile}
       />
 
-      <main id="top" data-view={activeView}>
+      <YangeThread journey={journey} activeView={activeView} onNavigate={setActiveView} />
+
+      <main id="view-start" data-view={activeView}>
         {activeView === "today" && <section className="hero">
           <div>
             <time className="context-date" dateTime={now.toISOString().slice(0, 10)}>{todayLabel} <span aria-hidden="true">&middot;</span> {state.userProfile.locationLabel}</time>
@@ -294,6 +299,16 @@ export function App() {
 
 
         {error && <div className="error-banner" role="alert"><YangeText>{error}</YangeText></div>}
+
+        {activeView === "today" && state.wardrobeMode === "demo" && (
+          <section className="sample-wardrobe-note" aria-label="Sample wardrobe">
+            <div>
+              <span>Sample wardrobe</span>
+              <strong>Explore freely. Add your own clothes when you want personal suggestions.</strong>
+            </div>
+            <button type="button" onClick={() => setActiveView("studio")}>Add my clothes</button>
+          </section>
+        )}
 
         {activeView === "today" ? todayOutfit && fridayOutfit ? (
           <div className="content-grid today-content">
@@ -443,6 +458,7 @@ export function App() {
             onStartPersonalWardrobe={startPersonalWardrobe}
             onSaveStyle={saveStyleProfile}
             onSaveLook={saveLookDna}
+            onNavigate={setActiveView}
           />
         ) : activeView === "atelier" ? (
           <Atelier

@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps ./apps
 COPY packages ./packages
+COPY scripts ./scripts
 # The liquid-glass UI dependency publishes a consumer-facing postinstall hook
 # that calls a development-only binary. Production builds do not need package
 # lifecycle scripts, and disabling them also reduces supply-chain exposure.

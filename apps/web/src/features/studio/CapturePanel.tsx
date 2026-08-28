@@ -24,11 +24,15 @@ import {
   scheduleGarmentCutout,
   type GarmentCutoutStatus,
 } from "../../media/garmentCutout";
+import { useGarmentPhoto } from "./useGarmentPhoto";
 
 interface CapturePanelProps {
   queue: CaptureQueue;
   analyzer: TestableMultimodalAnalyzer;
+  existingGarments: Garment[];
   onAddGarment(garment: Garment): boolean;
+  essentialsActionLabel: string;
+  onEssentialsReady(): void;
 }
 
 function userEvidence<T>(value: T): EvidenceValue<T> {
@@ -99,19 +103,45 @@ const bleachOptions: Array<{ value: BleachMethod; label: string }> = [
   { value: "do-not-bleach", label: "Do not bleach" },
 ];
 
-export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProps) {
+const essentialCategories: GarmentCategory[] = ["top", "bottom", "shoes"];
+
+export function CapturePanel({
+  queue,
+  analyzer,
+  existingGarments,
+  onAddGarment,
+  essentialsActionLabel,
+  onEssentialsReady,
+}: CapturePanelProps) {
   const garmentSlot = queue.slots.garment;
   const labelSlot = queue.slots["care-label"];
   const [draft, setDraft] = useState<GarmentAnalysisV1 | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [careReviewed, setCareReviewed] = useState(false);
   const [savedName, setSavedName] = useState<string | null>(null);
+  const [savedGarment, setSavedGarment] = useState<Garment | null>(null);
   const [cutoutStatus, setCutoutStatus] = useState<GarmentCutoutStatus>("idle");
+  const [showOriginal, setShowOriginal] = useState(false);
   const activeCutoutAssetId = useRef<string | null>(null);
+  const capturePhoto = useGarmentPhoto(garmentSlot.asset?.assetId ?? null);
 
   useEffect(() => {
-    activeCutoutAssetId.current = garmentSlot.asset?.assetId ?? null;
-    setCutoutStatus("idle");
+    const sourceAsset = garmentSlot.asset;
+    activeCutoutAssetId.current = sourceAsset?.assetId ?? null;
+    setShowOriginal(false);
+    if (!sourceAsset) {
+      setCutoutStatus("idle");
+      return;
+    }
+    setCutoutStatus("processing");
+    void scheduleGarmentCutout(sourceAsset).then(
+      () => {
+        if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("ready");
+      },
+      () => {
+        if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("fallback");
+      },
+    );
   }, [garmentSlot.asset?.assetId]);
 
   const analyzing = garmentSlot.status === "analyzing";
@@ -125,7 +155,6 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
     queue.setAnalysisStatus([...kinds], "analyzing");
     setAnalysisError(null);
     setSavedName(null);
-    const sourceAsset = garmentSlot.asset;
     try {
       const result = await analyzer.analyze({
         contractVersion: MULTIMODAL_CONTRACT_VERSION,
@@ -140,16 +169,6 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
       setDraft(structuredClone(result));
       setCareReviewed(false);
       queue.setAnalysisStatus([...kinds], "ready");
-      activeCutoutAssetId.current = sourceAsset.assetId;
-      setCutoutStatus("processing");
-      void scheduleGarmentCutout(sourceAsset).then(
-        () => {
-          if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("ready");
-        },
-        () => {
-          if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("fallback");
-        },
-      );
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Garment analysis failed.";
       setAnalysisError(message);
@@ -244,6 +263,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
     };
     if (onAddGarment(garment)) {
       setSavedName(garment.name);
+      setSavedGarment(garment);
       // Cloud sync starts only after the user has confirmed this piece belongs
       // in their wardrobe. A cancelled capture never leaves an orphan cutout.
       void scheduleGarmentCutout(garmentSlot.asset, { syncCloud: true }).catch(() => undefined);
@@ -256,7 +276,15 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
     setAnalysisError(null);
     setCareReviewed(false);
     setSavedName(null);
+    setSavedGarment(null);
   }
+
+  const capturedCategories = new Set([
+    ...existingGarments.map((garment) => garment.category),
+    ...(savedGarment ? [savedGarment.category] : []),
+  ]);
+  const missingEssential = essentialCategories.find((category) => !capturedCategories.has(category));
+  const captureStep = savedName ? 3 : draft ? 2 : garmentSlot.asset ? 1 : 0;
 
   return (
     <section className="studio-panel studio-capture-panel" aria-labelledby="capture-title">
@@ -277,6 +305,21 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
         <strong>Private by default</strong>
         <span>Your wardrobe photos are prepared privately and only the details you confirm are saved.</span>
       </div>
+
+      <ol className="capture-journey" aria-label="Add garment progress">
+        {["Photo", "Review", "Saved"].map((label, index) => {
+          const step = index + 1;
+          return (
+            <li
+              key={label}
+              className={captureStep > step ? "is-complete" : captureStep === step || (captureStep === 0 && step === 1) ? "is-current" : ""}
+              aria-current={captureStep === step || (captureStep === 0 && step === 1) ? "step" : undefined}
+            >
+              <span>{step}</span><strong>{label}</strong>
+            </li>
+          );
+        })}
+      </ol>
 
       <div className="capture-grid">
         <ImageDropzone
@@ -309,7 +352,7 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
           disabled={!canAnalyze}
           onClick={() => void analyzeGarment()}
         >
-          {analyzing ? "Reading garment evidence…" : analysisError ? "Retry garment analysis" : "Analyse garment"}
+          {analyzing ? "Reading garment evidence…" : analysisError ? "Retry garment analysis" : "Analyse this garment"}
         </button>
         {cutoutStatus !== "idle" && (
           <span className={`cutout-status is-${cutoutStatus}`} role="status">
@@ -322,6 +365,52 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
           </span>
         )}
       </div>
+
+      {garmentSlot.asset && !draft && !analyzing && !analysisError && (
+        <div className="next-step-note" role="status">
+          <strong>Your photo is ready.</strong>
+          <span>Select “Analyse this garment” next. The care label is optional and can be added later.</span>
+        </div>
+      )}
+
+      {garmentSlot.asset && cutoutStatus !== "idle" && (
+        <section className={`clean-view-review is-${cutoutStatus}`} aria-labelledby="clean-view-title">
+          <div className="clean-view-copy">
+            <span>Wardrobe photo</span>
+            <h3 id="clean-view-title">
+              {cutoutStatus === "processing"
+                ? "Preparing the clean view"
+                : cutoutStatus === "ready"
+                  ? "Background removed"
+                  : "Original photo kept"}
+            </h3>
+            <p>
+              {cutoutStatus === "processing"
+                ? "You can continue reviewing the garment while Yange separates it in the background."
+                : cutoutStatus === "ready"
+                  ? "Switch between the private original and the clean wardrobe view before saving."
+                  : "The separation was not reliable enough. Retake against a contrasting background, or safely keep this original."}
+            </p>
+            <div className="clean-view-controls" role="group" aria-label="Wardrobe photo view">
+              <button type="button" className={showOriginal ? "active" : ""} aria-pressed={showOriginal} onClick={() => setShowOriginal(true)}>Original</button>
+              <button
+                type="button"
+                className={!showOriginal && cutoutStatus === "ready" ? "active" : ""}
+                aria-pressed={!showOriginal && cutoutStatus === "ready"}
+                disabled={cutoutStatus !== "ready" || !capturePhoto.cutoutUrl}
+                onClick={() => setShowOriginal(false)}
+              >
+                {cutoutStatus === "processing" ? "Clean view preparing" : "Clean view"}
+              </button>
+            </div>
+          </div>
+          <div className={`clean-view-image ${!showOriginal && capturePhoto.cutoutUrl ? "is-cutout" : ""}`}>
+            {(showOriginal ? capturePhoto.originalUrl : capturePhoto.cutoutUrl ?? capturePhoto.originalUrl)
+              ? <img src={(showOriginal ? capturePhoto.originalUrl : capturePhoto.cutoutUrl ?? capturePhoto.originalUrl) ?? ""} alt={`${draft?.facts.name.value || "Garment"} ${showOriginal || !capturePhoto.cutoutUrl ? "original photograph" : "clean wardrobe view"}`} />
+              : <span>Preparing preview</span>}
+          </div>
+        </section>
+      )}
 
       {analysisError && (
         <div className="error-banner analysis-error" role="alert">
@@ -434,8 +523,18 @@ export function CapturePanel({ queue, analyzer, onAddGarment }: CapturePanelProp
 
           {savedName && (
             <div className="success-banner" role="status">
-              <div><strong>{savedName} is now in your wardrobe.</strong><span>Your confirmed details are saved with the piece.</span></div>
-              <button type="button" className="quiet-action" onClick={() => void addAnother()}>Add another piece</button>
+              <div>
+                <strong>{savedName} is now in your wardrobe.</strong>
+                <span>{missingEssential ? `Next, add ${missingEssential === "shoes" ? "shoes" : `a ${missingEssential}`} to complete your first outfit essentials.` : "Your top, bottom and shoes are ready for a personal outfit."}</span>
+              </div>
+              <div className="success-actions">
+                {missingEssential ? (
+                  <button type="button" className="primary-action compact-action" onClick={() => void addAnother()}>{missingEssential === "shoes" ? "Add shoes next" : `Add ${missingEssential} next`}</button>
+                ) : (
+                  <button type="button" className="primary-action compact-action" onClick={onEssentialsReady}>{essentialsActionLabel}</button>
+                )}
+                <button type="button" className="quiet-action" onClick={() => void addAnother()}>Add another piece</button>
+              </div>
             </div>
           )}
         </div>

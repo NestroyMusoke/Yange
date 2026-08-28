@@ -5,6 +5,7 @@ locals {
     GOOGLE_CLOUD_LOCATION              = var.vertex_location
     YANGE_TASK_LOCATION                = var.task_region
     GEMINI_MODEL                       = var.gemini_model
+    GEMINI_MULTIMODAL_MODEL            = var.gemini_multimodal_model
     FIRESTORE_DATABASE                 = google_firestore_database.default.name
     YANGE_WEARCAST_QUEUE               = google_cloud_tasks_queue.wearcast.name
     YANGE_EVENTS_TOPIC                 = google_pubsub_topic.events.name

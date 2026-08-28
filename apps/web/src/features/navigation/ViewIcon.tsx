@@ -16,7 +16,7 @@ function IconFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ViewIcon({ view }: { view: YangeView }) {
+export function ViewIcon({ view }: { view: YangeView | "more" }) {
   switch (view) {
     case "today":
       return (
@@ -69,6 +69,14 @@ export function ViewIcon({ view }: { view: YangeView }) {
         <IconFrame>
           <path d="M2.8 10h3l1.4-3.2 2.5 6.4 2.2-5.1 1.3 1.9h4" />
           <path d="m15.7 8.7 1.5 1.3-1.5 1.3" />
+        </IconFrame>
+      );
+    case "more":
+      return (
+        <IconFrame>
+          <circle cx="4.2" cy="10" r="1" fill="currentColor" stroke="none" />
+          <circle cx="10" cy="10" r="1" fill="currentColor" stroke="none" />
+          <circle cx="15.8" cy="10" r="1" fill="currentColor" stroke="none" />
         </IconFrame>
       );
   }

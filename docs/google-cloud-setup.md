@@ -59,7 +59,8 @@ Override these only if the selected Google APIs are unavailable in your project:
   -AppRegion africa-south1 `
   -TaskRegion me-central1 `
   -VertexLocation global `
-  -GeminiModel gemini-3.5-flash
+  -GeminiModel gemini-3.5-flash `
+  -GeminiMultimodalModel gemini-3.5-flash-lite
 ```
 
 ## 4. Prove the deployed web workflow

@@ -19,10 +19,10 @@ describe("YangeNavigation", () => {
       <YangeNavigation activeView={activeView} indicators={{}} onNavigate={() => undefined} />,
     );
 
-    expect(markup.match(/<button/g)).toHaveLength(7);
+    expect(markup.match(/<button/g)).toHaveLength(5);
     expect(markup.match(/aria-current="page"/g)).toHaveLength(1);
-    expect(markup.match(/<svg/g)).toHaveLength(7);
-    expect(markup.match(/stroke-width="1.25"/g)).toHaveLength(7);
+    expect(markup.match(/<svg/g)).toHaveLength(5);
+    expect(markup.match(/stroke-width="1.25"/g)).toHaveLength(5);
     expect(markup).not.toContain("<img");
   });
 });

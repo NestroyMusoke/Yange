@@ -59,8 +59,16 @@ export function ProfileSetup({ open, profile, wardrobeMode, onClose, onSave }: P
         <div className="profile-setup-copy">
           <span>Wardrobe context</span>
           <h2 id="profile-setup-title">Make <YangeWordmark /> yours.</h2>
-          <p>Your name and location shape live weather, occasion timing and the wardrobe memory on this device.</p>
+          <p>Your name and city personalise weather, outfit timing and the wardrobe memory on this device.</p>
         </div>
+
+        {!profile.onboardingCompletedAt && (
+          <ol className="profile-onboarding-path" aria-label="How Yange begins">
+            <li><span>1</span><div><strong>Add your clothes</strong><small>Start with a top, bottom and shoes.</small></div></li>
+            <li><span>2</span><div><strong>Get a complete outfit</strong><small>Yange only chooses pieces that are ready.</small></div></li>
+            <li><span>3</span><div><strong>Teach it by wearing</strong><small>A confidence check-in shapes what comes next.</small></div></li>
+          </ol>
+        )}
 
         <div className="profile-setup-fields">
           <label>
@@ -71,20 +79,24 @@ export function ProfileSetup({ open, profile, wardrobeMode, onClose, onSave }: P
             <span>City or area</span>
             <input value={draft.locationLabel} maxLength={80} placeholder="Kampala" onChange={(event) => setDraft((current) => ({ ...current, locationLabel: event.target.value }))} />
           </label>
-          <div className="profile-coordinates">
-            <label><span>Latitude</span><input type="number" step="0.0001" min="-90" max="90" value={draft.latitude} onChange={(event) => setDraft((current) => ({ ...current, latitude: Number(event.target.value) }))} /></label>
-            <label><span>Longitude</span><input type="number" step="0.0001" min="-180" max="180" value={draft.longitude} onChange={(event) => setDraft((current) => ({ ...current, longitude: Number(event.target.value) }))} /></label>
-          </div>
           <button type="button" className="profile-location-action" onClick={useCurrentLocation} disabled={locating}>{locating ? "Finding your location…" : "Use my current location"}</button>
           {locationError && <p className="profile-location-error" role="status">{locationError}</p>}
+          <details className="profile-location-details">
+            <summary>Adjust weather location</summary>
+            <p>Only change these coordinates if the forecast does not match your city.</p>
+            <div className="profile-coordinates">
+              <label><span>Latitude</span><input type="number" step="0.0001" min="-90" max="90" value={draft.latitude} onChange={(event) => setDraft((current) => ({ ...current, latitude: Number(event.target.value) }))} /></label>
+              <label><span>Longitude</span><input type="number" step="0.0001" min="-180" max="180" value={draft.longitude} onChange={(event) => setDraft((current) => ({ ...current, longitude: Number(event.target.value) }))} /></label>
+            </div>
+          </details>
         </div>
 
         <div className="profile-setup-actions">
           {profile.onboardingCompletedAt && <button type="button" className="quiet-action" onClick={onClose}>Cancel</button>}
-          {wardrobeMode === "demo" && <button type="button" className="quiet-action" disabled={!draft.displayName.trim() || !draft.locationLabel.trim()} onClick={() => save(false)}>Keep the sample wardrobe</button>}
-          <button type="button" className="primary-action" disabled={!draft.displayName.trim() || !draft.locationLabel.trim()} onClick={() => save(wardrobeMode === "demo")}>{wardrobeMode === "demo" ? "Start with my own clothes" : "Save changes"}</button>
+          {wardrobeMode === "demo" && <button type="button" className="quiet-action" disabled={!draft.displayName.trim() || !draft.locationLabel.trim()} onClick={() => save(false)}>Explore with sample clothes</button>}
+          <button type="button" className="primary-action" disabled={!draft.displayName.trim() || !draft.locationLabel.trim()} onClick={() => save(wardrobeMode === "demo")}>{wardrobeMode === "demo" ? "Add my own clothes" : "Save changes"}</button>
         </div>
-        {wardrobeMode === "demo" && <small className="profile-setup-note">Starting your wardrobe removes sample garments from recommendations. Your captured pieces stay.</small>}
+        {wardrobeMode === "demo" && <small className="profile-setup-note">Sample clothes are available for a quick tour. Choose your own clothes for personal recommendations from the start.</small>}
       </section>
     </div>
   );

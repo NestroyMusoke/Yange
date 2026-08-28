@@ -196,23 +196,40 @@ export function WearCast({
             <small>{decision.capacity.unavailableCount} of {decision.capacity.totalCoreClothing} tops, bottoms, and layers unavailable · alert at 50%</small>
           </div>
         </div>
+        <div className="wardrobe-watch-status" aria-live="polite">
+          <span className={triggerReady ? "watch-light is-alert" : "watch-light"} aria-hidden="true" />
+          <div>
+            <strong>{triggerReady ? "A wardrobe check is ready" : "Your wardrobe is being watched"}</strong>
+            <small>{triggerReady ? "Weather and availability can be checked now." : "Yange will surface a clear action when a planned outfit is at risk."}</small>
+          </div>
+          {triggerReady ? (
+            <button type="button" className="primary-action compact-action" onClick={() => void onRun(false)} disabled={running}>
+              {running ? "Checking…" : execution ? "Check again" : "Check now"}
+            </button>
+          ) : <em className="watch-clear">No action needed</em>}
+        </div>
+      </section>
+
+      <details className="wearcast-demo-tools">
+        <summary>Demo controls</summary>
+        <p>Use these controls to reproduce wardrobe pressure and recovery during a technical review.</p>
         <div className="demo-sequence">
           <div className={pressureStaged ? "demo-step step-complete" : "demo-step"}>
-            <span>01</span><div><strong>Preview laundry pressure</strong><small>3 pieces enter laundry</small></div>
-            <button type="button" onClick={onStage} disabled={pressureStaged || running}>{pressureStaged ? "Ready" : "Preview"}</button>
+            <span>01</span><div><strong>Stage laundry pressure</strong><small>Move three preview pieces into laundry</small></div>
+            <button type="button" onClick={onStage} disabled={pressureStaged || running}>{pressureStaged ? "Ready" : "Stage"}</button>
           </div>
           <div className={execution ? "demo-step step-complete" : "demo-step"}>
-            <span>02</span><div><strong>Check the forecast</strong><small>Find risks and prepare an alert</small></div>
+            <span>02</span><div><strong>Run the wardrobe check</strong><small>Compare the forecast and upcoming outfits</small></div>
             {!execution ? (
-              <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Checking…" : "Run check"}</button>
+              <button type="button" onClick={() => void onRun(false)} disabled={!triggerReady || running}>{running ? "Checking…" : "Run"}</button>
             ) : <em>{execution.status}</em>}
           </div>
           <div className={complete ? "demo-step step-complete" : failed ? "demo-step step-failed" : "demo-step"}>
-            <span>03</span><div><strong>{failed ? "Finish the alert" : "Confirm no duplicate alert"}</strong><small>{failed ? "Continue from the safe stopping point" : "Repeat the same wardrobe check"}</small></div>
-            <button type="button" onClick={() => void onRun(false)} disabled={!execution || running}>{running ? "Finishing…" : failed ? "Finish paused alert" : complete ? "Run again" : "Waiting"}</button>
+            <span>03</span><div><strong>{failed ? "Resume safely" : "Verify idempotency"}</strong><small>{failed ? "Continue from the last saved checkpoint" : "Repeat the same trigger without duplicating the alert"}</small></div>
+            <button type="button" onClick={() => void onRun(false)} disabled={!execution || running}>{running ? "Finishing…" : failed ? "Resume" : complete ? "Run again" : "Waiting"}</button>
           </div>
         </div>
-      </section>
+      </details>
 
       <ForecastRail forecast={forecast} decision={decision} />
 
@@ -259,7 +276,7 @@ export function WearCast({
       ) : (
         <section className="wearcast-clear">
           <div className="clear-radar" aria-hidden="true"><i /><i /><i /></div>
-          <div><h3>Your upcoming looks are clear.</h3><p>Move several pieces into laundry above to see how WearCast responds when wardrobe capacity becomes tight.</p></div>
+          <div><h3>Your upcoming looks are clear.</h3><p>No action is needed. Yange will guide you here when laundry, weather or an upcoming outfit needs attention.</p></div>
         </section>
       )}
 

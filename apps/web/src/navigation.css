@@ -12,7 +12,7 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
   overflow: visible;
   margin: 0;
@@ -160,8 +160,94 @@
   box-shadow: none;
 }
 
+.app-shell .view-tabs .more-destination {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.app-shell .view-tabs .more-destination > button { width: 100%; }
+
+.app-shell .view-tabs .more-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  width: min(330px, calc(100vw - 32px));
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--cream) 16%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--canvas) 88%, transparent);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.42), inset 0 1px 0 color-mix(in srgb, var(--cream) 13%, transparent);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+  backdrop-filter: blur(28px) saturate(135%);
+}
+
+.app-shell .view-tabs .more-menu-heading {
+  padding: 4px 10px 8px;
+  color: var(--cream-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.app-shell .view-tabs .more-menu button,
+.app-shell .view-tabs .more-menu button:hover,
+.app-shell .view-tabs .more-menu button.active {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  min-height: 62px;
+  gap: 10px;
+  justify-content: stretch;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: var(--cream);
+  background: transparent;
+  text-align: left;
+}
+
+.app-shell .view-tabs .more-menu button:hover,
+.app-shell .view-tabs .more-menu button.active {
+  border-color: color-mix(in srgb, var(--champagne) 24%, transparent);
+  background: color-mix(in srgb, var(--champagne) 7%, transparent);
+}
+
+.app-shell .view-tabs .more-menu button::after { display: none; }
+
+.app-shell .view-tabs .more-menu button > span:nth-child(2) {
+  display: grid;
+  gap: 2px;
+}
+
+.app-shell .view-tabs .more-menu button strong {
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.app-shell .view-tabs .more-menu button small {
+  color: var(--cream-dim);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.app-shell .view-tabs .more-menu button em {
+  align-self: center;
+  color: var(--champagne);
+  font-size: 11px;
+  font-style: normal;
+}
+
 @media (max-width: 960px) {
-  .app-shell .view-tab-copy { display: none; }
+  .app-shell .view-tabs button { gap: 5px; }
+  .app-shell .view-tab-copy,
+  .app-shell .view-tab-copy strong { display: block; }
+  .app-shell .view-tab-copy strong { font-size: 11px; }
 }
 
 @media (max-width: 720px) {
@@ -171,22 +257,28 @@
   }
 
   .app-shell .view-tabs {
-    grid-template-columns: repeat(7, 56px);
-    overflow-x: auto;
+    grid-template-columns: repeat(5, minmax(52px, 1fr));
+    overflow: visible;
     padding: 4px 8px 8px;
   }
 
   .app-shell .view-tabs button {
-    min-width: 56px;
-    min-height: 44px;
-    padding: 4px;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 50px;
+    gap: 1px;
+    padding: 3px 2px 5px;
   }
 
   .app-shell .view-tab-icon {
-    width: 20px;
-    height: 20px;
-    flex-basis: 20px;
+    width: 18px;
+    height: 18px;
+    flex-basis: 18px;
   }
+
+  .app-shell .view-tab-copy strong { overflow: hidden; max-width: 100%; font-size: 9px; text-overflow: ellipsis; }
+
+  .app-shell .view-tabs .more-menu { position: fixed; top: 132px; right: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

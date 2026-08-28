@@ -27,6 +27,12 @@ variable "gemini_model" {
   default     = "gemini-3.5-flash"
 }
 
+variable "gemini_multimodal_model" {
+  description = "Fast Gemini model used for garment and care-label image understanding."
+  type        = string
+  default     = "gemini-3.5-flash-lite"
+}
+
 variable "api_image" {
   description = "Immutable Artifact Registry image URI for the Yange API/worker container."
   type        = string

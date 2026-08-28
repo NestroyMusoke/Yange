@@ -8,6 +8,7 @@ param(
   [string]$TaskRegion = 'me-central1',
   [string]$VertexLocation = 'global',
   [string]$GeminiModel = 'gemini-3.5-flash',
+  [string]$GeminiMultimodalModel = 'gemini-3.5-flash-lite',
   [string]$CalendarId = '',
   [string]$ImageTag = '',
   [switch]$SkipBuild
@@ -103,6 +104,7 @@ try {
     -var="task_region=$TaskRegion" `
     -var="vertex_location=$VertexLocation" `
     -var="gemini_model=$GeminiModel" `
+    -var="gemini_multimodal_model=$GeminiMultimodalModel" `
     -var="api_image=$ApiImage" `
     -var="agent_image=$AgentImage" `
     -var="calendar_id=$CalendarId"

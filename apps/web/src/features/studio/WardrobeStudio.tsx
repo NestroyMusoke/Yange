@@ -6,6 +6,7 @@ import { LookDnaPanel } from "./LookDnaPanel";
 import { StyleDnaPanel } from "./StyleDnaPanel";
 import { useCaptureQueue } from "./useCaptureQueue";
 import { WardrobeGallery } from "./WardrobeGallery";
+import type { YangeView } from "../judge/JudgeMode";
 
 type StudioStep = "capture" | "style" | "inspiration";
 
@@ -17,15 +18,16 @@ interface WardrobeStudioProps {
   onStartPersonalWardrobe(): boolean;
   onSaveStyle(profile: StyleProfile): boolean;
   onSaveLook(look: LookDna): boolean;
+  onNavigate(view: YangeView): void;
 }
 
-const steps: Array<{ id: StudioStep; number: string; label: string; detail: string }> = [
-  { id: "capture", number: "01", label: "Capture a piece", detail: "Photo + care label" },
-  { id: "style", number: "02", label: "Shape Style DNA", detail: "Colours, fit and comfort" },
-  { id: "inspiration", number: "03", label: "Save inspiration", detail: "Palette, shape and styling" },
+const steps: Array<{ id: StudioStep; label: string; detail: string }> = [
+  { id: "capture", label: "Add clothes", detail: "Photo and optional care label" },
+  { id: "style", label: "Preferences", detail: "Colours, fit and comfort" },
+  { id: "inspiration", label: "Inspiration", detail: "Save a look you love" },
 ];
 
-export function WardrobeStudio({ state, onAddGarment, onUpdateGarment, onArchiveGarment, onStartPersonalWardrobe, onSaveStyle, onSaveLook }: WardrobeStudioProps) {
+export function WardrobeStudio({ state, onAddGarment, onUpdateGarment, onArchiveGarment, onStartPersonalWardrobe, onSaveStyle, onSaveLook, onNavigate }: WardrobeStudioProps) {
   const [activeStep, setActiveStep] = useState<StudioStep>("capture");
   const [confirmPersonal, setConfirmPersonal] = useState(false);
   const queue = useCaptureQueue();
@@ -69,7 +71,7 @@ export function WardrobeStudio({ state, onAddGarment, onUpdateGarment, onArchive
         </div>
       </section>
 
-      <section className={`wardrobe-mode-card mode-${state.wardrobeMode}`} data-liquid-glass>
+      <section id="wardrobe-mode" className={`wardrobe-mode-card mode-${state.wardrobeMode}`} data-liquid-glass>
         <div>
           <span>{state.wardrobeMode === "personal" ? "Personal wardrobe" : "Sample wardrobe active"}</span>
           <strong>{state.wardrobeMode === "personal" ? "Only your confirmed pieces shape recommendations." : "Explore first, then switch when your real wardrobe is ready."}</strong>
@@ -88,14 +90,27 @@ export function WardrobeStudio({ state, onAddGarment, onUpdateGarment, onArchive
             aria-current={activeStep === step.id ? "step" : undefined}
             onClick={() => setActiveStep(step.id)}
           >
-            <span>{step.number}</span>
             <div><strong>{step.label}</strong><small>{step.detail}</small></div>
           </button>
         ))}
       </nav>
 
       <div hidden={activeStep !== "capture"}>
-        <CapturePanel queue={queue} analyzer={analyzer} onAddGarment={onAddGarment} />
+        <CapturePanel
+          queue={queue}
+          analyzer={analyzer}
+          existingGarments={userGarments}
+          onAddGarment={onAddGarment}
+          essentialsActionLabel={state.wardrobeMode === "personal" ? "Create my first outfit" : "Use only my clothes"}
+          onEssentialsReady={() => {
+            if (state.wardrobeMode === "personal") {
+              onNavigate("atelier");
+            } else {
+              setConfirmPersonal(true);
+              document.getElementById("wardrobe-mode")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }}
+        />
       </div>
       <div hidden={activeStep !== "style"}>
         <StyleDnaPanel profile={state.styleProfile} onSave={onSaveStyle} />
