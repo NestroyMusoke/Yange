@@ -10,7 +10,7 @@ import {
   type StructuredLogger,
 } from "@yange/cloud";
 import { createKampalaDemoForecast, ManualForecastAdapter } from "@yange/contracts";
-import { createSeedState, type DomainEvent } from "@yange/domain";
+import { createSeedState, type DomainEvent, type TwinState } from "@yange/domain";
 import { createYangeApi, type YangeApiDependencies } from "./app";
 
 const silentLogger: StructuredLogger = { write() {} };
@@ -249,6 +249,44 @@ describe("Yange production API", () => {
     expect(body.weather).toMatchObject({ temperatureC: 27, precipitationProbability: 20 });
     expect(body.calendar).toBeNull();
     expect(body.calendarStatus).toBe("unavailable");
+  });
+
+  it("keeps scheduled WearCast compatible with projections created before user profiles", async () => {
+    class LegacyProjectionStore extends InMemoryUserStateStore {
+      override async readTwin(userId: string) {
+        const twin = await super.readTwin(userId);
+        return {
+          ...twin,
+          state: { ...twin.state, userProfile: undefined } as unknown as TwinState,
+        };
+      }
+    }
+    let requestedLocation: { latitude: number; longitude: number; label: string } | null = null;
+    const origin = await start(
+      { NODE_ENV: "test" },
+      {
+        forecastProviderForLocation: (location) => {
+          requestedLocation = location;
+          return new ManualForecastAdapter(createKampalaDemoForecast(), {
+            now: () => new Date("2026-08-14T07:30:00.000Z"),
+          });
+        },
+      },
+      new LegacyProjectionStore(),
+    );
+
+    const response = await fetch(`${origin}/internal/scheduler/wearcast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Yange-User": "legacy-user" },
+      body: JSON.stringify({
+        userId: "legacy-user",
+        triggerId: "legacy-profile-sweep",
+        triggeredAt: "2026-08-14T07:30:00.000Z",
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(requestedLocation).toEqual({ latitude: 0.3476, longitude: 32.5825, label: "Kampala" });
   });
 
   it("keeps public routes off a private worker role", async () => {

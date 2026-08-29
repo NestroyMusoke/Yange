@@ -41,6 +41,7 @@ import {
   activatePersonalWardrobe,
   archiveGarment,
   captureLookDna,
+  createSeedState,
   DomainError,
   markOutfitWorn,
   planOutfit,
@@ -585,7 +586,10 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
 
       if (method === "GET" && url.pathname === "/v1/context") {
         const twin = await store.readTwin(userId);
-        const profile = twin.state.userProfile;
+        // Projections created before the profile schema was introduced can
+        // still exist in Firestore. Keep scheduled work forward-compatible
+        // instead of letting one legacy partition abort the whole sweep.
+        const profile = twin.state.userProfile ?? createSeedState().userProfile;
         const provider = dependencies.forecastProviderForLocation?.({
           latitude: profile.latitude,
           longitude: profile.longitude,
@@ -750,7 +754,7 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
           return;
         }
         const workflowTwin = await store.readTwin(userId);
-        const profile = workflowTwin.state.userProfile;
+        const profile = workflowTwin.state.userProfile ?? createSeedState().userProfile;
         const workflow = new WearCastWorkflow({
           forecastProvider: dependencies.forecastProviderForLocation?.({
             latitude: profile.latitude,

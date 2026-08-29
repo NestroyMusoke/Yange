@@ -68,7 +68,7 @@ The complete product runs locally without credentials and activates its deployed
 - A polished production architecture asset, deployment evidence slots, submission checklist, and one-command verification script
 - Contract, domain, and browser image-pipeline tests
 - Stable per-screen URLs, notification deep links, and responsive profile access
-- 107 automated TypeScript tests across the API, web, cloud, contracts, domain, and orchestration packages
+- 108 automated TypeScript tests across the API, web, cloud, contracts, domain, and orchestration packages
 
 The local model simulations are intentional. They make the core workflow reproducible for contributors and judges. The deployed runtime activates schema-constrained Vertex AI adapters and the isolated Google Virtual Try-On worker through the same versioned boundaries. Yange Mirror is deliberately unavailable in credential-free local mode because a fake body visualization would be misleading.
 
@@ -95,7 +95,7 @@ Open `http://127.0.0.1:4173/?mode=judge` for the four-minute director. Select **
 .\scripts\verify-phase6.ps1
 ```
 
-The release candidate passes 107 automated TypeScript tests, strict TypeScript checks, production web/API builds, Terraform validation, and the high-severity dependency gate. The original Phase 6 receipt is recorded in [docs/phase-6-verification.md](docs/phase-6-verification.md); current visual evidence is in [docs/evidence/visual-qa](docs/evidence/visual-qa).
+The release candidate passes 108 automated TypeScript tests, strict TypeScript checks, production web/API builds, Terraform validation, and the high-severity dependency gate. The original Phase 6 receipt is recorded in [docs/phase-6-verification.md](docs/phase-6-verification.md); current visual evidence is in [docs/evidence/visual-qa](docs/evidence/visual-qa).
 
 ## Deploy to Google Cloud
 
