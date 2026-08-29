@@ -31,6 +31,9 @@ The complete product runs locally without credentials and activates its deployed
 - Optional read-only Calendar context that degrades independently when unavailable
 - An explanation-only model contract that cannot choose garments, score, or mutate state
 - Atomic outfit planning and dependency reservation events
+- Yange Mirror, an optional single-garment preview that appears only after an outfit is reserved
+- Adult-only consent, one-output generation, a four-per-day cost cap, cached retries, and private 24-hour result storage
+- Async Google Virtual Try-On jobs that cannot alter Personal Match, Style Aura, reservations, or wardrobe state
 - A conservative Laundry Lab with incompatibility-graph clustering
 - Separate drying routes, visible conflict edges, and fail-closed care holdouts
 - A seven-day WearCast horizon with validated production-shaped forecast data
@@ -65,9 +68,9 @@ The complete product runs locally without credentials and activates its deployed
 - A polished production architecture asset, deployment evidence slots, submission checklist, and one-command verification script
 - Contract, domain, and browser image-pipeline tests
 - Stable per-screen URLs, notification deep links, and responsive profile access
-- 83 automated TypeScript tests across the API, web, cloud, contracts, domain, and orchestration packages
+- 107 automated TypeScript tests across the API, web, cloud, contracts, domain, and orchestration packages
 
-The local model simulations are intentional. They make the complete workflow reproducible for contributors and judges; future Vertex AI adapters implement the same `@yange/contracts` interfaces.
+The local model simulations are intentional. They make the core workflow reproducible for contributors and judges. The deployed runtime activates schema-constrained Vertex AI adapters and the isolated Google Virtual Try-On worker through the same versioned boundaries. Yange Mirror is deliberately unavailable in credential-free local mode because a fake body visualization would be misleading.
 
 ## Run locally
 
@@ -92,7 +95,7 @@ Open `http://127.0.0.1:4173/?mode=judge` for the four-minute director. Select **
 .\scripts\verify-phase6.ps1
 ```
 
-The release candidate passes 83 automated TypeScript tests, strict TypeScript checks, production web/API builds, and the high-severity dependency gate. GitHub CI owns the Terraform 1.9.8 gate when the CLI is unavailable locally. The original Phase 6 receipt is recorded in [docs/phase-6-verification.md](docs/phase-6-verification.md); current visual evidence is in [docs/evidence/visual-qa](docs/evidence/visual-qa).
+The release candidate passes 107 automated TypeScript tests, strict TypeScript checks, production web/API builds, Terraform validation, and the high-severity dependency gate. The original Phase 6 receipt is recorded in [docs/phase-6-verification.md](docs/phase-6-verification.md); current visual evidence is in [docs/evidence/visual-qa](docs/evidence/visual-qa).
 
 ## Deploy to Google Cloud
 
@@ -110,4 +113,4 @@ AI may propose actions; validated domain rules commit state. The domain package 
 
 ![Yange production architecture](docs/assets/yange-architecture.svg)
 
-See [docs/build-plan.md](docs/build-plan.md), [docs/architecture.md](docs/architecture.md), [docs/phase-6-spec.md](docs/phase-6-spec.md), [docs/demo-runbook.md](docs/demo-runbook.md), [docs/submission-checklist.md](docs/submission-checklist.md), and [docs/google-cloud-setup.md](docs/google-cloud-setup.md).
+See [docs/build-plan.md](docs/build-plan.md), [docs/architecture.md](docs/architecture.md), [docs/yange-mirror.md](docs/yange-mirror.md), [docs/phase-6-spec.md](docs/phase-6-spec.md), [docs/demo-runbook.md](docs/demo-runbook.md), [docs/submission-checklist.md](docs/submission-checklist.md), and [docs/google-cloud-setup.md](docs/google-cloud-setup.md).

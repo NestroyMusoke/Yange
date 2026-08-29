@@ -5,6 +5,8 @@ import type {
   MultimodalResponseV1,
   OutfitExplanationRequestV1,
   OutfitExplanationV1,
+  CreateMirrorJobRequestV1,
+  MirrorJobResponseV1,
 } from "@yange/contracts";
 
 export interface CloudRuntimeSnapshot {
@@ -24,6 +26,10 @@ export interface CloudRuntimeSnapshot {
     taskInvokerConfigured: boolean;
     weatherConfigured: boolean;
     calendarConfigured: boolean;
+    mirrorConfigured: boolean;
+    mirrorModel: string | null;
+    mirrorProcessingRegion: string | null;
+    mirrorDailyLimit: number;
   };
   readiness: { ready: boolean; issues: string[] };
   architecture: {
@@ -127,7 +133,34 @@ export async function createMediaUploadIntent(asset: {
 }
 
 export async function createMediaReadUrl(assetId: string): Promise<{ url: string; expiresAt: string }> {
-  return request<{ url: string; expiresAt: string }>(`/v1/media/${encodeURIComponent(assetId)}`);
+  return request<{ url: string; expiresAt: string }>(`/v1/media/${encodeURIComponent(assetId)}/read-url`);
+}
+
+export async function createMirrorUploadIntent(asset: {
+  assetId: string;
+  mimeType: "image/jpeg" | "image/png";
+  byteLength: number;
+}): Promise<{ uploadUrl: string; requiredHeaders: Record<string, string> }> {
+  const response = await request<{ intent: { uploadUrl: string; requiredHeaders: Record<string, string> } }>(
+    "/v1/mirror/upload-intent",
+    { method: "POST", body: JSON.stringify(asset) },
+  );
+  return response.intent;
+}
+
+export function createMirrorJob(requestBody: CreateMirrorJobRequestV1): Promise<MirrorJobResponseV1> {
+  return request<MirrorJobResponseV1>("/v1/mirror/jobs", {
+    method: "POST",
+    body: JSON.stringify(requestBody),
+  });
+}
+
+export function getMirrorJob(jobId: string): Promise<MirrorJobResponseV1> {
+  return request<MirrorJobResponseV1>(`/v1/mirror/jobs/${encodeURIComponent(jobId)}`);
+}
+
+export function deleteMirrorJob(jobId: string): Promise<MirrorJobResponseV1> {
+  return request<MirrorJobResponseV1>(`/v1/mirror/jobs/${encodeURIComponent(jobId)}`, { method: "DELETE" });
 }
 
 export async function analyzeWithCloud(requestBody: MultimodalRequestV1): Promise<MultimodalResponseV1> {

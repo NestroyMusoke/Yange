@@ -143,6 +143,12 @@ resource "google_project_iam_member" "worker_service_usage" {
   member  = "serviceAccount:${google_service_account.worker.email}"
 }
 
+resource "google_project_iam_member" "worker_vertex" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.worker.email}"
+}
+
 resource "google_project_iam_member" "edge_service_usage" {
   project = var.project_id
   role    = "roles/serviceusage.serviceUsageConsumer"
@@ -167,6 +173,12 @@ resource "google_storage_bucket_iam_member" "edge_media" {
   bucket = google_storage_bucket.media.name
   role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.edge.email}"
+}
+
+resource "google_storage_bucket_iam_member" "worker_media" {
+  bucket = google_storage_bucket.media.name
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${google_service_account.worker.email}"
 }
 
 resource "google_service_account_iam_member" "edge_signer" {
@@ -245,6 +257,26 @@ resource "google_cloud_tasks_queue" "wearcast" {
     min_backoff        = "10s"
     max_backoff        = "600s"
     max_doublings      = 5
+  }
+
+  depends_on = [google_project_service.required]
+}
+
+resource "google_cloud_tasks_queue" "mirror" {
+  name     = "mirror-previews"
+  location = var.task_region
+
+  rate_limits {
+    max_concurrent_dispatches = 1
+    max_dispatches_per_second = 1
+  }
+
+  retry_config {
+    max_attempts       = 3
+    max_retry_duration = "1800s"
+    min_backoff        = "20s"
+    max_backoff        = "300s"
+    max_doublings      = 3
   }
 
   depends_on = [google_project_service.required]

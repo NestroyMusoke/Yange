@@ -2,10 +2,15 @@ import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   InMemoryUserStateStore,
+  InMemoryMirrorJobRepository,
   readRuntimeConfiguration,
+  type MediaUploadIntent,
+  type MirrorTaskScheduler,
+  type PrivateMediaStore,
   type StructuredLogger,
 } from "@yange/cloud";
 import { createKampalaDemoForecast, ManualForecastAdapter } from "@yange/contracts";
+import { createSeedState, type DomainEvent } from "@yange/domain";
 import { createYangeApi, type YangeApiDependencies } from "./app";
 
 const silentLogger: StructuredLogger = { write() {} };
@@ -20,10 +25,11 @@ afterEach(async () => {
 async function start(
   environment: Record<string, string> = { NODE_ENV: "test" },
   overrides: Partial<Omit<YangeApiDependencies, "configuration" | "store">> = {},
+  store = new InMemoryUserStateStore(),
 ) {
   server = createServer(createYangeApi({
     configuration: readRuntimeConfiguration(environment),
-    store: new InMemoryUserStateStore(),
+    store,
     logger: silentLogger,
     now: () => "2026-08-14T07:30:00.000Z",
     ...overrides,
@@ -32,6 +38,27 @@ async function start(
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("Test server did not bind.");
   return `http://127.0.0.1:${address.port}`;
+}
+
+class MirrorTestMedia implements PrivateMediaStore {
+  deleted: string[] = [];
+  async createUploadIntent(): Promise<MediaUploadIntent> { throw new Error("Unused."); }
+  async createReadUrl(): Promise<{ url: string; expiresAt: string }> { throw new Error("Unused."); }
+  async readBytes() { return Buffer.from("persistent"); }
+  async delete() {}
+  async createTemporaryUploadIntent(_userId: string, assetId: string): Promise<MediaUploadIntent> {
+    return {
+      assetId,
+      objectKey: `temporary/${assetId}`,
+      uploadUrl: "https://upload.example/person",
+      expiresAt: "2026-08-29T10:10:00.000Z",
+      requiredHeaders: { "Content-Type": "image/jpeg" },
+    };
+  }
+  async createTemporaryReadUrl(): Promise<{ url: string; expiresAt: string }> { throw new Error("Unused."); }
+  async readTemporaryBytes() { return Buffer.from("temporary"); }
+  async writeTemporary() {}
+  async deleteTemporary(_userId: string, assetId: string) { this.deleted.push(assetId); }
 }
 
 describe("Yange production API", () => {
@@ -238,5 +265,96 @@ describe("Yange production API", () => {
     });
     expect(publicResponse.status).toBe(404);
     expect(internalResponse.status).toBe(200);
+  });
+
+  it("queues an adult-consented Mirror job without exposing its cache key", async () => {
+    const store = new InMemoryUserStateStore();
+    const media = new MirrorTestMedia();
+    const jobs = new InMemoryMirrorJobRepository();
+    const queued: Array<{ userId: string; jobId: string }> = [];
+    const scheduler: MirrorTaskScheduler = {
+      async enqueue(request) {
+        queued.push(request);
+        return { taskName: `tasks/${request.jobId}`, deduplicated: false };
+      },
+    };
+    const origin = await start(
+      { NODE_ENV: "test", YANGE_MIRROR_ENABLED: "true" },
+      { mediaStore: media, mirrorJobs: jobs, mirrorTaskScheduler: scheduler },
+      store,
+    );
+    const runtime = await fetch(`${origin}/v1/runtime`);
+    const runtimeBody = await runtime.json();
+    const cookie = runtime.headers.get("set-cookie")?.split(";")[0];
+    if (!cookie) throw new Error("Session cookie missing.");
+    const userId = runtimeBody.sessionPartition as string;
+    const seed = createSeedState();
+    const garment = {
+      ...seed.garments["cream-blouse"],
+      imageAssetId: "asset-personal-cream",
+      source: "user-added" as const,
+    };
+    const baseOutfit = seed.outfits["today-city-calm"];
+    if (!baseOutfit) throw new Error("Seed outfit missing.");
+    await store.appendEvents(userId, [
+      {
+        id: "mirror-garment-update",
+        operationId: "mirror-fixture",
+        occurredAt: "2026-08-29T10:00:00.000Z",
+        type: "GarmentUpdated",
+        payload: { garment },
+      },
+      {
+        id: "mirror-outfit-plan",
+        operationId: "mirror-fixture",
+        occurredAt: "2026-08-29T10:00:00.000Z",
+        type: "OutfitPlanned",
+        payload: {
+          outfit: {
+            ...baseOutfit,
+            id: "planned-candidate-1",
+            source: "agent-planned",
+            garmentIds: [garment.id],
+            dependencies: [garment.id],
+          },
+        },
+      },
+    ] as DomainEvent[]);
+
+    const response = await fetch(`${origin}/v1/mirror/jobs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookie },
+      body: JSON.stringify({
+        contractVersion: "1.0",
+        requestId: "request-1",
+        outfitCandidateId: "candidate-1",
+        personImage: {
+          assetId: "mirror-person-request-1",
+          mimeType: "image/jpeg",
+          byteLength: 400_000,
+          width: 900,
+          height: 1_400,
+        },
+        garment: {
+          garmentId: garment.id,
+          assetId: garment.imageAssetId,
+          name: garment.name,
+          category: garment.category,
+        },
+        consent: {
+          adultConfirmed: true,
+          imageRightsConfirmed: true,
+          privateProcessingAccepted: true,
+          retention: "delete-person-after-generation",
+          acceptedAt: "2026-08-29T10:00:00.000Z",
+        },
+        requestedAt: "2026-08-29T10:00:00.000Z",
+      }),
+    });
+    const body = await response.json();
+    expect(response.status).toBe(202);
+    expect(body.job).toMatchObject({ status: "queued", model: "virtual-try-on-001" });
+    expect(body.job).not.toHaveProperty("cacheKey");
+    expect(queued).toEqual([{ userId, jobId: "mirror-request-1" }]);
   });
 });

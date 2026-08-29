@@ -15,6 +15,12 @@ import {
   type StructuredLogger,
   type UserStateStore,
   type WearCastTaskScheduler,
+  createMirrorJob,
+  runMirrorJob,
+  type MirrorJobRecord,
+  type MirrorJobRepository,
+  type MirrorTaskScheduler,
+  type VirtualTryOnGenerator,
 } from "@yange/cloud";
 import {
   createKampalaDemoForecast,
@@ -27,6 +33,8 @@ import {
   type ForecastProvider,
   type CalendarContextProvider,
   type NotificationGateway,
+  MirrorContractError,
+  parseCreateMirrorJobRequest,
 } from "@yange/contracts";
 import {
   addGarment,
@@ -75,6 +83,9 @@ export interface YangeApiDependencies {
   notificationGateway?: NotificationGateway;
   multimodalAnalyzerForUser?: (userId: string) => MultimodalAnalyzer;
   outfitExplainer?: OutfitExplanationPort;
+  mirrorJobs?: MirrorJobRepository;
+  mirrorTaskScheduler?: MirrorTaskScheduler;
+  mirrorGenerator?: VirtualTryOnGenerator;
 }
 
 type CloudCommand =
@@ -199,6 +210,11 @@ function sendJson(response: ServerResponse, status: number, body: unknown): void
   response.end(encoded);
 }
 
+function publicMirrorJob(job: MirrorJobRecord) {
+  const { cacheKey: _cacheKey, ...publicJob } = job;
+  return publicJob;
+}
+
 function requestId(request: IncomingMessage): string {
   const existing = request.headers["x-request-id"];
   return typeof existing === "string" && existing.length <= 128
@@ -237,7 +253,7 @@ function secureHeaders(response: ServerResponse): void {
   response.setHeader("Origin-Agent-Cluster", "?1");
   response.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://*.googleapis.com",
+    "default-src 'self'; img-src 'self' blob: data: https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://*.googleapis.com",
   );
 }
 
@@ -399,6 +415,163 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
             asyncTransport: configuration.mode === "google" ? "cloud-tasks-plus-pubsub" : "in-process",
           },
         });
+        finish(200, userId);
+        return;
+      }
+
+      if (method === "POST" && url.pathname === "/v1/mirror/upload-intent") {
+        if (!configuration.mirrorEnabled || !dependencies.mediaStore) {
+          sendJson(response, 501, { error: "MIRROR_NOT_CONFIGURED" });
+          finish(501, userId);
+          return;
+        }
+        const body = await readJson(request);
+        if (
+          typeof body.assetId !== "string" || !/^mirror-person-[a-zA-Z0-9_-]{1,120}$/.test(body.assetId) ||
+          (body.mimeType !== "image/jpeg" && body.mimeType !== "image/png") ||
+          !Number.isInteger(body.byteLength) || Number(body.byteLength) < 1 || Number(body.byteLength) > 7 * 1024 * 1024
+        ) throw new Error("REQUEST_BODY_INVALID");
+        const intent = await dependencies.mediaStore.createTemporaryUploadIntent(
+          userId,
+          body.assetId,
+          body.mimeType,
+          Number(body.byteLength),
+        );
+        sendJson(response, 200, { intent });
+        finish(200, userId);
+        return;
+      }
+
+      if (method === "POST" && url.pathname === "/v1/mirror/jobs") {
+        if (
+          !configuration.mirrorEnabled ||
+          !dependencies.mediaStore ||
+          !dependencies.mirrorJobs ||
+          !dependencies.mirrorTaskScheduler
+        ) {
+          sendJson(response, 501, { error: "MIRROR_NOT_CONFIGURED" });
+          finish(501, userId);
+          return;
+        }
+        const mirrorRequest = parseCreateMirrorJobRequest(await readJson(request));
+        const twin = await store.readTwin(userId);
+        const plannedOutfit = twin.state.outfits[`planned-${mirrorRequest.outfitCandidateId}`];
+        const garment = twin.state.garments[mirrorRequest.garment.garmentId];
+        if (
+          !plannedOutfit ||
+          plannedOutfit.source !== "agent-planned" ||
+          !plannedOutfit.garmentIds.includes(mirrorRequest.garment.garmentId) ||
+          !garment ||
+          garment.source !== "user-added" ||
+          garment.archived ||
+          garment.imageAssetId !== mirrorRequest.garment.assetId ||
+          garment.name !== mirrorRequest.garment.name ||
+          garment.category !== mirrorRequest.garment.category
+        ) {
+          await dependencies.mediaStore.deleteTemporary(userId, mirrorRequest.personImage.assetId).catch(() => undefined);
+          sendJson(response, 409, { error: "MIRROR_OUTFIT_CHANGED" });
+          finish(409, userId);
+          return;
+        }
+        const proposed = createMirrorJob(userId, mirrorRequest, configuration.mirrorLocation);
+        const reserved = await dependencies.mirrorJobs.createOrReuse(
+          userId,
+          proposed,
+          configuration.mirrorDailyLimit,
+        );
+        if (reserved.rateLimited) {
+          await dependencies.mediaStore.deleteTemporary(userId, proposed.personAssetId).catch(() => undefined);
+          sendJson(response, 429, { error: "MIRROR_DAILY_LIMIT_REACHED" });
+          finish(429, userId);
+          return;
+        }
+        if (reserved.reused) {
+          await dependencies.mediaStore.deleteTemporary(userId, proposed.personAssetId).catch(() => undefined);
+        } else {
+          try {
+            await dependencies.mirrorTaskScheduler.enqueue({ userId, jobId: reserved.job.id });
+          } catch {
+            const failedAt = now();
+            await dependencies.mirrorJobs.update(userId, reserved.job.id, {
+              status: "failed",
+              updatedAt: failedAt,
+              completedAt: failedAt,
+              personDeletedAt: failedAt,
+              failure: { code: "MODEL_UNAVAILABLE", message: "The preview could not be queued." },
+            });
+            await dependencies.mediaStore.deleteTemporary(userId, proposed.personAssetId).catch(() => undefined);
+            sendJson(response, 503, { error: "MIRROR_QUEUE_UNAVAILABLE" });
+            finish(503, userId);
+            return;
+          }
+        }
+        let resultUrl = null;
+        let resultUrlExpiresAt = null;
+        if (reserved.job.status === "ready" && reserved.job.resultAssetId) {
+          const signed = await dependencies.mediaStore.createTemporaryReadUrl(userId, reserved.job.resultAssetId);
+          resultUrl = signed.url;
+          resultUrlExpiresAt = signed.expiresAt;
+        }
+        sendJson(response, reserved.reused ? 200 : 202, {
+          job: publicMirrorJob({ ...reserved.job, cached: reserved.reused }),
+          resultUrl,
+          resultUrlExpiresAt,
+        });
+        finish(reserved.reused ? 200 : 202, userId);
+        return;
+      }
+
+      const mirrorJobMatch = url.pathname.match(/^\/v1\/mirror\/jobs\/([a-zA-Z0-9:_-]{1,200})$/);
+      if (method === "GET" && mirrorJobMatch) {
+        if (!configuration.mirrorEnabled || !dependencies.mirrorJobs || !dependencies.mediaStore) {
+          sendJson(response, 501, { error: "MIRROR_NOT_CONFIGURED" });
+          finish(501, userId);
+          return;
+        }
+        const job = await dependencies.mirrorJobs.read(userId, mirrorJobMatch[1] ?? "");
+        if (!job) {
+          sendJson(response, 404, { error: "MIRROR_JOB_NOT_FOUND" });
+          finish(404, userId);
+          return;
+        }
+        let resultUrl = null;
+        let resultUrlExpiresAt = null;
+        if (job.status === "ready" && job.resultAssetId) {
+          const signed = await dependencies.mediaStore.createTemporaryReadUrl(userId, job.resultAssetId);
+          resultUrl = signed.url;
+          resultUrlExpiresAt = signed.expiresAt;
+        }
+        sendJson(response, 200, { job: publicMirrorJob(job), resultUrl, resultUrlExpiresAt });
+        finish(200, userId);
+        return;
+      }
+
+      if (method === "DELETE" && mirrorJobMatch) {
+        if (!configuration.mirrorEnabled || !dependencies.mirrorJobs || !dependencies.mediaStore) {
+          sendJson(response, 501, { error: "MIRROR_NOT_CONFIGURED" });
+          finish(501, userId);
+          return;
+        }
+        const job = await dependencies.mirrorJobs.read(userId, mirrorJobMatch[1] ?? "");
+        if (!job) {
+          sendJson(response, 404, { error: "MIRROR_JOB_NOT_FOUND" });
+          finish(404, userId);
+          return;
+        }
+        await Promise.all([
+          dependencies.mediaStore.deleteTemporary(userId, job.personAssetId),
+          job.resultAssetId ? dependencies.mediaStore.deleteTemporary(userId, job.resultAssetId) : Promise.resolve(),
+        ]);
+        const deletedAt = now();
+        const deleted = await dependencies.mirrorJobs.update(userId, job.id, {
+          status: "deleted",
+          resultAssetId: null,
+          updatedAt: deletedAt,
+          completedAt: deletedAt,
+          personDeletedAt: deletedAt,
+          failure: null,
+        });
+        sendJson(response, 200, { job: publicMirrorJob(deleted), resultUrl: null, resultUrlExpiresAt: null });
         finish(200, userId);
         return;
       }
@@ -673,6 +846,32 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
         return;
       }
 
+      if (method === "POST" && url.pathname === "/internal/mirror/generate") {
+        if (!dependencies.mirrorJobs || !dependencies.mediaStore || !dependencies.mirrorGenerator) {
+          sendJson(response, 501, { error: "MIRROR_WORKER_NOT_CONFIGURED" });
+          finish(501, userId);
+          return;
+        }
+        const body = await readJson(request);
+        if (
+          typeof body.userId !== "string" || body.userId !== userId ||
+          typeof body.jobId !== "string" || !/^mirror-[a-zA-Z0-9:_-]{1,200}$/.test(body.jobId)
+        ) throw new Error("REQUEST_BODY_INVALID");
+        const job = await runMirrorJob(
+          { userId, jobId: body.jobId },
+          {
+            jobs: dependencies.mirrorJobs,
+            media: dependencies.mediaStore,
+            generator: dependencies.mirrorGenerator,
+            now,
+          },
+        );
+        const status = job.status === "queued" && job.failure?.code === "MODEL_UNAVAILABLE" ? 503 : 200;
+        sendJson(response, status, { job: publicMirrorJob(job) });
+        finish(status, userId);
+        return;
+      }
+
       if (method === "GET" && url.pathname === "/v1/outbox") {
         sendJson(response, 200, { records: await store.listOutbox(userId) });
         finish(200, userId);
@@ -710,6 +909,8 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
           ? 400
           : invalidMedia
             ? 422
+          : cause instanceof MirrorContractError
+            ? 400
           : cause instanceof DomainError
             ? 422
             : 500;

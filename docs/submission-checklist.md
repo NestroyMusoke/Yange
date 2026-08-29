@@ -12,6 +12,7 @@ No credential, token, service-account file, Terraform state, private photo, or p
 - [ ] Do nothing and Autopilot futures are compared before commit.
 - [ ] The agent schedules, notifies, and reserves a fallback with little hand-holding.
 - [ ] Personal Match and Style Aura use user-controlled evidence rather than attractiveness claims.
+- [ ] If Mirror is shown, it starts only after reservation and is described as an optional single-garment visualization, not 3D or a fit prediction.
 - [ ] Shopping is described only as later intentional gap analysis, not part of the working MVP.
 
 ## Architectural discipline & stack — 30%
@@ -24,6 +25,7 @@ No credential, token, service-account file, Terraform state, private photo, or p
 - [ ] Demonstrate Style Aura failure without product failure.
 - [ ] Point to schema-constrained Vertex adapters and the narrow ADK tool surface.
 - [ ] Confirm no secrets are in Git and readiness fails closed when required cloud configuration is absent.
+- [ ] Show Mirror’s separate job ledger, stable task, adult-only request, per-user cost cap, temporary storage, and failure isolation.
 
 ## Demo & production readiness — 30%
 
@@ -51,4 +53,4 @@ Use:
 - “saved social-video frame” rather than direct TikTok ingestion;
 - “drying suitability window” rather than guaranteed dry time; and
 - “Personal Match” rather than a beauty, body, or attractiveness score.
-
+- “AI visualization, not a fit guarantee” rather than 3D try-on, exact fit, or sizing advice.

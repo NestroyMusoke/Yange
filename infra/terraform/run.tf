@@ -13,6 +13,10 @@ locals {
     YANGE_WEATHER_LATITUDE             = "0.3476"
     YANGE_WEATHER_LONGITUDE            = "32.5825"
     GOOGLE_CALENDAR_ID                 = var.calendar_id
+    YANGE_MIRROR_ENABLED               = "true"
+    YANGE_MIRROR_LOCATION              = var.mirror_location
+    YANGE_MIRROR_QUEUE                 = google_cloud_tasks_queue.mirror.name
+    YANGE_MIRROR_DAILY_LIMIT           = tostring(var.mirror_daily_limit)
   }
 }
 
@@ -44,7 +48,8 @@ resource "google_cloud_run_v2_service" "worker" {
 
       dynamic "env" {
         for_each = merge(local.common_environment, {
-          YANGE_ROLE = "worker"
+          YANGE_ROLE         = "worker"
+          YANGE_MEDIA_BUCKET = google_storage_bucket.media.name
         })
         content {
           name  = env.key

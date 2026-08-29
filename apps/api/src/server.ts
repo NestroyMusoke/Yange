@@ -10,6 +10,11 @@ import {
   GoogleCalendarAdapter,
   GoogleVertexStructuredGenerationClient,
   GoogleWeatherForecastAdapter,
+  GoogleCloudAccessTokenProvider,
+  GoogleVirtualTryOnGenerator,
+  InMemoryMirrorJobRepository,
+  createFirestoreMirrorJobRepository,
+  createGoogleMirrorTaskScheduler,
   InMemoryUserStateStore,
   readRuntimeConfiguration,
   VertexMultimodalAdapter,
@@ -53,8 +58,29 @@ const taskScheduler = google
 const eventPublisher = google && configuration.role !== "edge"
   ? createGoogleEventPublisher(google.projectId, configuration.eventsTopic)
   : undefined;
-const mediaStore = google && configuration.role !== "worker" && google.mediaBucket
+const mediaStore = google && google.mediaBucket
   ? createGoogleMediaStore(google.projectId, google.mediaBucket)
+  : undefined;
+const mirrorJobs = configuration.mirrorEnabled
+  ? google
+    ? createFirestoreMirrorJobRepository(google.projectId, configuration.firestoreDatabase)
+    : new InMemoryMirrorJobRepository()
+  : undefined;
+const mirrorTaskScheduler = configuration.mirrorEnabled && google?.workerUrl && configuration.role !== "worker"
+  ? createGoogleMirrorTaskScheduler({
+      projectId: google.projectId,
+      location: configuration.taskLocation,
+      queue: configuration.mirrorQueue,
+      workerUrl: google.workerUrl,
+      serviceAccountEmail: google.taskInvokerServiceAccount,
+    })
+  : undefined;
+const mirrorGenerator = configuration.mirrorEnabled && google && configuration.role !== "edge"
+  ? new GoogleVirtualTryOnGenerator({
+      projectId: google.projectId,
+      location: configuration.mirrorLocation,
+      tokenProvider: new GoogleCloudAccessTokenProvider(),
+    })
   : undefined;
 const forecastProviders = new Map<string, GoogleWeatherForecastAdapter>();
 const forecastProviderForLocation = google
@@ -113,6 +139,9 @@ const server = createServer(createYangeApi({
   calendarProvider,
   multimodalAnalyzerForUser,
   outfitExplainer,
+  mirrorJobs,
+  mirrorTaskScheduler,
+  mirrorGenerator,
 }));
 
 server.listen(port, "0.0.0.0", () => {

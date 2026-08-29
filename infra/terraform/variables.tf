@@ -33,6 +33,22 @@ variable "gemini_multimodal_model" {
   default     = "gemini-3.5-flash-lite"
 }
 
+variable "mirror_location" {
+  description = "Supported Google Virtual Try-On region. Wardrobe media crosses from Africa south1 only after explicit consent."
+  type        = string
+  default     = "europe-west1"
+}
+
+variable "mirror_daily_limit" {
+  description = "Maximum user-initiated Mirror generations per anonymous wardrobe partition per UTC day."
+  type        = number
+  default     = 4
+  validation {
+    condition     = var.mirror_daily_limit >= 1 && var.mirror_daily_limit <= 20
+    error_message = "mirror_daily_limit must be between 1 and 20."
+  }
+}
+
 variable "api_image" {
   description = "Immutable Artifact Registry image URI for the Yange API/worker container."
   type        = string

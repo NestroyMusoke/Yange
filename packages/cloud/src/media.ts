@@ -20,6 +20,21 @@ export interface PrivateMediaStore {
   createReadUrl(userId: string, assetId: string): Promise<{ url: string; expiresAt: string }>;
   readBytes(userId: string, assetId: string): Promise<Buffer>;
   delete(userId: string, assetId: string): Promise<void>;
+  createTemporaryUploadIntent(
+    userId: string,
+    assetId: string,
+    mimeType: "image/jpeg" | "image/png",
+    byteLength: number,
+  ): Promise<MediaUploadIntent>;
+  createTemporaryReadUrl(userId: string, assetId: string): Promise<{ url: string; expiresAt: string }>;
+  readTemporaryBytes(userId: string, assetId: string): Promise<Buffer>;
+  writeTemporary(
+    userId: string,
+    assetId: string,
+    bytes: Buffer,
+    mimeType: "image/jpeg" | "image/png",
+  ): Promise<void>;
+  deleteTemporary(userId: string, assetId: string): Promise<void>;
 }
 
 function safeId(value: string, label: string): void {
@@ -53,8 +68,14 @@ export class GoogleCloudStorageMediaStore implements PrivateMediaStore {
     return `users/${userId}/assets/${assetId}`;
   }
 
-  async createUploadIntent(
-    userId: string,
+  private temporaryKey(userId: string, assetId: string): string {
+    safeId(userId, "User ID");
+    safeId(assetId, "Asset ID");
+    return `temporary/users/${userId}/assets/${assetId}`;
+  }
+
+  private async uploadIntent(
+    objectKey: string,
     assetId: string,
     mimeType: SupportedImageMimeType,
     byteLength: number,
@@ -65,7 +86,6 @@ export class GoogleCloudStorageMediaStore implements PrivateMediaStore {
     if (!Number.isInteger(byteLength) || byteLength < 1 || byteLength > MAX_MEDIA_BYTES) {
       throw new Error("Media uploads must be between 1 byte and 8 MiB.");
     }
-    const objectKey = this.key(userId, assetId);
     const expires = this.now() + 10 * 60_000;
     const [uploadUrl] = await this.bucket.file(objectKey).getSignedUrl({
       version: "v4",
@@ -82,6 +102,24 @@ export class GoogleCloudStorageMediaStore implements PrivateMediaStore {
     };
   }
 
+  async createUploadIntent(
+    userId: string,
+    assetId: string,
+    mimeType: SupportedImageMimeType,
+    byteLength: number,
+  ): Promise<MediaUploadIntent> {
+    return this.uploadIntent(this.key(userId, assetId), assetId, mimeType, byteLength);
+  }
+
+  createTemporaryUploadIntent(
+    userId: string,
+    assetId: string,
+    mimeType: "image/jpeg" | "image/png",
+    byteLength: number,
+  ): Promise<MediaUploadIntent> {
+    return this.uploadIntent(this.temporaryKey(userId, assetId), assetId, mimeType, byteLength);
+  }
+
   async createReadUrl(userId: string, assetId: string): Promise<{ url: string; expiresAt: string }> {
     const expires = this.now() + 5 * 60_000;
     const { file } = await this.validatedFile(userId, assetId);
@@ -90,6 +128,13 @@ export class GoogleCloudStorageMediaStore implements PrivateMediaStore {
       action: "read",
       expires,
     });
+    return { url, expiresAt: new Date(expires).toISOString() };
+  }
+
+  async createTemporaryReadUrl(userId: string, assetId: string): Promise<{ url: string; expiresAt: string }> {
+    const expires = this.now() + 5 * 60_000;
+    const { file } = await this.validatedFileByKey(this.temporaryKey(userId, assetId));
+    const [url] = await file.getSignedUrl({ version: "v4", action: "read", expires });
     return { url, expiresAt: new Date(expires).toISOString() };
   }
 
@@ -102,8 +147,21 @@ export class GoogleCloudStorageMediaStore implements PrivateMediaStore {
     return bytes;
   }
 
+  async readTemporaryBytes(userId: string, assetId: string): Promise<Buffer> {
+    const { file, mimeType } = await this.validatedFileByKey(this.temporaryKey(userId, assetId));
+    const [bytes] = await file.download();
+    if (bytes.length > MAX_MEDIA_BYTES || !hasExpectedSignature(bytes, mimeType)) {
+      throw new Error("Stored media failed binary signature validation.");
+    }
+    return bytes;
+  }
+
   private async validatedFile(userId: string, assetId: string) {
-    const file = this.bucket.file(this.key(userId, assetId));
+    return this.validatedFileByKey(this.key(userId, assetId));
+  }
+
+  private async validatedFileByKey(objectKey: string) {
+    const file = this.bucket.file(objectKey);
     const [metadata] = await file.getMetadata();
     const size = Number(metadata.size);
     const mimeType = metadata.contentType;
@@ -118,6 +176,27 @@ export class GoogleCloudStorageMediaStore implements PrivateMediaStore {
 
   async delete(userId: string, assetId: string): Promise<void> {
     await this.bucket.file(this.key(userId, assetId)).delete({ ignoreNotFound: true });
+  }
+
+
+  async writeTemporary(
+    userId: string,
+    assetId: string,
+    bytes: Buffer,
+    mimeType: "image/jpeg" | "image/png",
+  ): Promise<void> {
+    if (bytes.length < 1 || bytes.length > MAX_MEDIA_BYTES || !hasExpectedSignature(bytes, mimeType)) {
+      throw new Error("Generated media failed binary signature validation.");
+    }
+    await this.bucket.file(this.temporaryKey(userId, assetId)).save(bytes, {
+      resumable: false,
+      contentType: mimeType,
+      metadata: { cacheControl: "private, no-store, max-age=0" },
+    });
+  }
+
+  async deleteTemporary(userId: string, assetId: string): Promise<void> {
+    await this.bucket.file(this.temporaryKey(userId, assetId)).delete({ ignoreNotFound: true });
   }
 }
 

@@ -9,6 +9,9 @@ param(
   [string]$VertexLocation = 'global',
   [string]$GeminiModel = 'gemini-3.5-flash',
   [string]$GeminiMultimodalModel = 'gemini-3.5-flash-lite',
+  [string]$MirrorLocation = 'europe-west1',
+  [ValidateRange(1, 20)]
+  [int]$MirrorDailyLimit = 4,
   [string]$CalendarId = '',
   [string]$ImageTag = '',
   [switch]$SkipBuild
@@ -105,6 +108,8 @@ try {
     -var="vertex_location=$VertexLocation" `
     -var="gemini_model=$GeminiModel" `
     -var="gemini_multimodal_model=$GeminiMultimodalModel" `
+    -var="mirror_location=$MirrorLocation" `
+    -var="mirror_daily_limit=$MirrorDailyLimit" `
     -var="api_image=$ApiImage" `
     -var="agent_image=$AgentImage" `
     -var="calendar_id=$CalendarId"

@@ -1381,3 +1381,306 @@ body:has(.app-shell:not(.view-today)) {
   .context-source-control { grid-template-columns: 1fr 1fr; }
   .context-source-status { grid-column: 1 / -1; justify-self: start; }
 }
+
+/* Yange Mirror: a contained dressing-room reveal after an outfit is reserved. */
+.yange-mirror {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 24px;
+  padding: clamp(22px, 3vw, 34px);
+  border: 1px solid color-mix(in srgb, var(--champagne) 20%, transparent);
+  border-radius: 24px;
+  background:
+    linear-gradient(125deg, color-mix(in srgb, var(--cream) 6%, transparent), transparent 38%),
+    color-mix(in srgb, var(--charcoal-raised) 88%, transparent);
+  box-shadow: inset 0 1px color-mix(in srgb, white 10%, transparent), 0 24px 70px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: blur(24px) saturate(1.15);
+  backdrop-filter: blur(24px) saturate(1.15);
+}
+
+.yange-mirror::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--mx, 72%) var(--my, 18%), color-mix(in srgb, var(--champagne) 8%, transparent), transparent 28%);
+  pointer-events: none;
+  content: "";
+}
+
+.mirror-seam {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 48%;
+  width: 1px;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--champagne) 26%, transparent) 22%, color-mix(in srgb, var(--champagne) 55%, transparent) 50%, color-mix(in srgb, var(--champagne) 20%, transparent) 78%, transparent);
+  opacity: 0.7;
+}
+
+.mirror-seam i {
+  position: absolute;
+  top: -24%;
+  left: -2px;
+  width: 5px;
+  height: 24%;
+  border-radius: 50%;
+  background: var(--champagne);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--champagne) 52%, transparent);
+  opacity: 0;
+}
+
+.mirror-queued .mirror-seam i,
+.mirror-generating .mirror-seam i,
+.mirror-uploading .mirror-seam i {
+  opacity: 0.8;
+  animation: mirror-seam-travel 3.8s cubic-bezier(0.62, 0.05, 0.36, 1) infinite;
+}
+
+@keyframes mirror-seam-travel {
+  0% { transform: translateY(0); opacity: 0; }
+  16% { opacity: 0.82; }
+  84% { opacity: 0.62; }
+  100% { transform: translateY(520%); opacity: 0; }
+}
+
+.mirror-heading {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mirror-heading > div { max-width: 690px; }
+.mirror-heading > div > span,
+.mirror-result-copy > span,
+.mirror-processing > div > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--champagne);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.app-shell:not(.view-today) .mirror-heading h3 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.2vw, 2.7rem);
+  font-variation-settings: "opsz" 34, "wght" 410;
+  line-height: 1.08;
+}
+
+.mirror-heading p {
+  max-width: 65ch;
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.mirror-heading > em {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  border: 1px solid color-mix(in srgb, var(--champagne) 20%, transparent);
+  border-radius: 999px;
+  color: var(--cream-dim);
+  font-size: 0.63rem;
+  font-style: normal;
+}
+
+.mirror-workbench,
+.mirror-result {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.82fr) minmax(300px, 1.18fr);
+  gap: clamp(24px, 4vw, 52px);
+  margin-top: 26px;
+}
+
+.mirror-photo-stage,
+.mirror-result figure {
+  position: relative;
+  overflow: hidden;
+  min-height: 430px;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--cream) 12%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--charcoal) 72%, transparent);
+}
+
+.mirror-photo-stage > img,
+.mirror-result figure > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 430px;
+  object-fit: cover;
+}
+
+.mirror-photo-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.mirror-photo-empty span {
+  width: 86px;
+  height: 86px;
+  border: 1px solid color-mix(in srgb, var(--champagne) 28%, transparent);
+  border-radius: 50%;
+  transform: translateY(-68px);
+}
+
+.mirror-photo-empty i {
+  position: absolute;
+  bottom: -58px;
+  width: 78%;
+  height: 320px;
+  border: 1px solid color-mix(in srgb, var(--champagne) 24%, transparent);
+  border-radius: 50% 50% 0 0;
+}
+
+.mirror-photo-control {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  padding: 13px 15px;
+  border: 1px solid color-mix(in srgb, white 13%, transparent);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--charcoal) 64%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  cursor: pointer;
+}
+
+.mirror-photo-control input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+
+.mirror-photo-control strong,
+.mirror-photo-control small { display: block; }
+.mirror-photo-control strong { color: var(--cream); font-size: 0.75rem; }
+.mirror-photo-control small { margin-top: 4px; color: var(--cream-dim); font-size: 0.61rem; line-height: 1.35; }
+
+.mirror-controls {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.mirror-consent {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.mirror-consent label {
+  display: grid;
+  grid-template-columns: 19px 1fr;
+  gap: 11px;
+  align-items: start;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.mirror-consent input { width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--champagne); }
+.mirror-controls > .primary-action { width: 100%; margin: 0; }
+.mirror-error { margin: 0 0 13px; color: var(--danger) !important; font-size: 0.71rem; line-height: 1.5; }
+
+.mirror-privacy { margin-top: 14px; color: var(--cream-dim); font-size: 0.66rem; }
+.mirror-privacy summary { width: fit-content; cursor: pointer; }
+.mirror-privacy p { margin: 8px 0 0; font-size: 0.65rem; line-height: 1.55; }
+
+.mirror-processing,
+.mirror-unavailable {
+  display: flex;
+  min-height: 230px;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 28px;
+  border: 1px solid color-mix(in srgb, var(--cream) 9%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--chocolate) 32%, transparent);
+}
+
+.mirror-processing > div:last-child,
+.mirror-unavailable { text-align: left; }
+.mirror-processing h4,
+.mirror-result-copy h4 { margin: 0 0 9px; color: var(--cream); font-family: var(--font-display); font-size: 1.7rem; font-weight: 410; }
+.mirror-processing p,
+.mirror-unavailable p,
+.mirror-result-copy p { max-width: 58ch; margin: 0; font-size: 0.75rem; line-height: 1.6; }
+.mirror-unavailable { flex-direction: column; align-items: flex-start; }
+.mirror-unavailable strong { color: var(--cream); font-family: var(--font-display); font-size: 1.35rem; font-weight: 410; }
+.mirror-unavailable .quiet-action { margin-top: 4px; }
+
+.mirror-progress {
+  position: relative;
+  flex: 0 0 auto;
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--champagne) 24%, transparent);
+  border-radius: 50%;
+}
+.mirror-progress i {
+  position: absolute;
+  top: 18px;
+  right: -20px;
+  left: -20px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--champagne) 75%, transparent);
+  filter: blur(8px);
+  animation: mirror-progress-drift 2.8s ease-in-out infinite alternate;
+}
+@keyframes mirror-progress-drift { to { transform: translateY(30px) rotate(-8deg); } }
+
+.mirror-result figure { aspect-ratio: 3 / 4; min-height: 0; }
+.mirror-result figure > img { min-height: 0; aspect-ratio: 3 / 4; }
+.mirror-result figcaption {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: var(--cream);
+  background: rgba(8, 8, 7, 0.62);
+  font-size: 0.6rem;
+  text-align: center;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.mirror-result-copy { align-self: center; }
+.mirror-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+@media (max-width: 780px) {
+  .yange-mirror { padding: 18px 15px; border-radius: 18px; }
+  .mirror-heading { flex-direction: column; }
+  .mirror-heading > em { align-self: flex-start; }
+  .mirror-workbench,
+  .mirror-result { grid-template-columns: 1fr; }
+  .mirror-photo-stage { min-height: 390px; }
+  .mirror-photo-stage > img { min-height: 390px; }
+  .mirror-seam { display: none; }
+  .mirror-processing { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mirror-seam i,
+  .mirror-progress i { animation: none !important; }
+}

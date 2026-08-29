@@ -17,6 +17,11 @@ const mediaStore: PrivateMediaStore = {
   async createReadUrl() { throw new Error("Unused in test."); },
   async readBytes() { return Buffer.from("rewritten-image"); },
   async delete() {},
+  async createTemporaryUploadIntent() { throw new Error("Unused in test."); },
+  async createTemporaryReadUrl() { throw new Error("Unused in test."); },
+  async readTemporaryBytes() { throw new Error("Unused in test."); },
+  async writeTemporary() {},
+  async deleteTemporary() {},
 };
 
 describe("Vertex supervised adapters", () => {

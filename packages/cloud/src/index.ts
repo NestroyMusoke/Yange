@@ -3,6 +3,7 @@ export * from "./config";
 export * from "./firestore";
 export * from "./media";
 export * from "./messaging";
+export * from "./mirror";
 export * from "./observability";
 export * from "./persistence";
 export * from "./vertex";

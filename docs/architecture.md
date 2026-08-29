@@ -30,6 +30,10 @@ flowchart LR
   Worker --> Calendar["Google Calendar, read-only"]
   Worker --> PubSub["Pub/Sub ordered events + DLQ"]
   Vertex["Vertex AI structured multimodal/explanations"] --> Contracts["Versioned runtime contracts"]
+  Edge -->|"opt-in Mirror task"| MirrorTasks["Rate-limited Mirror queue"]
+  MirrorTasks --> Worker
+  Worker -->|"adult-only, one output"| VTO["Google Virtual Try-On 001"]
+  VTO -->|"private temporary result"| Storage
   Contracts --> Domain
 ```
 
@@ -175,6 +179,30 @@ The separate ADK service reasons with Gemini and can inspect or request a verifi
 
 Firestore stores four evidence surfaces under each opaque user partition: immutable events, a rebuildable current projection, checkpoint receipts, and outbox records. An append transaction either writes all matching evidence or none of it. Pub/Sub delivery is downstream, so transport failure cannot roll back a valid wardrobe decision.
 
+### Yange Mirror, isolated presentation workflow
+
+Mirror begins only after the user reserves a deterministically validated outfit. It is presentation output, not wardrobe evidence.
+
+```text
+Reserved outfit + photographed supported garment
+        |
+Explicit adult, image-rights, and regional-processing consent
+        |
+Short-lived signed upload for one person photo
+        |
+Edge revalidates outfit, garment ownership, photo reference, quota, and cache
+        |
+Stable Cloud Task name -> private worker
+        |
+Adult-only Google Virtual Try-On request, one output
+        |
+Person photo deleted -> result stored under 24-hour temporary lifecycle
+        |
+Polling receipt / optional browser notification / user delete
+```
+
+The job ledger is separate from the append-only Wardrobe Digital Twin. A blocked, failed, deleted, or duplicated Mirror job cannot emit domain events, change a score, reserve a garment, update Style Aura, or affect WearCast. The worker permits at most three transport attempts, while the edge permits four user-started generations per UTC day. Inputs and outputs remain in private Cloud Storage; task payloads and logs contain identifiers only. See [Yange Mirror safety and experiment record](yange-mirror.md).
+
 ### Replaceable model boundary
 
 `@yange/contracts` owns the versioned multimodal and explanation requests, responses, runtime parsers, and adapter ports. The React experience depends on those boundaries rather than a Gemini SDK. Phase 5 can add Vertex AI adapters without changing domain commands, persisted events, scoring, or review UI.
@@ -198,6 +226,7 @@ Firestore stores four evidence surfaces under each opaque user partition: immuta
 - Future simulation clones its inputs and cannot write the event ledger.
 - Forecast heuristics express suitability and uncertainty, never a guaranteed drying completion time.
 - Workflow retries are idempotent even when the underlying scheduler or message transport delivers more than once.
+- Generative presentation is isolated from decision authority and can fail without changing the twin.
 
 ## Phase 6 — presentation and proof boundary
 

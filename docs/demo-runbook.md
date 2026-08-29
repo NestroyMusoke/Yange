@@ -34,6 +34,7 @@ Say: “The model cannot invent clothes or override availability.”
 - Show the ranked feasible candidates and the five-factor Personal Match receipt.
 - Point to weather, calendar, care practicality, Style Memory, and deterministic tie-breaking.
 - Reserve the best candidate and show garment dependency reservations.
+- If the recorded time limit allows, open **Yange Mirror**, select the photographed top, and start one consented preview. Continue the demo while the private job runs; return only when the result is ready.
 
 Proof: constrained planning, explainability, live state, model containment.
 
@@ -78,6 +79,7 @@ Proof: graceful degradation, observability, reproducible Google Cloud execution.
 - WebGL unavailable: keep the still fallback and continue; this proves the boundary.
 - Cloud runtime not in Google mode: stop calling it deployed proof. Continue with the local rehearsal and record the Google take after configuration is fixed.
 - Weather unavailable in cloud: use the stored validated snapshot only if the UI labels its source and age.
+- Mirror blocked or slow: say that the person photo was deleted and continue. The planned outfit, score, and reservations remain complete; never wait on generation during the live take.
 
 ## Screenshot set after deployment
 
@@ -91,4 +93,4 @@ Capture at 1440 × 900 unless Devpost specifies otherwise:
 6. Cloud Proof with Google mode, revision, and trace.
 7. System architecture diagram.
 8. 390 px mobile Today or Judge Mode frame.
-
+9. Optional Yange Mirror result with the visible “AI visualization, not a fit guarantee” label and no private source image.

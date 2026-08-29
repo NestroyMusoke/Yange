@@ -21,6 +21,10 @@ export interface RuntimeConfiguration {
   sessionSecret: string | null;
   weatherBaseUrl: string | null;
   calendarId: string | null;
+  mirrorEnabled: boolean;
+  mirrorLocation: string;
+  mirrorQueue: string;
+  mirrorDailyLimit: number;
   weatherLatitude: number;
   weatherLongitude: number;
 }
@@ -75,6 +79,10 @@ export function readRuntimeConfiguration(
     sessionSecret: value(environment, "YANGE_SESSION_SECRET"),
     weatherBaseUrl: value(environment, "WEATHER_PROVIDER_BASE_URL"),
     calendarId: value(environment, "GOOGLE_CALENDAR_ID"),
+    mirrorEnabled: value(environment, "YANGE_MIRROR_ENABLED") === "true",
+    mirrorLocation: value(environment, "YANGE_MIRROR_LOCATION") ?? "europe-west1",
+    mirrorQueue: value(environment, "YANGE_MIRROR_QUEUE") ?? "mirror-previews",
+    mirrorDailyLimit: Number.parseInt(value(environment, "YANGE_MIRROR_DAILY_LIMIT") ?? "4", 10),
     weatherLatitude: Number.parseFloat(value(environment, "YANGE_WEATHER_LATITUDE") ?? "0.3476"),
     weatherLongitude: Number.parseFloat(value(environment, "YANGE_WEATHER_LONGITUDE") ?? "32.5825"),
   };
@@ -101,6 +109,12 @@ export function checkRuntimeConfiguration(
   if (configuration.role !== "worker" && (!configuration.sessionSecret || configuration.sessionSecret.length < 32)) {
     issues.push("YANGE_SESSION_SECRET must contain at least 32 characters in google edge mode.");
   }
+  if (configuration.mirrorEnabled && !configuration.mediaBucket) {
+    issues.push("YANGE_MEDIA_BUCKET is required when Yange Mirror is enabled.");
+  }
+  if (configuration.mirrorEnabled && (!Number.isInteger(configuration.mirrorDailyLimit) || configuration.mirrorDailyLimit < 1 || configuration.mirrorDailyLimit > 20)) {
+    issues.push("YANGE_MIRROR_DAILY_LIMIT must be between 1 and 20.");
+  }
   return { ready: issues.length === 0, issues };
 }
 
@@ -121,5 +135,9 @@ export function publicRuntimeConfiguration(configuration: RuntimeConfiguration) 
     taskInvokerConfigured: Boolean(configuration.taskInvokerServiceAccount),
     weatherConfigured: configuration.mode === "google",
     calendarConfigured: Boolean(configuration.calendarId),
+    mirrorConfigured: configuration.mirrorEnabled,
+    mirrorModel: configuration.mirrorEnabled ? "virtual-try-on-001" : null,
+    mirrorProcessingRegion: configuration.mirrorEnabled ? configuration.mirrorLocation : null,
+    mirrorDailyLimit: configuration.mirrorEnabled ? configuration.mirrorDailyLimit : 0,
   };
 }

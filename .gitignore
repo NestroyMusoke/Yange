@@ -19,3 +19,5 @@ coverage/
 services/yange_steward/.venv/
 services/yange_steward/**/__pycache__/
 services/yange_steward/.pytest_cache/
+# Local experiment inputs/results may include third-party or private people.
+artifacts/experiments/

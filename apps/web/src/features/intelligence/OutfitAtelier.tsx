@@ -18,6 +18,7 @@ import { RuntimeOutfitExplainer } from "../../aiRuntime";
 import { getLiveContext, isCloudSyncConfigured, type LiveContextSnapshot } from "../../cloudRuntime";
 import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 import { GarmentPreview } from "./GarmentPreview";
+import { YangeMirror } from "./YangeMirror";
 
 interface OutfitAtelierProps {
   state: TwinState;
@@ -353,6 +354,12 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
             ))}
           </div>
           {plannedCandidateId && <div className="success-banner" role="status"><div><strong>Outfit planned.</strong><span>Every included garment is reserved for this occasion.</span></div></div>}
+          {plannedCandidateId && candidates.find((candidate) => candidate.id === plannedCandidateId) && (
+            <YangeMirror
+              candidate={candidates.find((candidate) => candidate.id === plannedCandidateId)!}
+              state={state}
+            />
+          )}
         </div>
       ) : (
         <div className="atelier-empty">

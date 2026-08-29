@@ -10,5 +10,7 @@ await build({
   bundle: true,
   platform: "node",
   format: "esm",
-  external: ["@google-cloud/*", "@google/genai", "google-auth-library", "googleapis"],
+  // Keep native and Google Cloud packages in node_modules. In particular,
+  // Sharp resolves its platform-specific libvips binary at runtime.
+  external: ["@google-cloud/*", "@google/genai", "google-auth-library", "googleapis", "sharp"],
 });
