@@ -1,12 +1,14 @@
 # Yange
 
-**A personal wardrobe agent that turns the clothes you already own into weather-ready outfits, learns from how you felt wearing them, and acts before laundry disrupts your plans.**
+**Some mornings I lost 30 minutes to my own closet. Yange ended that.**
+
+Yange is a personal wardrobe agent that turns the clothes you already own into weather-ready outfits, learns from how you felt wearing them, and acts before laundry disrupts your plans.
 
 **[Open the live product](https://yange-kdxt2klboq-bq.a.run.app/)** · **[See the architecture](#architecture-built-to-survive-failure)** · **[Run it locally](#run-yange)**
 
-[![Yange Today screen showing wardrobe readiness, Personal Match and the living Style Aura](docs/evidence/visual-qa/today.png)](https://yange-kdxt2klboq-bq.a.run.app/)
+[![Live Yange journey from outfit wear to confidence memory and a personal Style Aura](docs/assets/yange-product-demo.gif)](https://yange-kdxt2klboq-bq.a.run.app/)
 
-<sub>Yange running as a responsive web product. The colour ribbons are a live WebGL projection of the style evidence the user has chosen and confirmed.</sub>
+<sub>Live capture from the deployed product: one worn outfit updates five garment states, records a Confidence Check-in and changes the Aura from learning to a personal palette.</sub>
 
 ## I built the agent I needed
 
@@ -15,6 +17,8 @@ I am **Musoke Nestroy**, and some mornings I could spend as much as 30 minutes s
 The problem was not a lack of clothes. It was the number of facts I was trying to hold in my head at once: what I had worn recently, what still needed washing, which pieces I was overusing, what the weather in Kampala might do next, where I was going, and whether an outfit would actually feel like me. I would reach for the same familiar pieces while other clothes stayed idle, shortening the life of the clothes I loved most.
 
 Laundry created a second version of the same problem. I had to reread care labels, separate materials safely, guess whether the weather would let them dry, and remember whether a planned outfit depended on something sitting in the laundry basket.
+
+That confusion is not mine alone. A [2017 survey of 500 people in the UK](https://www.laundryandcleaningnews.com/news/over-half-of-people-find-clothing-care-labels-confusing-5768936/) found that 56% found clothing-care symbols confusing. More locally, a [2023 study of 159 Family and Consumer Sciences students in Ghana](https://www.scipublications.com/journal/index.php/jad/article/view/703) found that 42.1% did not understand care-label information; most students could not identify several common drying and bleaching symbols. Yange reads the label once, asks when the evidence is uncertain, and remembers the confirmed instructions for the garment's lifetime.
 
 I realised this was not simply an outfit-recommendation problem. It was a **memory, state, and forward-planning problem**.
 
@@ -62,7 +66,7 @@ The outfit engine first applies hard constraints, then calculates a deterministi
 
 ### 3. Laundry treated as an operational workflow
 
-Confirmed care-label evidence becomes an incompatibility graph. Yange separates unsafe combinations, isolates unknown-care garments instead of guessing, assigns drying routes, and uses a seven-day forecast to compare doing nothing with acting now. At 50% core-wardrobe pressure, it can warn the user before choice collapses.
+Yange calls its future-risk loop **WearCast**. Confirmed care-label evidence becomes an incompatibility graph. Yange separates unsafe combinations, isolates unknown-care garments instead of guessing, assigns drying routes, and uses a seven-day forecast to compare doing nothing with acting now. At 50% core-wardrobe pressure, it can warn the user before choice collapses.
 
 ### 4. Personalisation without body judgement
 
@@ -74,7 +78,7 @@ Gemini 3.5 Flash Lite reads garment photos, care labels and inspiration images i
 
 ### 6. A safer virtual preview, downstream of the decision
 
-**Yange Mirror** can preview one photographed top or outerwear piece after an outfit is already selected. Google Virtual Try-On runs as an isolated asynchronous job with adult-only consent, private temporary media, one result, a four-per-day cap and immediate deletion controls. A failed preview cannot change the outfit, score, Style Aura or wardrobe ledger. Every result is labelled **AI visualization, not a fit guarantee**.
+**Yange Mirror** can preview one photographed top or outerwear piece after an outfit is already selected. Google Virtual Try-On runs as an isolated asynchronous job with adult-only consent, private temporary media, one result, a four-per-day cap and immediate deletion controls. A failed preview cannot change the outfit, score, learned colour projection or wardrobe ledger. Every result is labelled **AI visualization, not a fit guarantee**.
 
 ## The interface learns too
 
@@ -88,7 +92,7 @@ The visual layer remains expendable. If WebGL fails, the Aura becomes a still co
 
 | Capture the wardrobe | Plan from evidence | Act on what is coming |
 | --- | --- | --- |
-| ![Wardrobe Studio with private garment capture and evidence review](docs/evidence/visual-qa/studio.png) | ![Outfit Atelier with planning and Personal Match](docs/evidence/visual-qa/atelier.png) | ![WearCast showing the weather-aware planning surface](docs/evidence/visual-qa/wearcast.png) |
+| ![Wardrobe Studio with private garment capture and evidence review](docs/evidence/visual-qa/studio.png) | ![Outfit Atelier with planning and Personal Match](docs/evidence/visual-qa/atelier.png) | ![Weather and laundry planning surface](docs/evidence/visual-qa/wearcast.png) |
 | Garments, care labels and inspiration become reviewed evidence. | Only feasible outfits reach the Personal Match ranking. | Weather, laundry and future plans are simulated before action. |
 
 ## Architecture built to survive failure
@@ -123,6 +127,8 @@ Browser request
 | Supervised reasoning agent | Google ADK with Gemini 3.5 Flash | Can inspect the wardrobe or request a verified WearCast run through two narrow tools |
 | Optional garment preview | Google Virtual Try-On `virtual-try-on-001` | Produces one temporary image outside the wardrobe ledger |
 | Outfit ranking, care safety, state transitions and commits | Pure TypeScript domain engine | Sole decision authority |
+
+The two Gemini variants are intentional. Flash Lite handles frequent schema-constrained visual evidence extraction. Flash handles the higher-level explanation and supervised ADK reasoning paths. Both remain downstream of the deterministic rules that decide and commit wardrobe state.
 
 ### Failure is contained, not hidden
 
