@@ -1,231 +1,179 @@
 # Yange
 
-**Some mornings I lost 30 minutes to my own closet. Yange ended that.**
+**Your Friday outfit depends on a shirt that is still in the laundry. Yange notices before you do.**
 
-Yange is a personal wardrobe agent that turns the clothes you already own into weather-ready outfits, learns from how you felt wearing them, and acts before laundry disrupts your plans. I built it alone in Kampala, Uganda.
+Yange is an autonomous wardrobe-readiness agent. It tracks what is wearable, reads confirmed care evidence, watches future plans and weather, and completes the safe parts of the laundry workflow before a dirty garment becomes a failed plan.
 
-**[Open the live product](https://yange-kdxt2klboq-bq.a.run.app/)** · **[Read the build story](https://medium.com/@franciamusoke/i-lost-30-minutes-a-day-to-my-closet-so-i-built-an-agent-that-remembers-what-i-cant-39b9bc11e89a)** · **[See the architecture](#architecture-built-to-survive-failure)** · **[Run it locally](#run-yange)**
+I built Yange alone in Kampala, Uganda, from a problem I kept living: my wardrobe had clothes, but no memory—and I was spending up to 30 minutes reconstructing its state in my head.
 
-[![Live Yange journey from outfit wear to confidence memory and a personal Style Aura](docs/assets/yange-product-demo.gif)](https://yange-kdxt2klboq-bq.a.run.app/)
+**[Open the live product](https://yange-kdxt2klboq-bq.a.run.app/)** · **[Read the build story](https://medium.com/@franciamusoke/i-lost-30-minutes-a-day-to-my-closet-so-i-built-an-agent-that-remembers-what-i-cant-39b9bc11e89a)** · **[Run it locally](#run-yange)**
 
-<sub>Live capture from the deployed product: one worn outfit updates five garment states, records a Confidence Check-in and changes the Aura from learning to a personal palette.</sub>
+[![WearCast autonomous wardrobe planning with durable checkpoints, replay safety and failure recovery](docs/submission-assets/05-wearcast-reliability.png)](docs/submission-assets/05-wearcast-reliability.png)
 
-## Proof at a glance
+<sub>The core Taskmaster workflow: a scheduled trigger becomes a forecast-aware intervention, persists through six durable checkpoints, and produces each domain effect once even when transport retries. Click for the full-resolution architecture.</sub>
 
-| Claim | Inspectable evidence |
-| --- | --- |
-| A real garment becomes trusted wardrobe state | [Capture → clean cutout → reviewed evidence](#one-friday-explains-the-whole-product) |
-| Inspiration never becomes imaginary inventory | [Inspiration → Look DNA → feasible wardrobe match](#one-friday-explains-the-whole-product) |
-| Laundry safety is calculated, not narrated | [Care-safe grouping proof](#why-yange-is-more-than-an-outfit-chatbot) and the [pure domain implementation](packages/domain) |
-| Autonomy survives retries and partial failure | [WearCast checkpoint architecture](#wearcast-autonomy-that-survives-replay) and [orchestrator tests](packages/orchestrator) |
-| Gemini cannot silently rewrite wardrobe truth | [Multimodal trust boundary](#multimodal-intake-without-blocking-the-user) and [versioned contracts](packages/contracts) |
-| The system is genuinely deployed | [Unedited Google Cloud evidence](#live-google-cloud-evidence), a [dated receipt](docs/evidence/live-deployment-2026-08-29.md), and the [live runtime](https://yange-kdxt2klboq-bq.a.run.app/v1/runtime) |
+## The one chore Yange owns
 
-## I built the agent I needed
+The hard part of getting dressed is not generating an outfit description. It is keeping tomorrow's real options open while garments are being worn, aired, washed and dried.
 
-I am **Musoke Nestroy**, and some mornings I could spend as much as 30 minutes standing in front of my wardrobe trying to decide what to wear.
+One Friday explains the agent:
 
-The problem was not a lack of clothes. It was the number of facts I was trying to hold in my head at once: what I had worn recently, what still needed washing, which pieces I was overusing, what the weather in Kampala might do next, where I was going, and whether an outfit would actually feel like me. I would reach for the same familiar pieces while other clothes stayed idle, shortening the life of the clothes I loved most.
+1. **A plan creates a dependency.** The user reserves an outfit for Friday. Its garments are now part of a future commitment, not just cards in a gallery.
+2. **Reality changes.** Wearing another outfit moves each garment independently into available, rewearable, airing or laundry state according to confirmed material and care evidence.
+3. **Yange wakes up without being asked.** Cloud Scheduler creates a stable trigger. Cloud Tasks invokes an authenticated private worker, which rebuilds the latest wardrobe state instead of trusting stale client memory.
+4. **It simulates before acting.** WearCast acquires a timestamped forecast, clones the wardrobe projection, and compares doing nothing with a safe intervention.
+5. **It completes the safe work.** If a dirty dependency threatens Friday, Yange separates compatible wash groups, finds a forecast-backed drying opportunity, reserves a verified fallback when necessary, and prepares one concise notification.
+6. **It leaves a receipt.** One Firestore transaction records the intervention, current projection, workflow checkpoint and outbox message. Retries resume; they do not repeat the chore.
 
-Laundry created a second version of the same problem. I had to reread care labels, separate materials safely, guess whether the weather would let them dry, and remember whether a planned outfit depended on something sitting in the laundry basket.
+The user does not have to reopen a chat, remember which garment matters, ask whether the weather changed, or reconstruct what the agent already knew.
 
-That confusion is not mine alone. A [2017 survey of 500 people in the UK](https://www.laundryandcleaningnews.com/news/over-half-of-people-find-clothing-care-labels-confusing-5768936/) found that 56% found clothing-care symbols confusing. More locally, a [2023 study of 159 Family and Consumer Sciences students in Ghana](https://www.scipublications.com/journal/index.php/jad/article/view/703) found that 42.1% did not understand care-label information; most students could not identify several common drying and bleaching symbols. Yange reads the label once, asks when the evidence is uncertain, and remembers the confirmed instructions for the garment's lifetime.
+## Why this is a Taskmaster agent
 
-I realised this was not simply an outfit-recommendation problem. It was a **memory, state, and forward-planning problem**.
-
-That experience became Yange. In Luganda, *yange* means **mine**. The name is the product promise: my wardrobe, my evidence, my preferences, and an agent that learns my routines instead of issuing generic rules about what should look good on me.
-
-Kampala shaped the product too. A morning can begin bright and turn wet before clothes have dried, so weather could not be a decorative card; it had to become timestamped decision context. And because I have not always had many people around who notice the small things about me, I wanted the product to make attention visible. That became Style Aura: not a mascot or a mood light, but a gradual visual receipt that Yange is learning the colours in which I actually feel like myself.
-
-| Before Yange | With Yange |
-| --- | --- |
-| Search the whole wardrobe from memory | Rank only outfits that are actually available |
-| Rewear the same pieces without noticing | Track wear, airing, rewear and laundry state per garment |
-| Read every care label again on wash day | Build safe wash groups from confirmed care evidence |
-| Wash when the forecast cannot support drying | Find the strongest forecast-backed laundry opportunity |
-| Discover too late that Friday's blouse is dirty | Detect the dependency early, notify me, and reserve a fallback |
-| Receive generic styling advice | Learn from my own confidence feedback and chosen colours |
-
-## One Friday explains the whole product
-
-1. **Capture reality.** Photograph a garment and its care label. Yange extracts observable evidence, then asks the user to confirm uncertain material and care facts.
-2. **Ask naturally.** Request an outfit for Friday dinner, optionally with a Pinterest image or a saved frame from a social video as inspiration.
-3. **Plan from what exists.** Yange rejects unavailable pieces, scores feasible combinations against weather, occasion, comfort, care practicality and learned preferences, then reserves the selected garments.
-4. **Learn from lived feedback.** After the outfit is worn, a simple Confidence Check-in records how the user felt. Colour-specific feedback is stronger than a broad outfit rating, so the system does not pretend to know which detail caused confidence.
-5. **Think ahead.** Marking the outfit worn moves different garments into rewearable, airing or laundry states according to their material and care evidence.
-6. **Act before the problem arrives.** If Friday's plan now depends on a dirty garment, Yange checks the forecast, identifies a safe washing opportunity, groups compatible laundry, sends a risk notification and reserves a verified alternative when needed.
-
-![A real bedroom garment photo becomes a clean, reviewable wardrobe asset without blocking Gemini evidence extraction](docs/submission-assets/01-capture-to-clean-wardrobe.png)
-
-<sub>One upload produces two independent outcomes: a trusted evidence proposal for review and a clean transparent cutout for the wardrobe gallery. If cutout generation fails, the original remains usable and evidence extraction continues.</sub>
-
-![A saved inspiration image becomes reviewable Look DNA and is matched only against clothes the user actually owns](docs/submission-assets/02-inspiration-to-look-dna.png)
-
-<sub>Yange extracts palette, silhouette, layering and occasion cues from inspiration. Those cues can influence ranking; they cannot invent garments or bypass availability.</sub>
-
-```mermaid
-flowchart LR
-  Capture["Photograph clothes<br/>and care labels"] --> Plan["Plan from real<br/>availability"]
-  Plan --> Wear["Wear and record<br/>confidence"]
-  Wear --> Twin["Update each garment's<br/>real state"]
-  Twin --> Simulate["Simulate the week<br/>with forecast and plans"]
-  Simulate --> Act["Wash, notify or<br/>reserve a fallback"]
-  Act --> Plan
-```
-
-This is the core loop. The user does not have to keep reopening a chat and asking whether something has changed. Yange can notice the risk, complete the safe parts of the workflow asynchronously, and surface what it did with an inspectable receipt.
-
-## Why Yange is more than an outfit chatbot
-
-### 1. A wardrobe that knows its own state
-
-Yange reconstructs a live wardrobe projection from an append-only event ledger. Wearing an outfit does not mark every item “dirty.” A cotton blouse can move to laundry, trousers to rewearable, a jacket to airing, and shoes remain available. This matters because the next recommendation is grounded in reality rather than a static photo catalogue.
-
-### 2. Recommendations that cannot invent clothes
-
-The outfit engine first applies hard constraints, then calculates a deterministic five-factor **Personal Match** receipt. Gemini explains the completed result in natural language, but it cannot select garments, replace the score, emit state-changing actions or override availability.
-
-### 3. Laundry treated as an operational workflow
-
-Yange calls its future-risk loop **WearCast**. Confirmed care-label evidence becomes an incompatibility graph. Yange separates unsafe combinations, isolates unknown-care garments instead of guessing, assigns drying routes, and uses a seven-day forecast to compare doing nothing with acting now. At 50% core-wardrobe pressure, it can warn the user before choice collapses.
-
-![Confirmed care evidence blocks unsafe garment pairings and produces explained wash groups](docs/submission-assets/03-care-safe-laundry.png)
-
-<sub>The Laundry Lab is fail-closed: unknown or unreviewed care evidence is held out, while every accepted group exposes its strictest wash, bleach and drying rules.</sub>
-
-### 4. Personalisation without body judgement
-
-Height, fit, comfort and colour preferences are user-controlled inputs, not attractiveness verdicts. Confidence feedback becomes contextual memory. Positive and negative colour evidence is attributed carefully, decays with time, and remains explainable through counts such as “three confident wears” or “two saved looks.”
-
-### 5. Multimodal evidence with a human checkpoint
-
-Gemini 3.5 Flash Lite reads garment photos, care labels and inspiration images into versioned JSON contracts. Images are signature-checked, resized and metadata-stripped before storage. Uncertain facts remain uncertain until the user confirms them; malformed model output is rejected rather than written into wardrobe state.
-
-### 6. A safer virtual preview, downstream of the decision
-
-**Yange Mirror** can preview one photographed top or outerwear piece after an outfit is already selected. Google Virtual Try-On runs as an isolated asynchronous job with adult-only consent, private temporary media, one result, a four-per-day cap and immediate deletion controls. A failed preview cannot change the outfit, score, learned colour projection or wardrobe ledger. Every result is labelled **AI visualization, not a fit guarantee**.
-
-## The interface learns too
-
-I wanted Yange to feel less like static software and more like a companion that visibly earns familiarity.
-
-The WebGL **Style Aura** begins with colours the user explicitly chooses. Confirmed inspiration palettes, wardrobe colours and confidence feedback add weighted evidence over time. The displayed palette moves no more than 8% after one new evidence signature, so a single interaction cannot abruptly rewrite the product's personality. The user can open the receipt behind the Aura and see which evidence moved each colour.
-
-```mermaid
-flowchart LR
-  Events["Confirmed wardrobe events"] --> Evidence["Explicit colours + inspiration + confidence"]
-  Evidence --> Palette["Pure weighted palette projection"]
-  Palette --> Guard["Maximum 8% change per evidence signature"]
-  Guard --> Aura["2.8 second WebGL interpolation"]
-  Aura -->|"context loss / reduced motion"| Still["Accessible static fallback"]
-  Aura -. cannot write .-> Events
-```
-
-The dotted return is deliberately not a data path: Style Aura cannot issue commands, change a recommendation or write an event. It is a disposable projection of trusted state.
-
-The visual layer remains expendable. If WebGL fails, the Aura becomes a still composition while every wardrobe action continues to work. Reduced-motion mode freezes it deliberately, hidden tabs pause rendering, and sustained frame pressure lowers only the drawing resolution.
-
-## Product journey
-
-| Capture the wardrobe | Plan from evidence | Act on what is coming |
+| Taskmaster requirement | What Yange does | Inspectable evidence |
 | --- | --- | --- |
-| ![Wardrobe Studio with private garment capture and evidence review](docs/evidence/visual-qa/studio.png) | ![Outfit Atelier with planning and Personal Match](docs/evidence/visual-qa/atelier.png) | ![Weather and laundry planning surface](docs/evidence/visual-qa/wearcast.png) |
-| Garments, care labels and inspiration become reviewed evidence. | Only feasible outfits reach the Personal Match ranking. | Weather, laundry and future plans are simulated before action. |
+| Owns a messy multi-step chore | Turns future outfit dependencies, garment state, care rules and weather into a readiness intervention | [WearCast implementation](packages/domain/src/wearcast.ts) and [domain tests](packages/domain) |
+| Acts instead of only advising | Commits validated wardrobe interventions, wash plans, fallback reservations and notification outbox records | [Checkpointed orchestrator](packages/orchestrator) |
+| Runs asynchronously | Cloud Scheduler → Cloud Tasks → authenticated private worker | [Production architecture](#production-architecture) |
+| Survives retries | Stable trigger, operation and notification keys prevent duplicate effects | [WearCast reliability diagram](docs/submission-assets/05-wearcast-reliability.png) |
+| Knows when not to act | Unknown care, stale weather or an unnecessary intervention produces a safe hold or no-op | [Failure boundaries](#failure-is-contained-not-hidden) |
+| Proves what happened | Append-only events, workflow receipts, structured logs and live Cloud Console evidence | [Google Cloud proof](#live-google-cloud-proof) |
 
-## Architecture built to survive failure
+This is the distinction at the centre of Yange: **Gemini can interpret ambiguity, but deterministic policy decides whether the chore is safe to complete.**
 
-Yange follows one rule throughout the system:
+## Built from a real story
+
+I am **Musoke Nestroy**. Some mornings I spent as much as 30 minutes standing in front of my wardrobe—not because I lacked clothes, but because I was trying to remember too many changing facts at once: what I had worn, what still needed washing, which pieces I was overusing, what Kampala's weather might do, where I was going and what had made me feel confident before.
+
+Laundry was the same problem in another form. I reread care labels, separated garments by memory, guessed whether the weather would let them dry, and sometimes discovered too late that a future outfit depended on something in the basket.
+
+That confusion is not mine alone. A [2017 survey of 500 people in the UK](https://www.laundryandcleaningnews.com/news/over-half-of-people-find-clothing-care-labels-confusing-5768936/) found that 56% found clothing-care symbols confusing. A [2023 study of 159 Family and Consumer Sciences students in Ghana](https://www.scipublications.com/journal/index.php/jad/article/view/703) found that 42.1% did not understand care-label information; most could not identify several common drying and bleaching symbols.
+
+I realised I was not facing an outfit-generation problem. I was facing a **memory, state and forward-planning problem**.
+
+In Luganda, *yange* means **mine**. That became the promise: my wardrobe, my evidence, my routines—and an agent that does the work of paying attention before I have to.
+
+## From care label to autonomous action
+
+WearCast can only be useful if its inputs are trustworthy. Yange therefore builds the chore from evidence rather than model confidence.
+
+### 1. Capture once
+
+A user photographs a garment and its care label. Gemini 3.5 Flash Lite proposes observable facts through a versioned JSON contract. Runtime validation rejects malformed output, and uncertain material or care facts wait for human confirmation.
+
+[![A real bedroom garment photo becomes a clean wardrobe asset while evidence extraction remains independent](docs/submission-assets/01-capture-to-clean-wardrobe.png)](docs/submission-assets/01-capture-to-clean-wardrobe.png)
+
+<sub>One upload produces two independent results: a reviewable evidence proposal and a clean transparent wardrobe cutout. If background removal fails, the original remains usable and Gemini analysis continues.</sub>
+
+### 2. Let the safest garment set the rules
+
+Confirmed care evidence becomes an incompatibility graph. Unknown or unreviewed garments are held out instead of guessed. Accepted groups expose their strictest wash, bleach and drying requirements.
+
+[![Confirmed care evidence blocks unsafe garment pairings and creates explained wash groups](docs/submission-assets/03-care-safe-laundry.png)](docs/submission-assets/03-care-safe-laundry.png)
+
+<sub>Laundry Lab is the visible proof surface for the underlying policy: unsafe pairings are blocked, safe groups are explained, and a held garment cannot quietly enter an autonomous wash recommendation.</sub>
+
+### 3. Simulate the future
+
+WearCast combines the current Wardrobe Digital Twin with timestamped weather and future outfit dependencies. It calculates whether doing nothing is safe, whether washing now preserves the plan, whether drying conditions are credible, and whether a fallback should be reserved.
+
+### 4. Commit once
+
+The private worker revalidates every intervention at execution time. Firestore atomically writes the immutable event, rebuilt current projection, workflow receipt and transactional outbox record. Pub/Sub and notification delivery can retry without repeating the wardrobe mutation.
+
+```text
+Scheduled or user trigger
+  -> public Cloud Run edge validates the typed command
+  -> Cloud Tasks invokes a private worker with OIDC identity
+  -> worker rebuilds the current Wardrobe Digital Twin
+  -> timestamped forecast + future dependencies become simulation context
+  -> deterministic policies choose act, hold or do nothing
+  -> one Firestore transaction commits event + projection + receipt + outbox
+  -> Pub/Sub and notifications resume from durable checkpoints
+```
+
+## Production architecture
+
+Yange follows one authority rule throughout the system:
 
 > **AI proposes. Validated domain rules commit.**
 
-The domain engine has no React, browser, Gemini or Google Cloud dependency. External systems live behind replaceable ports, long-running work resumes from durable checkpoints, and every autonomous mutation is validated again at the worker boundary.
+[![Yange production architecture with public edge, private execution, Google ADK, Vertex AI, Firestore, Cloud Tasks, Pub/Sub and Storage](docs/submission-assets/06-production-architecture.png)](docs/submission-assets/06-production-architecture.png)
 
-![Yange production architecture showing the public edge, private worker, Google ADK, Vertex AI, Firestore, Cloud Tasks, Pub/Sub and Storage](docs/submission-assets/06-production-architecture.png)
+<sub>The complete system is role-separated: a public edge accepts typed commands; authenticated private services execute and reason; Firestore preserves transactional truth; Cloud Tasks, Scheduler and Pub/Sub move durable work. Click for full resolution.</sub>
 
-<sub>The complete production system: a public edge, OIDC-authenticated private execution, transactional evidence, ordered transport and narrow Google intelligence boundaries.</sub>
-
-### Multimodal intake without blocking the user
-
-![Yange vision pipeline separates the critical Gemini evidence path from the non-critical browser cutout path](docs/submission-assets/04-vision-pipeline.png)
-
-Gemini proposes garment, care-label and inspiration evidence through a versioned schema. Runtime validation and user confirmation sit before any trusted wardrobe command. Background removal runs independently in a dedicated Web Worker with ONNX Runtime Web; its latency or failure cannot block analysis or wardrobe creation.
-
-### WearCast autonomy that survives replay
-
-![WearCast architecture showing six durable checkpoints, deterministic validation and failure recovery](docs/submission-assets/05-wearcast-reliability.png)
-
-The workflow checkpoints `triggered`, `forecast-acquired`, `decision-simulated`, `interventions-committed`, `notifications-delivered` and `completed`. Stable task names, trigger IDs and notification keys mean Cloud Tasks, Scheduler or Pub/Sub may deliver more than once while domain effects occur once.
-
-### Decision path
-
-```text
-Browser request
-  -> public Cloud Run edge validates session and command
-  -> Cloud Tasks sends an OIDC-authenticated job
-  -> private Cloud Run worker rebuilds the wardrobe projection
-  -> Google Weather and optional Calendar provide timestamped context
-  -> deterministic domain policies simulate and validate the action
-  -> one Firestore transaction writes event + projection + outbox
-  -> Pub/Sub and notification delivery continue from checkpoints
-```
+The domain engine has no React, browser, Gemini or Google Cloud dependency. External systems live behind replaceable ports, long-running work resumes from checkpoints, and every autonomous mutation is validated again at the worker boundary.
 
 ### Google AI responsibilities
 
 | Capability | Model or framework | Authority boundary |
 | --- | --- | --- |
-| Garment, care-label and inspiration evidence | Gemini 3.5 Flash Lite on Vertex AI | Produces schema-constrained proposals; the user confirms uncertain facts |
-| Outfit explanation | Gemini 3.5 Flash on Vertex AI | Explains an already-computed score; cannot choose or mutate |
-| Supervised reasoning agent | Google ADK with Gemini 3.5 Flash | Can inspect the wardrobe or request a verified WearCast run through two narrow tools |
-| Optional garment preview | Google Virtual Try-On `virtual-try-on-001` | Produces one temporary image outside the wardrobe ledger |
-| Outfit ranking, care safety, state transitions and commits | Pure TypeScript domain engine | Sole decision authority |
+| Garment, care-label and inspiration evidence | Gemini 3.5 Flash Lite on Vertex AI | Produces schema-constrained proposals; uncertain facts require confirmation |
+| Outfit explanation | Gemini 3.5 Flash on Vertex AI | Explains an already-computed result; cannot choose garments or mutate state |
+| Supervised reasoning | Google ADK with Gemini 3.5 Flash | Inspects wardrobe state or requests a verified WearCast run through two narrow tools |
+| Optional garment preview | Google Virtual Try-On `virtual-try-on-001` | Produces one temporary visualization outside the wardrobe ledger |
+| Availability, care safety, ranking, transitions and commits | Pure TypeScript domain engine | Sole decision authority |
 
-The two Gemini variants are intentional. Flash Lite handles frequent schema-constrained visual evidence extraction. Flash handles the higher-level explanation and supervised ADK reasoning paths. Both remain downstream of the deterministic rules that decide and commit wardrobe state.
+The two Gemini variants are intentional: Flash Lite handles frequent schema-constrained visual extraction; Flash handles higher-level explanation and supervised ADK reasoning. Neither can bypass the policies that decide and commit wardrobe state.
+
+### Multimodal intake does not block the chore
+
+[![Yange vision pipeline separates critical evidence extraction from non-critical browser background removal](docs/submission-assets/04-vision-pipeline.png)](docs/submission-assets/04-vision-pipeline.png)
+
+The critical lane prepares private media, calls Gemini, validates the structured proposal, exposes uncertainty and waits for confirmation. Background removal runs independently in a Web Worker with ONNX Runtime Web. A slow or failed cutout cannot block evidence analysis or wardrobe creation.
 
 ### Failure is contained, not hidden
 
-| Failure | What Yange does |
+| Failure | Safe outcome |
 | --- | --- |
-| Gemini returns malformed data | Rejects the contract and preserves the rewritten image for an explicit retry |
-| Weather or Calendar is unavailable | Labels stale or manual context; unrelated wardrobe features remain usable |
-| Notification delivery fails | Keeps the valid intervention, resumes from the delivery checkpoint and avoids duplicate messages |
-| A scheduler or task delivers twice | Stable trigger and operation IDs return the existing receipt without repeating side effects |
-| WebGL context is lost | Swaps to an accessible still while product controls stay mounted |
-| Virtual Try-On is blocked or slow | Leaves the selected outfit and every wardrobe decision untouched |
+| Gemini returns malformed or uncertain data | Reject the contract or request confirmation; commit no trusted fact |
+| Weather is missing or stale | Preserve the last timestamped context or hold the intervention; never manufacture certainty |
+| A scheduler or task delivers twice | Return the existing execution receipt; repeat no domain effect |
+| Notification delivery fails | Keep the valid wardrobe intervention and resume from the notification checkpoint |
+| Background removal fails | Keep the original image and continue evidence extraction |
+| WebGL or virtual preview fails | Leave WearCast, wardrobe state and every recommendation untouched |
 
-The full rationale is documented in [docs/architecture.md](docs/architecture.md).
+The deeper rationale is documented in [docs/architecture.md](docs/architecture.md).
 
-## Live proof
+## Live Google Cloud proof
 
-The public build is not a local model simulation. It is deployed on Google Cloud and activates the real Google adapters through the same versioned contracts used by the credential-free local mode.
+The public build is not a local simulation. It runs in project `yange-agentic-prod-2026` in `africa-south1` with a public product edge and two authentication-required private services.
 
-| Proof | Current evidence |
+| Proof | Inspect it |
 | --- | --- |
-| Public product | [yange-kdxt2klboq-bq.a.run.app](https://yange-kdxt2klboq-bq.a.run.app/) |
-| Health endpoint | [`/health`](https://yange-kdxt2klboq-bq.a.run.app/health) returns `ok` |
-| Runtime receipt | [`/v1/runtime`](https://yange-kdxt2klboq-bq.a.run.app/v1/runtime) reports Google mode, readiness and configured model boundaries |
+| Live product | [yange-kdxt2klboq-bq.a.run.app](https://yange-kdxt2klboq-bq.a.run.app/) |
+| Health | [`/health`](https://yange-kdxt2klboq-bq.a.run.app/health) |
+| Runtime boundary receipt | [`/v1/runtime`](https://yange-kdxt2klboq-bq.a.run.app/v1/runtime) |
 | Dated deployment receipt | [Redacted live verification from 29 August 2026](docs/evidence/live-deployment-2026-08-29.md) |
-| Public edge | Cloud Run revision `yange-00020-bjh`, 100% traffic in the final proof capture |
-| Private worker | Cloud Run revision `yange-worker-00011-m54`, authenticated service only |
-| Private ADK steward | Cloud Run revision `yange-steward-00005-hfc`, authenticated service only |
-| Async infrastructure | Cloud Tasks, Cloud Scheduler, Firestore transactional outbox, Pub/Sub ordered events and a dead-letter topic |
-| Automated verification | 108 TypeScript tests, strict typechecking, production builds, Terraform validation and a high-severity dependency gate |
+| Automated verification | 108 TypeScript tests, strict typechecking, production builds, Terraform validation and dependency gating |
 | CI | [![Yange verification workflow](https://github.com/NestroyMusoke/Yange/actions/workflows/ci.yml/badge.svg)](https://github.com/NestroyMusoke/Yange/actions/workflows/ci.yml) |
-
-The Mirror feasibility experiment produced a 1237 × 1920 preview in roughly 32 seconds while preserving the subject's identity, pose, trousers, shoes and background. The experiment also exposed fabric smoothing and a lost wrist accessory, which is why the production interface avoids fit claims. Read the complete [safety and experiment record](docs/yange-mirror.md).
-
-### Live Google Cloud evidence
 
 [![Unedited Google Cloud Run console showing Yange's public edge and two authenticated private services](docs/submission-assets/google-cloud-run-services.png)](docs/submission-assets/google-cloud-run-services.png)
 
-<sub>Cloud Run in `africa-south1`: `yange` is the public product edge; `yange-worker` and `yange-steward` require authentication. Click for the full-resolution console capture.</sub>
+<sub>Unedited Cloud Run console: `yange` accepts public product traffic; `yange-worker` and `yange-steward` require authentication.</sub>
 
-[![Unedited Google Cloud Logs Explorer showing successful Yange worker and scheduler activity](docs/submission-assets/google-cloud-logs-explorer.png)](docs/submission-assets/google-cloud-logs-explorer.png)
+[![Unedited Google Cloud Logs Explorer showing successful Yange worker and Scheduler activity](docs/submission-assets/google-cloud-logs-explorer.png)](docs/submission-assets/google-cloud-logs-explorer.png)
 
-<sub>Logs Explorer records successful production worker traffic, Cloud Scheduler execution and application completion events. Click for the full-resolution capture.</sub>
+<sub>Unedited Logs Explorer: successful private-worker traffic, Cloud Scheduler execution and completion events in the production project.</sub>
 
-[![Unedited Google Cloud Monitoring console showing operational dashboards used by Yange](docs/submission-assets/google-cloud-monitoring.png)](docs/submission-assets/google-cloud-monitoring.png)
+[![Unedited Google Cloud Monitoring console showing Yange operational dashboards](docs/submission-assets/google-cloud-monitoring.png)](docs/submission-assets/google-cloud-monitoring.png)
 
-<sub>The production project exposes operational surfaces for Cloud Storage, Cloud Tasks, Logs, Pub/Sub and Vertex AI. Click for the full-resolution capture.</sub>
+<sub>Unedited Monitoring console: operational surfaces for Cloud Storage, Cloud Tasks, Logs, Pub/Sub and Vertex AI.</sub>
+
+## The rest of Yange supports the chore
+
+Yange is a complete wardrobe product, but these layers are deliberately downstream of the Taskmaster spine:
+
+- **Outfit planning** ranks only combinations made from garments that are actually available. Hard constraints run before a deterministic five-factor Personal Match score; Gemini explains the completed result.
+- **Inspiration analysis** extracts palette, silhouette, layering and occasion cues from an uploaded image. Those cues influence ranking but cannot invent inventory.
+- **Confidence Check-ins** record how the user felt after wearing an outfit, creating contextual preference evidence rather than body judgement.
+- **Style Aura** turns that accumulated evidence into a slowly changing WebGL palette. One interaction can move the projection by no more than 8%, and the visual layer cannot write events or change a recommendation.
+- **Yange Mirror** is an optional, adult-consent preview after selection. It produces one temporary image, makes no fit claim and cannot influence wardrobe state.
+
+[![Live Yange journey from outfit wear to confidence memory and a personal Style Aura](docs/assets/yange-product-demo.gif)](https://yange-kdxt2klboq-bq.a.run.app/)
+
+<sub>The interface reflects accumulated state after the work is done. Style Aura is a visual receipt of learning—not the agent's decision engine.</sub>
+
+This hierarchy matters: capture gives the agent evidence; feedback makes it personal; the Aura makes learning visible. **WearCast remains the autonomous worker that protects the future plan.**
 
 ## Run Yange
 
@@ -233,7 +181,7 @@ The Mirror feasibility experiment produced a 1237 × 1920 preview in roughly 32 
 
 - Node.js 22 or newer
 - npm 10 or newer
-- No credentials for the complete local rehearsal
+- No credentials required for the complete local rehearsal
 
 ### Local product
 
@@ -244,7 +192,7 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-Open the URL printed by Vite. Local mode uses deterministic adapters so contributors can reproduce the whole wardrobe loop without spending money or weakening the model boundaries.
+Open the URL printed by Vite. Local mode uses deterministic adapters so contributors can reproduce the wardrobe loop without spending money or weakening the production authority boundaries.
 
 ### Production-shaped local edge
 
@@ -252,7 +200,7 @@ Open the URL printed by Vite. Local mode uses deterministic adapters so contribu
 npm.cmd run dev:cloud
 ```
 
-Open `http://127.0.0.1:4173/`. This runs the built web application and API together while keeping external Google calls in safe local mode.
+Open `http://127.0.0.1:4173/`.
 
 ### Verify the repository
 
@@ -274,38 +222,40 @@ The full release gate is also available as:
 .\scripts\deploy-google-cloud.ps1 -ProjectId YOUR_PROJECT_ID
 ```
 
-The deployment script builds the role-separated edge and worker image plus the Google ADK service, provisions the required Google Cloud infrastructure with Terraform, and probes the resulting public URL. See [docs/google-cloud-setup.md](docs/google-cloud-setup.md) for authentication, IAM, budget safeguards, Calendar sharing and rollback.
+The deployment script builds the role-separated edge, worker and private Google ADK service; provisions the required infrastructure with Terraform; and probes the public URL. See [docs/google-cloud-setup.md](docs/google-cloud-setup.md) for IAM, budget safeguards, Calendar sharing and rollback.
 
 ## Repository map
 
 | Path | Responsibility |
 | --- | --- |
-| `apps/web` | Responsive product, accessible fallbacks, local persistence and guided user journey |
-| `apps/api` | Public edge, private worker routes, sessions, security headers and static delivery |
-| `packages/domain` | Commands, events, projections, outfit scoring, laundry safety and WearCast policies |
-| `packages/contracts` | Versioned model requests, responses and runtime validation |
-| `packages/orchestrator` | Checkpointed execution, retry, resume and duplicate-trigger protection |
+| `packages/domain` | Commands, events, projections, care safety, outfit scoring and WearCast policies |
+| `packages/orchestrator` | Durable checkpoints, retry, resume and duplicate-trigger protection |
 | `packages/cloud` | Firestore, Storage, Tasks, Pub/Sub, Weather, Calendar and Vertex AI adapters |
+| `apps/api` | Public edge, private worker routes, sessions, security headers and static delivery |
+| `apps/web` | Responsive product, accessible fallbacks, local persistence and guided journey |
+| `packages/contracts` | Versioned model requests, responses and runtime validation |
 | `services/yange_steward` | Private Google ADK agent with two workload-identity tools |
-| `infra/terraform` | Least-privilege service identities and production infrastructure |
-| `docs` | Architecture, experiment records, demo runbook and deployment guide |
+| `infra/terraform` | Least-privilege identities and production infrastructure |
+| `docs` | Architecture, experiment records, evidence and deployment guide |
 
 ## Privacy and honest limits
 
-- Yange does not decide what objectively “flatters” a body or skin tone. It learns user-controlled preferences and reports them as options.
-- Original images are not stored in the event ledger. Events contain opaque asset IDs; private media is accessed with short-lived signed URLs.
-- Care evidence that is missing or unreviewed fails closed and is excluded from a recommended wash group.
-- The public deployment currently runs without Google Calendar connected. Weather-aware planning, manual occasion context and the rest of the agent remain available.
-- Direct TikTok ingestion is not implemented. A user can upload a saved frame for inspiration analysis.
-- Mirror currently supports one photographed top or outerwear piece for a consenting adult. It is not a size, comfort or fit estimator.
-- Shopping gap analysis and local price discovery remain future work. The current product focuses on getting more value and longer life from clothes the user already owns.
+- Original images are not stored in the event ledger. Events contain opaque asset IDs; private media uses short-lived signed URLs.
+- Missing or unreviewed care evidence fails closed and is excluded from autonomous wash groups.
+- The public deployment currently runs without Google Calendar connected. Weather-aware planning and manual occasion context remain available.
+- Direct TikTok ingestion is not implemented; a user can upload a saved frame for inspiration analysis.
+- Yange does not decide what objectively flatters a body or skin tone. It learns user-controlled preferences.
+- Mirror supports one photographed top or outerwear piece for a consenting adult. It is not a fit, size or comfort estimator. See the [experiment and safety record](docs/yange-mirror.md).
+- Shopping and price discovery remain future work. Yange currently focuses on extracting more use and longer life from clothes the user already owns.
 
-## Built from experience, engineered for trust
+## Built from experience, engineered to act
 
-Yange began with a small, repeated frustration in my own life. Building it changed the question from “Can AI choose an outfit?” to a more useful one:
+Yange began with a question I was asking every morning: *What can I actually wear?*
 
-> **Can an agent understand the state of what I own, learn how I actually feel, and quietly keep tomorrow's options open?**
+Building it revealed the more important question:
 
-That is the product I wanted beside me. Now it is live.
+> **Can an agent notice that tomorrow's options are shrinking—and safely do the work that keeps them open?**
 
-Built by **Musoke Nestroy** in Kampala, Uganda, for the All Things Agentic Hackathon.
+That is the Taskmaster I built. It is live now.
+
+Built alone by **Musoke Nestroy** in Kampala, Uganda, for the All Things Agentic Hackathon.
