@@ -205,7 +205,11 @@ export function useCaptureQueue() {
 
 export type CaptureQueue = ReturnType<typeof useCaptureQueue>;
 
-export function useMediaUrl(assetId: string | null): string | null {
+export function useMediaUrl(
+  assetId: string | null,
+  options: { cloudFallback?: boolean } = {},
+): string | null {
+  const cloudFallback = options.cloudFallback ?? true;
   const [url, setUrl] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
 
@@ -234,7 +238,7 @@ export function useMediaUrl(assetId: string | null): string | null {
           setUrl(createdUrl);
           return;
         }
-        if (isCloudSyncConfigured()) {
+        if (cloudFallback && isCloudSyncConfigured()) {
           const remote = await createMediaReadUrl(assetId);
           if (active) setUrl(remote.url);
         }
@@ -246,7 +250,7 @@ export function useMediaUrl(assetId: string | null): string | null {
       active = false;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [assetId, revision]);
+  }, [assetId, cloudFallback, revision]);
 
   return url;
 }

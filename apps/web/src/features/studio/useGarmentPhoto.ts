@@ -10,7 +10,10 @@ export interface GarmentPhotoSource {
 
 export function useGarmentPhoto(assetId: string | null): GarmentPhotoSource {
   const originalUrl = useMediaUrl(assetId);
-  const cutoutUrl = useMediaUrl(assetId ? cutoutAssetId(assetId) : null);
+  const cutoutUrl = useMediaUrl(
+    assetId ? cutoutAssetId(assetId) : null,
+    { cloudFallback: false },
+  );
   return {
     url: cutoutUrl ?? originalUrl,
     originalUrl,

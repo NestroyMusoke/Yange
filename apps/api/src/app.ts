@@ -254,7 +254,7 @@ function secureHeaders(response: ServerResponse): void {
   response.setHeader("Origin-Agent-Cluster", "?1");
   response.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; img-src 'self' blob: data: https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://*.googleapis.com",
+    "default-src 'self'; img-src 'self' blob: data: https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' https://*.googleapis.com",
   );
 }
 
@@ -284,8 +284,10 @@ const contentTypes: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".wasm": "application/wasm",
   ".webmanifest": "application/manifest+json",
   ".webp": "image/webp",
 };

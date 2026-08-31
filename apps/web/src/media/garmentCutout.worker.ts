@@ -18,9 +18,15 @@ ort.env.wasm.numThreads = self.crossOriginIsolated
   ? Math.max(1, Math.min(4, self.navigator.hardwareConcurrency || 2))
   : 1;
 ort.env.wasm.proxy = false;
+const cutoutRuntimeRevision = "csp-v3";
+function versionedRuntimeAsset(assetUrl: string): string {
+  const url = new URL(assetUrl, self.location.href);
+  url.searchParams.set("yange-cutout", cutoutRuntimeRevision);
+  return url.href;
+}
 ort.env.wasm.wasmPaths = {
-  mjs: new URL(ortRuntimeUrl, self.location.href).href,
-  wasm: new URL(ortWasmUrl, self.location.href).href,
+  mjs: versionedRuntimeAsset(ortRuntimeUrl),
+  wasm: versionedRuntimeAsset(ortWasmUrl),
 };
 
 let sessionPromise: Promise<ort.InferenceSession> | null = null;

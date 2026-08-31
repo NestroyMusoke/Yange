@@ -73,6 +73,9 @@ describe("Yange production API", () => {
     expect(health.headers.get("cross-origin-opener-policy")).toBe("same-origin");
     expect(health.headers.get("cross-origin-embedder-policy")).toBe("credentialless");
     expect(health.headers.get("origin-agent-cluster")).toBe("?1");
+    expect(health.headers.get("content-security-policy")).toContain(
+      "script-src 'self' 'wasm-unsafe-eval'",
+    );
   });
 
   it("reports sanitized local runtime readiness without credentials", async () => {

@@ -21,3 +21,11 @@ services/yange_steward/**/__pycache__/
 services/yange_steward/.pytest_cache/
 # Local experiment inputs/results may include third-party or private people.
 artifacts/experiments/
+# Private real-world demo inputs and generated recording intermediates.
+artifacts/demo-production/
+# Generated cloud-proof video/QA media stays local; curated proof screenshots live in docs/submission-assets.
+artifacts/cloud-proof/**/*.mp4
+artifacts/cloud-proof/**/check-*.jpg
+artifacts/cloud-proof/**/*contact-sheet*
+artifacts/cloud-proof/slides/
+artifacts/cloud-proof/live-console/frames/

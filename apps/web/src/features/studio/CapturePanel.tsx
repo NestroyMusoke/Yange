@@ -138,7 +138,12 @@ export function CapturePanel({
       () => {
         if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("ready");
       },
-      () => {
+      (error: unknown) => {
+        console.warn(
+          `[Yange garment cutout] Original photo retained for ${sourceAsset.assetId}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
         if (activeCutoutAssetId.current === sourceAsset.assetId) setCutoutStatus("fallback");
       },
     );
