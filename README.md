@@ -259,3 +259,7 @@ Building it revealed the more important question:
 That is the Taskmaster I built. It is live now.
 
 Built alone by **Musoke Nestroy** in Kampala, Uganda, for the All Things Agentic Hackathon.
+
+## Qloo-powered outings (hackathon extension)
+
+The Outfits view now lets you choose cultural interests, discover places through Qloo, and use a selected place as the occasion for wardrobe planning. Qloo recommendations require a server-side `QLOO_API_KEY`; missing credentials and empty results are shown explicitly. See [Qloo setup, architecture, validation and submission checklist](docs/hackathons/qloo-2026.md). This extends the original Yange project; live search and Kampala recommendations were verified on 2026-10-19; public deployment remains a separate acceptance step.

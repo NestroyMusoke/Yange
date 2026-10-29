@@ -18,6 +18,7 @@ import { RuntimeOutfitExplainer } from "../../aiRuntime";
 import { getLiveContext, isCloudSyncConfigured, type LiveContextSnapshot } from "../../cloudRuntime";
 import { YangeText, YangeWordmark } from "../brand/YangeWordmark";
 import { GarmentPreview } from "./GarmentPreview";
+import { TasteOutings, type SelectedOuting } from "./TasteOutings";
 import { YangeMirror } from "./YangeMirror";
 
 interface OutfitAtelierProps {
@@ -148,6 +149,7 @@ function CandidateCard({
 }
 
 export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
+  const [outing, setOuting] = useState<SelectedOuting | null>(null);
   const [eventTitle, setEventTitle] = useState("Dinner out");
   const [startsAt, setStartsAt] = useState(initialStartTime);
   const [occasion, setOccasion] = useState<PlanningOccasion>("dinner");
@@ -235,7 +237,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
           startsAt: startsAtIso,
           occasion,
           dressCode,
-          notes: "User-supplied planning context",
+          notes: outing && outing.city === state.userProfile.locationLabel ? `Qloo place ${outing.place.id}; retrieved ${outing.fetchedAt}; interests: ${outing.interests.map((item) => item.name).join(", ")}`.slice(0, 240) : "User-supplied planning context",
         }).upcoming();
         context = {
           version: 1 as const,
@@ -260,7 +262,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
             startsAt: startsAtIso,
             occasion,
             dressCode,
-            notes: "User-supplied planning context",
+            notes: outing && outing.city === state.userProfile.locationLabel ? `Qloo place ${outing.place.id}; retrieved ${outing.fetchedAt}; interests: ${outing.interests.map((item) => item.name).join(", ")}`.slice(0, 240) : "User-supplied planning context",
           }),
           inspirationLookId || null,
         );
@@ -295,6 +297,19 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
         <div className="engine-chip"><span /> Available garments only</div>
       </div>
 
+      <TasteOutings key={state.userProfile.locationLabel} city={state.userProfile.locationLabel} onSelect={(selected) => {
+        setOuting(selected);
+        setEventTitle(selected.place.name.slice(0, 80));
+        setUseCalendar(false);
+        setCandidates([]);
+        setExplanations({});
+        setPlannedCandidateId(null);
+      }} />
+      {outing && outing.city === state.userProfile.locationLabel && <div className="selected-outing" role="status">
+        <strong>Outing selected: {outing.place.name}</strong>
+        <p>Qloo suggested this place from {outing.interests.map((item) => item.name).join(", ")}. Confirm the date, occasion and dress code below, then find outfit options.</p>
+        <button type="button" onClick={() => setOuting(null)}>Clear outing</button>
+      </div>}
       <div className="planning-workbench">
         <form className="context-console" onSubmit={(event) => { event.preventDefault(); void generate(); }}>
           <div className="console-topline"><span>Occasion details</span><em>{state.userProfile.locationLabel} context</em></div>
@@ -303,7 +318,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
             <button type="button" className={contextMode === "manual" ? "active" : ""} onClick={() => setContextMode("manual")}>Adjust manually</button>
             <span className={`context-source-status status-${liveStatus}`}>{contextMode === "manual" ? "Your values" : liveStatus === "ready" ? `${liveContext?.weather.temperatureC.toFixed(0)}°C · ${liveContext?.weather.precipitationProbability.toFixed(0)}% rain` : liveStatus === "loading" ? "Reading forecast…" : "Forecast unavailable"}</span>
           </div>
-          <label className="field-group full-field"><span>What are you dressing for?</span><input value={eventTitle} maxLength={80} onChange={(event) => setEventTitle(event.target.value)} /></label>
+          <label className="field-group full-field"><span>What are you dressing for?</span><input value={eventTitle} maxLength={80} onChange={(event) => { setEventTitle(event.target.value); setOuting(null); }} /></label>
           <div className="context-grid">
             <label className="field-group"><span>Starts</span><input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
             <label className="field-group"><span>Occasion</span><select value={occasion} onChange={(event) => setOccasion(event.target.value as PlanningOccasion)}>{occasionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
@@ -314,7 +329,7 @@ export function OutfitAtelier({ state, onPlan }: OutfitAtelierProps) {
             <label><span>Temperature <strong>{temperatureC}°C</strong></span><input type="range" min="12" max="36" value={temperatureC} disabled={contextMode === "live"} onChange={(event) => setTemperatureC(Number(event.target.value))} /></label>
             <label><span>Rain chance <strong>{rain}%</strong></span><input type="range" min="0" max="100" value={rain} disabled={contextMode === "live"} onChange={(event) => setRain(Number(event.target.value))} /></label>
           </div>
-          {liveContext?.calendar && <label className="calendar-context-choice"><input type="checkbox" checked={useCalendar} onChange={(event) => setUseCalendar(event.target.checked)} /><span><strong>Use {liveContext.calendar.title}</strong><small>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(liveContext.calendar.startsAt))} · Google Calendar</small></span></label>}
+          {liveContext?.calendar && <label className="calendar-context-choice"><input type="checkbox" checked={useCalendar} onChange={(event) => { setUseCalendar(event.target.checked); if (event.target.checked) setOuting(null); }} /><span><strong>Use {liveContext.calendar.title}</strong><small>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(liveContext.calendar.startsAt))} · Google Calendar</small></span></label>}
           <label className="field-group full-field"><span>Inspiration memory <small>Optional</small></span><select value={inspirationLookId} onChange={(event) => setInspirationLookId(event.target.value)}><option value="">No saved Look DNA</option>{Object.values(state.inspirationLooks).map((look) => <option key={look.id} value={look.id}>{look.name}</option>)}</select></label>
           <button type="submit" className="primary-action" disabled={generating}>{generating ? "Checking your wardrobe…" : "Find outfit options"}</button>
         </form>

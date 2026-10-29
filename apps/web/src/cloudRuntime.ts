@@ -213,3 +213,10 @@ export async function waitForCloudExecution(
 export async function resetCloudDemo(): Promise<void> {
   await request("/v1/demo", { method: "DELETE" });
 }
+
+export function searchTaste(query: string): Promise<{ entities: import("@yange/contracts").TasteEntity[] }> {
+  return request("/v1/taste/search", { method: "POST", body: JSON.stringify({ query }) });
+}
+export function suggestOutings(city: string, interestIds: string[]): Promise<import("@yange/contracts").OutingSuggestions> {
+  return request("/v1/taste/places", { method: "POST", body: JSON.stringify({ city, interestIds }) });
+}

@@ -4,3 +4,4 @@ export * from "./explanations";
 export * from "./fakeGemini";
 export * from "./multimodal";
 export * from "./mirror";
+export * from "./taste";

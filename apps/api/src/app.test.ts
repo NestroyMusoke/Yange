@@ -399,3 +399,37 @@ describe("Yange production API", () => {
     expect(queued).toEqual([{ userId, jobId: "mirror-request-1" }]);
   });
 });
+
+describe("Qloo outing routes", () => {
+  const id = "f0d354aa-ba7e-49d2-8aba-9a8250f5c852";
+  const provider = {
+    search: async () => [{ id, name: "Test interest", type: "urn:entity:artist" }],
+    recommend: async (city: string, interestIds: string[]) => ({ source: "qloo" as const, city, interestIds, fetchedAt: "2026-10-18T12:00:00Z", places: [] }),
+  };
+  it("reports an unconfigured integration without returning invented places", async () => {
+    const origin = await start();
+    const response = await fetch(`${origin}/v1/taste/places`, { method: "POST", body: JSON.stringify({ city: "Kampala", interestIds: [id] }) });
+    expect(response.status).toBe(503);
+    expect(await response.json()).not.toHaveProperty("places");
+  });
+  it("validates IDs and passes real choices to the provider", async () => {
+    const origin = await start({ NODE_ENV: "test" }, { tasteProvider: provider });
+    for (const interestIds of [[], ["invented"], [id, id]]) {
+      const response = await fetch(`${origin}/v1/taste/places`, { method: "POST", body: JSON.stringify({ city: "Kampala", interestIds }) });
+      expect(response.status).toBe(400);
+    }
+    const response = await fetch(`${origin}/v1/taste/places`, { method: "POST", body: JSON.stringify({ city: " Kampala ", interestIds: [id] }) });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ source: "qloo", city: "Kampala", interestIds: [id], places: [] });
+  });
+  it("bounds public upstream usage and rejects short searches", async () => {
+    const origin = await start({ NODE_ENV: "test" }, { tasteProvider: provider });
+    expect((await fetch(`${origin}/v1/taste/search`, { method: "POST", body: JSON.stringify({ query: "a" }) })).status).toBe(400);
+    for (let i = 0; i < 30; i++) {
+      expect((await fetch(`${origin}/v1/taste/search`, { method: "POST", body: JSON.stringify({ query: "artist" }) })).status).toBe(200);
+    }
+    const response = await fetch(`${origin}/v1/taste/search`, { method: "POST", body: JSON.stringify({ query: "artist" }) });
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("60");
+  });
+});

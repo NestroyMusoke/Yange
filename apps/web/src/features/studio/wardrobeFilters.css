@@ -1,0 +1,30 @@
+.wardrobe-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+}
+.wardrobe-filters label { display: grid; gap: 8px; flex: 1 1 150px; min-width: 0; }
+.wardrobe-filters .wardrobe-search { flex: 2 1 240px; }
+.wardrobe-filters label > span { color: var(--muted); font-size: 0.875rem; }
+.wardrobe-filters input, .wardrobe-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  background: var(--canvas);
+  font: inherit;
+}
+.wardrobe-filters button { min-height: 44px; padding: 10px 12px; font: inherit; }
+.wardrobe-filters button:disabled { opacity: 0.5; cursor: default; }
+.wardrobe-filters :is(input, select, button):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+.wardrobe-results { margin: 16px 0; color: var(--muted); font-size: 0.875rem; }
+.wardrobe-empty { padding: 24px 0; }
+.wardrobe-empty h3 { margin: 0 0 8px; }
+.wardrobe-empty p { margin: 0; color: var(--muted); }
+@media (max-width: 540px) {
+  .wardrobe-filters label, .wardrobe-filters .wardrobe-search { flex-basis: 100%; }
+}

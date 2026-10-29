@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { resolve } from "node:path";
 import {
   createFirestoreStore,
+  QlooTasteAdapter,
   createGoogleEventPublisher,
   createGoogleMediaStore,
   createGoogleTaskScheduler,
@@ -128,6 +129,7 @@ const outfitExplainer = vertexClient
 
 const server = createServer(createYangeApi({
   configuration,
+  tasteProvider: process.env.QLOO_API_KEY?.trim() ? new QlooTasteAdapter(process.env.QLOO_API_KEY.trim()) : undefined,
   store,
   logger,
   webRoot,

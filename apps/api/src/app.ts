@@ -3,6 +3,7 @@ import { extname, join, normalize, resolve } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   checkRuntimeConfiguration,
+  QlooError,
   createStructuredLogger,
   eventSinkFor,
   publicRuntimeConfiguration,
@@ -24,6 +25,8 @@ import {
 } from "@yange/cloud";
 import {
   createKampalaDemoForecast,
+  QLOO_ENTITY_ID,
+  type TasteProvider,
   DurableInboxNotificationGateway,
   ManualForecastAdapter,
   type MultimodalAnalyzer,
@@ -84,6 +87,7 @@ export interface YangeApiDependencies {
   notificationGateway?: NotificationGateway;
   multimodalAnalyzerForUser?: (userId: string) => MultimodalAnalyzer;
   outfitExplainer?: OutfitExplanationPort;
+  tasteProvider?: TasteProvider;
   mirrorJobs?: MirrorJobRepository;
   mirrorTaskScheduler?: MirrorTaskScheduler;
   mirrorGenerator?: VirtualTryOnGenerator;
@@ -319,6 +323,10 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
   const configurationCheck = checkRuntimeConfiguration(configuration);
   const notificationGateway = dependencies.notificationGateway ?? new DurableInboxNotificationGateway(now);
 
+  // Instance-wide cap bounds upstream usage even if callers discard session cookies.
+  let tasteWindow = Date.now();
+  let tasteRequests = 0;
+
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     secureHeaders(response);
     const startedAt = Date.now();
@@ -404,6 +412,43 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
         );
       if (session.setCookie) response.setHeader("Set-Cookie", session.setCookie);
       const userId = session.userId;
+
+      if (url.pathname === "/v1/taste/search" || url.pathname === "/v1/taste/places") {
+        if (method !== "POST") {
+          sendJson(response, 405, { error: "Use POST for taste discovery." });
+          finish(405, userId);
+          return;
+        }
+        if (!dependencies.tasteProvider) {
+          sendJson(response, 503, { error: "Taste discovery is not connected yet. The team must configure the Qloo hackathon key." });
+          finish(503, userId);
+          return;
+        }
+        const body = await readJson(request);
+        const search = url.pathname.endsWith("/search");
+        const query = typeof body.query === "string" ? body.query.trim() : "";
+        const city = typeof body.city === "string" ? body.city.trim() : "";
+        const ids = body.interestIds;
+        if (search ? query.length < 2 || query.length > 100 :
+          !city || city.length > 100 || !Array.isArray(ids) || ids.length < 1 || ids.length > 5 ||
+          !ids.every((value) => typeof value === "string" && QLOO_ENTITY_ID.test(value)) || new Set(ids).size !== ids.length) {
+          throw new Error("REQUEST_BODY_INVALID");
+        }
+        if (Date.now() - tasteWindow >= 60_000) { tasteWindow = Date.now(); tasteRequests = 0; }
+        if (tasteRequests >= 30) {
+          response.setHeader("Retry-After", "60");
+          sendJson(response, 429, { error: "Taste discovery is busy. Wait a minute and try again." });
+          finish(429, userId);
+          return;
+        }
+        tasteRequests += 1;
+        const result = search
+          ? { entities: await dependencies.tasteProvider.search(query) }
+          : await dependencies.tasteProvider.recommend(city, ids as string[]);
+        sendJson(response, 200, result);
+        finish(200, userId);
+        return;
+      }
 
       if (method === "GET" && url.pathname === "/v1/runtime") {
         sendJson(response, 200, {
@@ -909,7 +954,7 @@ export function createYangeApi(dependencies: YangeApiDependencies) {
       const invalidMedia = message === "Stored media failed binary signature validation."
         || message === "Stored media exceeds Yange's 8 MiB safety limit."
         || message === "Stored media has an unsupported content type.";
-      const status = message === "REQUEST_TOO_LARGE"
+      const status = cause instanceof QlooError ? cause.status : message === "REQUEST_TOO_LARGE"
         ? 413
         : message === "REQUEST_BODY_INVALID"
           ? 400
